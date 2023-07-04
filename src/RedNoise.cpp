@@ -3,30 +3,61 @@
 #include <Utils.h>
 #include <fstream>
 #include <vector>
+#include <glm/glm.hpp>
 
 #define WIDTH 320
 #define HEIGHT 240
 
-std::vector<float> interpolateSingleFloats(float from, float to, int steps) {
+using std::vector;
+using glm::vec3;
+
+vector<float> interpolateSingleFloats(float from, float to, int steps) {
 	float diff = to - from;
 	float interval = diff / steps;
-	std::vector<float> interpolation;
+	vector<float> interpolation;
 	for (int i = 0; i < steps; i++) {
 		interpolation.push_back(from + i * interval);
 	}
 	return interpolation;
 }
+
+vector<vec3> interpolateThreeElementValues(vec3 from, vec3 to, int steps) {
+	vec3 diff = to - from;
+	vec3 interval = diff * float(1 / steps);
+	vector<vec3> interpolation;
+	for (int i = 0; i < steps; i++) {
+		interpolation.push_back(from + float(i) * interval);
+	}
+	return interpolation;
+}
+
+uint32_t vec3ToColour(vec3 vect, int alpha) {
+	uint32_t colour = (alpha << 24) + (int(vect.x) << 16) + (int(vect.y) << 8) + int(vect.z);
+	return colour; 
+}
+
  
 void draw(DrawingWindow &window) {
 	window.clearPixels();
-	std::vector<float> greyscalevector = interpolateSingleFloats(0, 255, WIDTH);
+
+	vec3 topLeft(255, 0, 0);        // red 
+	std::cout << std::bitset<32>(vec3ToColour(vec3(128, 64, 32), 255)) << std::endl;
+	vec3 topRight(0, 0, 255);       // blue 
+	vec3 bottomRight(0, 255, 0);    // green 
+	vec3 bottomLeft(255, 255, 0);   // yellow
+
+	vector<vec3> leftEdge = interpolateThreeElementValues(topLeft, bottomLeft, HEIGHT);
+	vector<vec3> rightEdge = interpolateThreeElementValues(topRight, bottomRight, HEIGHT);
+
 	for (size_t y = 0; y < window.height; y++) {
+		window.setPixelColour(0, y,vec3ToColour(leftEdge.at(y), 255));
+		window.setPixelColour(0, window.height-1,vec3ToColour(rightEdge.at(y), 255));
+		vector<vec3> layer = interpolateThreeElementValues(leftEdge.at(y), rightEdge.at(y), window.width);
 		for (size_t x = 0; x < window.width; x++) {
-			int value = int(greyscalevector.at(x));
-			uint32_t colour = (255 << 24) + (value << 16) + (value << 8) + value;
-			window.setPixelColour(x, y, colour);
+			window.setPixelColour(x, y, vec3ToColour(layer.at(x), 255));
 		}
 	}
+
 }
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {

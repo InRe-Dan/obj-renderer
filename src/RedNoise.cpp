@@ -23,6 +23,7 @@ vector<CanvasTriangle> triangleVector;
 vector<Colour> colourVector;
 
 uint32_t vec3ToColour(vec3 vect, int alpha) {
+	// Convert an RGB value and an alpha value to an int encoding them.
 	uint32_t colour = (alpha << 24) + (int(vect.x) << 16) + (int(vect.y) << 8) + int(vect.z);
 	return colour; 
 }
@@ -73,10 +74,12 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window
 	float xStepSize = xDiff / steps;
 	float yStepSize = yDiff / steps;
 	vec3 colVect(colour.red, colour.green, colour.blue);
-	for (float i = 0.0; i < steps; i++) {
-		float x = from.x + (xStepSize * i);
-		float y = from.y + (yStepSize * i);
-		window.setPixelColour(x, y, vec3ToColour(colVect, 255));
+	float x = from.x;
+	float y = from.y;
+	for (int i = 0; i < steps; i++) {
+		x += xStepSize;
+		y += yStepSize;
+		window.setPixelColour(round(x), round(y), vec3ToColour(colVect, 255));
 	}
 	
 }
@@ -88,19 +91,23 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &win
 }
 
 void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &window) {
+	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
 	CanvasPoint mid = triangle.v1();
 	CanvasPoint bot = triangle.v2();
 	if (top.y > mid.y) std::swap(top, mid);
 	if (mid.y > bot.y) std::swap(mid, bot);
 	if (top.y > mid.y) std::swap(top, mid);
+
+	// Locate point at the same y level from middle vertex
 	const float height = glm::abs(top.y - bot.y);
 	vector<vec2> topToBot = interpolate(top, bot, height);
-	int imaginaryY, imaginaryX = 0;
+	int imaginaryY = 0;
+	int imaginaryX = 0;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
 			imaginaryY = i + top.y;
-			imaginaryX = topToBot.at(i).x;
+			imaginaryX = round(topToBot.at(i).x);
 			break;
 		}
 	}
@@ -108,21 +115,24 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	const float topHeight = glm::abs(top.y - mid.y);
 	const float botHeight = glm::abs(bot.y - mid.y);
 
-	vector<vec2> topToImaginary = interpolate(top, imaginary, int(topHeight));
-	vector<vec2> topToMid = interpolate(top, mid, int(topHeight));
-	vector<vec2> imaginaryToBot = interpolate(imaginary, bot, int(botHeight));
-	vector<vec2> midToBot = interpolate(mid, bot, int(botHeight));
-	for (int i = 0; i < int(topHeight); i++) {
-		vec2 to = topToImaginary.at(i);
-		vec2 from = topToMid.at(i);
+	// Interpolate lines between all 4 points
+	vector<vec2> topToImaginary = interpolate(top, imaginary, topHeight);
+	vector<vec2> topToMid = interpolate(top, mid, topHeight);
+	vector<vec2> imaginaryToBot = interpolate(imaginary, bot, botHeight);
+	vector<vec2> midToBot = interpolate(mid, bot, botHeight);
+	// Colour between top two lines
+	for (int i = 0; i < topHeight; i++) {
+		vec2 to = round(topToImaginary.at(i));
+		vec2 from = round(topToMid.at(i));
 		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
 	}
-	for (int i = 0; i < int(botHeight); i++) {
-		vec2 to = imaginaryToBot.at(i);
-		vec2 from = midToBot.at(i);
+	// Colour between bottom two lines
+	for (int i = 0; i < botHeight; i++) {
+		vec2 to = round(imaginaryToBot.at(i));
+		vec2 from = round(midToBot.at(i));
 		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
 	}
-	line(imaginary, CanvasPoint(0, 0), WHITE, window);
+	// Outline the triangle (For debug purposes)
 	strokedTriangle(triangle, WHITE, window);
 }
 
@@ -182,6 +192,7 @@ void test() {
 
 
 int main(int argc, char *argv[]) {
+	// srand(time(NULL));
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 	// test();

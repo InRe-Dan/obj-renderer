@@ -7,6 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <glm/glm.hpp>
+#include <TextureMap.h>
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -21,6 +22,10 @@ using glm::round;
 
 vector<CanvasTriangle> triangleVector;
 vector<Colour> colourVector;
+vector<CanvasTriangle> filledTriangleVector;
+vector<Colour> filledColourVector;
+
+TextureMap brickMap("texture.ppm");
 
 uint32_t vec3ToColour(vec3 vect, int alpha) {
 	// Convert an RGB value and an alpha value to an int encoding them.
@@ -49,10 +54,15 @@ vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
 	return interpolation;
 }
 
-vector<vec2> interpolate(CanvasPoint fromP, CanvasPoint toP, int steps) {\
-	vec2 from(fromP.x, fromP.y);
-	vec2 to(toP.x, toP.y);
-	return interpolate(from, to, steps);
+vector<vec2> interpolate(CanvasPoint from, CanvasPoint to, int steps) {
+	vec2 fromP(from.x, from.y);
+	vec2 toP(to.x, to.y);
+	return interpolate(fromP, toP, steps);
+}
+vector<vec2> interpolate(TexturePoint from, TexturePoint to, int steps) {
+	vec2 fromP(from.x, from.y);
+	vec2 toP(to.x, to.y);
+	return interpolate(fromP, toP, steps);
 }
 
 
@@ -107,7 +117,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
 			imaginaryY = i + top.y;
-			imaginaryX = round(topToBot.at(i).x);
+			imaginaryX = topToBot.at(i).x;
 			break;
 		}
 	}
@@ -122,17 +132,96 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	vector<vec2> midToBot = interpolate(mid, bot, botHeight);
 	// Colour between top two lines
 	for (int i = 0; i < topHeight; i++) {
-		vec2 to = round(topToImaginary.at(i));
-		vec2 from = round(topToMid.at(i));
+		vec2 to = topToImaginary.at(i);
+		vec2 from = topToMid.at(i);
 		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
 	}
 	// Colour between bottom two lines
 	for (int i = 0; i < botHeight; i++) {
-		vec2 to = round(imaginaryToBot.at(i));
-		vec2 from = round(midToBot.at(i));
+		vec2 to = imaginaryToBot.at(i);
+		vec2 from = midToBot.at(i);
 		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
 	}
 	// Outline the triangle (For debug purposes)
+	strokedTriangle(triangle, WHITE, window);
+}
+
+void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &window) {
+	// Sort vertices by height
+	CanvasPoint top = triangle.v0();
+	CanvasPoint mid = triangle.v1();
+	CanvasPoint bot = triangle.v2();
+	if (top.y > mid.y) std::swap(top, mid);
+	if (mid.y > bot.y) std::swap(mid, bot);
+	if (top.y > mid.y) std::swap(top, mid);
+
+	// Locate point at the same y level from middle vertex
+	const float height = glm::abs(top.y - bot.y);
+	vector<vec2> topToBot = interpolate(top, bot, height);
+	vector<vec2> topToBotT = interpolate(top.texturePoint, bot.texturePoint, height);
+	int imaginaryY = 0;
+	int imaginaryX = 0;
+	int imaginaryYT = 0;
+	int imaginaryXT = 0;
+	for (int i = 0; i < height; i++) {
+		if (topToBot.at(i).y == mid.y) {
+			imaginaryY = topToBot.at(i).y;
+			imaginaryX = topToBot.at(i).x;
+			imaginaryYT = topToBotT.at(i).y;
+			imaginaryXT = topToBotT.at(i).x;
+			break;
+		}
+	}
+	CanvasPoint imaginary(imaginaryX, imaginaryY);
+	imaginary.texturePoint.x = imaginaryXT;
+	imaginary.texturePoint.y = imaginaryYT;
+	const float topHeight = glm::abs(top.y - mid.y);
+	const float botHeight = glm::abs(bot.y - mid.y);
+
+	// Interpolate lines between all 4 points
+	vector<vec2> topToImaginary = interpolate(top, imaginary, topHeight);
+	vector<vec2> topToMid = interpolate(top, mid, topHeight);
+	vector<vec2> imaginaryToBot = interpolate(imaginary, bot, botHeight);
+	vector<vec2> midToBot = interpolate(mid, bot, botHeight);
+
+	vector<vec2> topToImaginaryT = interpolate(top.texturePoint, imaginary.texturePoint, topHeight);
+	vector<vec2> topToMidT = interpolate(top.texturePoint, mid.texturePoint, topHeight);
+	vector<vec2> imaginaryToBotT = interpolate(imaginary.texturePoint, bot.texturePoint, botHeight);
+	vector<vec2> midToBotT = interpolate(mid.texturePoint, bot.texturePoint, botHeight);
+	// Colour between top two lines
+	for (int i = 0; i < topHeight; i++) {
+		vec2 to = topToImaginary.at(i);
+		vec2 from = topToMid.at(i);
+		vec2 toT = topToImaginaryT.at(i);
+		vec2 fromT = topToMidT.at(i);
+		int width = abs(to.x - from.x);
+		vector<vec2> interpolated = interpolate(to, from, width);
+		vector<vec2> interpolatedT = interpolate(toT, fromT, width);
+		for (int j = 0; j < width; j++) {
+			int x = round(interpolated.at(j).x);
+			int y = round(interpolated.at(j).y);
+			int xT = round(interpolatedT.at(j).x);
+			int yT = round(interpolatedT.at(j).y);
+			window.setPixelColour(x, y, map.pixels.at(yT * map.width + xT));
+		}
+	}
+	// Colour between bottom two lines
+	for (int i = 0; i < botHeight; i++) {
+		vec2 to = imaginaryToBot.at(i);
+		vec2 from = midToBot.at(i);
+		vec2 toT = imaginaryToBotT.at(i);
+		vec2 fromT = midToBotT.at(i);
+		int width = abs(to.x - from.x);
+		vector<vec2> interpolated = interpolate(to, from, width);
+		vector<vec2> interpolatedT = interpolate(toT, fromT, width);
+		for (int j = 0; j < width; j++) {
+			int x = round(interpolated.at(j).x);
+			int y = round(interpolated.at(j).y);
+			int xT = round(interpolatedT.at(j).x);
+			int yT = round(interpolatedT.at(j).y);
+			window.setPixelColour(x, y, map.pixels.at(yT * map.width + xT));
+		}
+	}
 	strokedTriangle(triangle, WHITE, window);
 }
 
@@ -142,6 +231,13 @@ void addStrokedTriangle() {
 	CanvasPoint v2(rand() % (WIDTH - 1), rand() % (HEIGHT - 1));
 	triangleVector.push_back(CanvasTriangle(v0, v1, v2));
 	colourVector.push_back(Colour(rand() % 256, rand() % 256, rand() % 256));
+}
+void addFilledTriangle() {
+	CanvasPoint v0(rand() % (WIDTH - 1), rand() % (HEIGHT - 1));
+	CanvasPoint v1(rand() % (WIDTH - 1), rand() % (HEIGHT - 1));
+	CanvasPoint v2(rand() % (WIDTH - 1), rand() % (HEIGHT - 1));
+	filledTriangleVector.push_back(CanvasTriangle(v0, v1, v2));
+	filledColourVector.push_back(Colour(rand() % 256, rand() % 256, rand() % 256));
 }
 
  
@@ -166,6 +262,17 @@ void draw(DrawingWindow &window) {
 	for (int i = 0; i < triangleVector.size(); i++) {
 		filledTriangle(triangleVector.at(i), colourVector.at(i), window);
 	}
+	for (int i = 0; i < filledTriangleVector.size(); i++) {
+		filledTriangle(filledTriangleVector.at(i), filledColourVector.at(i), window);
+	}
+	CanvasPoint _one(160, 10); _one.texturePoint.x = 195, _one.texturePoint.y = 5;
+	CanvasPoint _two(300, 230); _two.texturePoint.x = 395; _two.texturePoint.y = 380;
+	CanvasPoint _three(10, 150); _three.texturePoint.x = 65; _three.texturePoint.y = 330;
+	const CanvasPoint one = _one;
+	const CanvasPoint two = _two;
+	const CanvasPoint three = _three;
+	CanvasTriangle triangle(one, two, three);
+	texturedTriangle(triangle, brickMap, window);
 
 }
 
@@ -176,6 +283,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
 		else if (event.key.keysym.sym == SDLK_u) addStrokedTriangle();
+		else if (event.key.keysym.sym == SDLK_f) addFilledTriangle();
+
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 		window.savePPM("output.ppm");
 		window.saveBMP("output.bmp");

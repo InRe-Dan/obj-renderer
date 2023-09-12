@@ -259,6 +259,9 @@ int main(int argc, char *argv[]) {
 	// srand(time(NULL));
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
+	ObjectFile cornell("cornell-box.obj", 0.17f);
+	cornell.printFaces();
+	cornell.printVertices();
 	// test();
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !

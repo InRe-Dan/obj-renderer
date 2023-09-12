@@ -9,34 +9,110 @@
 #include <glm/glm.hpp>
 #include <TextureMap.h>
 #include <ModelTriangle.h>
+#include <iostream>
 
 using std::vector;
 using glm::vec3;
 using glm::vec2;
 using glm::round;
+using std::string;
+using std::stof;
+using std::atoi;
+using std::cout;
 
-vec3 parseVector(std::string input) {
 
+vec3 parseVertex(std::string input) {
+	vector<std::string> splitStr = split(input, ' ');
+	vec3 result(stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
+	return result;
 }
 
 vec3 parseFace(std::string input) {
-
+	vector<std::string> splitStr = split(input, ' ');
+	int a, b, c;
+	a = atoi(split(splitStr.at(1), '/').at(0).c_str());
+	b = atoi(split(splitStr.at(2), '/').at(0).c_str());
+	c = atoi(split(splitStr.at(3), '/').at(0).c_str());
+	return vec3(a, b, c);
 }
 
-vector<ModelTriangle> readOBJ(const char *filename, float scale) {
-	std::ifstream inputStream;
-	inputStream.open(filename, std::ios::in);
-	vector<vec3> vertices;
-	vector<ModelTriangle> triangles;
-	std::string line;
-	for (int lines = 0; std::getline(inputStream,line); lines++) {
-        vector<std::string> splitLine = split(line, ' ');
-
-        if (splitLine.at(0).compare("v") == 0) {
-
-        }
-        // And so on
+class Object {
+	public:
+	Object(string id) {
+		name = id;
 	}
-	inputStream.close();
-	return triangles;
-}
+	void setMaterial(string m) {
+		material = m;
+	}
+	vector<ModelTriangle> triangles;
+	private:
+	string material;
+	string name;
+};
+
+class ObjectFile {
+	public:
+	ObjectFile(const char *filename, float scale) {
+		file = filename;
+		scaleFactor = scale;
+		std::ifstream inputStream;
+		inputStream.open(filename, std::ios::in);
+		std::string line;
+		for (int lines = 0; std::getline(inputStream,line); lines++) {
+			std::string code = split(line, ' ').at(0);
+
+			if (code.compare("mtllib") == 0) {
+				materialLib = split(line, ' ').at(1);
+			} else if (code.compare("o") == 0) {
+				objects.push_back(Object(split(line, ' ').at(1)));
+			} else if (code.compare("usemtl") == 0) {
+				objects.at(objects.size() - 1).setMaterial(split(line, ' ').at(1));
+			} else if (code.compare("v") == 0) {
+				vec3 vertex = parseVertex(line);
+				vertices.push_back(vertex);
+			} else if (code.compare("f") == 0) {
+				vec3 face = parseFace(line);
+				std::array<vec3, 3> faceVertices;
+				faceVertices[0] = vertices.at(face.x - 1);
+				faceVertices[1] = vertices.at(face.y - 1);
+				faceVertices[2] = vertices.at(face.x - 1);
+				ModelTriangle faceTriangle;
+				faceTriangle.vertices = faceVertices;\
+				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
+				faces.push_back(face);
+			}
+		}
+		inputStream.close();
+	}
+	void printVertices() {
+		cout << "Vertices of " << file << std::endl;
+		for (int i = 0; i < vertices.size(); i++) {
+			vec3 current = vertices.at(i);
+			cout << '(' << current.x << ", " << current.y << ", " << current.z << ")" << std::endl;
+		}
+		cout << std::endl;
+	}
+	void printFaces() {
+		cout << "Faces of " << file << std::endl;
+		for (int i = 0; i < faces.size(); i++) {
+			vec3 current = faces.at(i);
+			cout << '(' << current.x << ", " << current.y << ", " << current.z << ")" << std::endl;
+		}
+		cout << std::endl;
+		cout << "Test triangle: ";
+		cout << objects.at(0).triangles.at(0);
+	}
+
+	vector<ModelTriangle> getTriangles() {
+		return vector<ModelTriangle>();
+	}
+
+	private:
+	string materialLib;
+	vector<vec3> vertices;
+	vector<vec3> faces;
+	vector<Object> objects;
+	const char *file;
+	float scaleFactor;
+};
+

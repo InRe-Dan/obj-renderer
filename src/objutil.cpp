@@ -10,12 +10,14 @@
 #include <TextureMap.h>
 #include <ModelTriangle.h>
 #include <iostream>
+#include <unordered_map>
 
 using std::vector;
 using glm::vec3;
 using glm::vec2;
 using glm::round;
 using std::string;
+using std::ifstream;
 using std::stof;
 using std::atoi;
 using std::cout;
@@ -36,6 +38,61 @@ vec3 parseFace(std::string input) {
 	return vec3(a, b, c);
 }
 
+class Material {
+	public:
+		Material(string name="UNSET") {
+			materialName = name;
+		}
+		void setDiffuseColour(vec3 colour) {
+			floatDiffuseColour = colour;
+			packedDiffuseRGB = 255 << 24;
+			packedDiffuseRGB += int(colour.x * 255) << 16;
+			packedDiffuseRGB += int(colour.y * 255) << 8;
+			packedDiffuseRGB += int(colour.z);
+		}
+		uint32_t getDiffuseColour() {
+			return packedDiffuseRGB;
+		}
+	private:
+		string materialName;
+		vec3 floatDiffuseColour;
+		uint32_t packedDiffuseRGB = 0;
+};
+
+class MaterialLibrary {
+	public:
+		MaterialLibrary(string filename="UNSET") {
+			file = filename;
+			ifstream inputStream;
+			inputStream.open(filename, std::ios::in);
+			string line, code, materialName;
+			for (int lines = 0; std::getline(inputStream,line); lines++) {
+				string code = split(line, ' ').at(0);
+				if (code.compare("newmtl") == 0) {
+					materialName = split(line, ' ').at(1);
+					Material newMatObject(materialName);
+					materials[materialName] = newMatObject;
+				} else if (code.compare("Kd") == 0) {
+					vector<string> lineSplit = split(line, ' ');
+					vec3 rgb(stof(lineSplit.at(1)), stof(lineSplit.at(2)), stof(lineSplit.at(3)));
+					materials[materialName].setDiffuseColour(rgb);
+				}
+			}
+			inputStream.close();
+			printMaterials();
+		}
+		void printMaterials() {
+			std::unordered_map<string, Material>::iterator itr;
+			for(itr=materials.begin();itr!=materials.end();itr++)
+			{
+				cout<<itr->first<<" "<<itr->second.getDiffuseColour()<<std::endl;
+			}
+		}
+	private:
+		string file;
+		std::unordered_map<string, Material> materials;
+};
+
 class Object {
 	public:
 	Object(string id) {
@@ -55,14 +112,15 @@ class ObjectFile {
 	ObjectFile(const char *filename, float scale) {
 		file = filename;
 		scaleFactor = scale;
-		std::ifstream inputStream;
+		ifstream inputStream;
 		inputStream.open(filename, std::ios::in);
-		std::string line;
+		string line;
 		for (int lines = 0; std::getline(inputStream,line); lines++) {
-			std::string code = split(line, ' ').at(0);
-
+			string code = split(line, ' ').at(0);
 			if (code.compare("mtllib") == 0) {
 				materialLib = split(line, ' ').at(1);
+				matLib = MaterialLibrary(materialLib);
+				
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));
 			} else if (code.compare("usemtl") == 0) {
@@ -108,6 +166,7 @@ class ObjectFile {
 	}
 
 	private:
+	MaterialLibrary matLib;
 	string materialLib;
 	vector<vec3> vertices;
 	vector<vec3> faces;

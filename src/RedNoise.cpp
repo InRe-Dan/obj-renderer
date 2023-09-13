@@ -28,7 +28,29 @@ vector<Colour> colourVector;
 vector<CanvasTriangle> filledTriangleVector;
 vector<Colour> filledColourVector;
 
+// Convention will be that the positive Z axis goes from the image plane towards the camera.
+vec3 cameraPosition(0.0, 0.0, 4);
+float focalLength = 2;
+ObjectFile cornell("cornell-box.obj", 0.17f);
+
 TextureMap brickMap("texture.ppm");
+
+CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition, float focalLength) {
+	// CanvasPoint = u, v
+	// Vertex = x, y, z
+	// Focal length = f
+	// Plane dimensions = W, H
+	// u = f * (x/z) + W/2
+	// v = f * (y/z) + H/2
+	// All coordinates are relative to the camera!
+
+	// First we need to translate the vertex point
+	vec3 vertexToCamera = vertexPosition - cameraPosition;
+
+	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
+	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50+ HEIGHT/2;
+	return CanvasPoint(u, v);
+}
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
 	// TODO use existing functions? workbook implies so
@@ -210,7 +232,7 @@ void draw(DrawingWindow &window) {
 	for (size_t y = 0; y < window.height; y++) {
 		vector<vec3> layer = interpolate(leftEdge.at(y), rightEdge.at(y), window.width);
 		for (size_t x = 0; x < window.width; x++) {
-			// window.setPixelColour(x, y, vec3ToColour(layer.at(x), 255));
+			window.setPixelColour(x, y, 0xff000000);
 		}
 	}
 	for (int i = 0; i < triangleVector.size(); i++) {
@@ -219,25 +241,42 @@ void draw(DrawingWindow &window) {
 	for (int i = 0; i < filledTriangleVector.size(); i++) {
 		filledTriangle(filledTriangleVector.at(i), filledColourVector.at(i), window);
 	}
+	vector<ModelTriangle> cornellTriangles = cornell.getTriangles();
+	for (int i = 0; i < cornellTriangles.size(); i++) {
+		CanvasPoint a = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(0), focalLength);
+		CanvasPoint b = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(1), focalLength);
+		CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(2), focalLength);
+		CanvasTriangle canvasTriangle(a, b, c);
+		filledTriangle(canvasTriangle, cornellTriangles.at(i).colour, window);
+		strokedTriangle(canvasTriangle, WHITE, window);
+	}
+	/*
 	CanvasPoint _one(160, 10); _one.texturePoint.x = 195, _one.texturePoint.y = 5;
 	CanvasPoint _two(300, 230); _two.texturePoint.x = 395; _two.texturePoint.y = 380;
 	CanvasPoint _three(10, 150); _three.texturePoint.x = 65; _three.texturePoint.y = 330;
 	const CanvasPoint one = _one;
 	const CanvasPoint two = _two;
-	const CanvasPoint three = _three;
-	CanvasTriangle triangle(one, two, three);
-	texturedTriangle(triangle, brickMap, window);
+	// const CanvasPoint three = _three;
+	// CanvasTriangle triangle(one, two, three);
+	// texturedTriangle(triangle, brickMap, window);
+	*/
 
 }
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
-		if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
-		else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
-		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
-		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+		if (event.key.keysym.sym == SDLK_LEFT) cameraPosition += vec3(-0.1, 0, 0);
+		else if (event.key.keysym.sym == SDLK_RIGHT) cameraPosition += vec3(+0.1, 0, 0);
+		else if (event.key.keysym.sym == SDLK_UP) cameraPosition += vec3(0, 0.1, 0);
+		else if (event.key.keysym.sym == SDLK_DOWN) cameraPosition += vec3(0, -0.1, 0);
+		else if (event.key.keysym.sym == SDLK_w) cameraPosition += vec3(0, 0, -0.1);
+		else if (event.key.keysym.sym == SDLK_s) cameraPosition += vec3(0, 0, +0.1);
+		else if (event.key.keysym.sym == SDLK_a) focalLength -= 0.1;
+		else if (event.key.keysym.sym == SDLK_d) focalLength += 0.1;
 		else if (event.key.keysym.sym == SDLK_u) addStrokedTriangle();
 		else if (event.key.keysym.sym == SDLK_f) addFilledTriangle();
+		cout << "Camera Position: " << cameraPosition.x << " " << cameraPosition.y << " " << cameraPosition.z << std::endl;
+		cout << "Focal Length: " << focalLength << std::endl;
 
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 		window.savePPM("output.ppm");
@@ -255,13 +294,9 @@ void test() {
 
 
 int main(int argc, char *argv[]) {
-	readOBJ("cornell-box.obj", 0.17);
 	// srand(time(NULL));
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
-	ObjectFile cornell("cornell-box.obj", 0.17f);
-	cornell.printFaces();
-	cornell.printVertices();
 	// test();
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !

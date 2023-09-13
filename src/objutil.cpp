@@ -81,6 +81,9 @@ class MaterialLibrary {
 			inputStream.close();
 			printMaterials();
 		}
+		std::unordered_map<string, Material> getMaterials() {
+			return materials;
+		}
 		void printMaterials() {
 			std::unordered_map<string, Material>::iterator itr;
 			for(itr=materials.begin();itr!=materials.end();itr++)
@@ -102,8 +105,8 @@ class Object {
 		material = m;
 	}
 	vector<ModelTriangle> triangles;
-	private:
 	string material;
+	private:
 	string name;
 };
 
@@ -127,15 +130,17 @@ class ObjectFile {
 				objects.at(objects.size() - 1).setMaterial(split(line, ' ').at(1));
 			} else if (code.compare("v") == 0) {
 				vec3 vertex = parseVertex(line);
-				vertices.push_back(vertex);
+				vertices.push_back(vertex * scaleFactor);
 			} else if (code.compare("f") == 0) {
 				vec3 face = parseFace(line);
 				std::array<vec3, 3> faceVertices;
 				faceVertices[0] = vertices.at(face.x - 1);
 				faceVertices[1] = vertices.at(face.y - 1);
-				faceVertices[2] = vertices.at(face.x - 1);
+				faceVertices[2] = vertices.at(face.z - 1);
 				ModelTriangle faceTriangle;
-				faceTriangle.vertices = faceVertices;\
+				uint32_t ci = matLib.getMaterials()[objects.at(objects.size() - 1).material].getDiffuseColour();
+				faceTriangle.colour = Colour((ci>>8) & 0x00FF0000, (ci>>16) & 0x0000FF00, (ci>>24) & 0x000000FF);
+				faceTriangle.vertices = faceVertices;
 				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
 				faces.push_back(face);
 			}
@@ -162,7 +167,13 @@ class ObjectFile {
 	}
 
 	vector<ModelTriangle> getTriangles() {
-		return vector<ModelTriangle>();
+		vector<ModelTriangle> triangles;
+		for (int i = 0; i < objects.size(); i++) {
+			for (int j = 0; j < objects.at(i).triangles.size(); j++) {
+				triangles.push_back(objects.at(i).triangles.at(j));
+			}
+		}
+		return triangles;
 	}
 
 	private:

@@ -33,6 +33,8 @@ vector<float> interpolate(float from, float to, int steps) {
 }
 
 vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
+	if (steps == 1) {vector<vec2> vec; vec.push_back(from); return vec;};
+	if (steps == 1) {vector<vec2> vec; vec.push_back(from); vec.push_back(to); return vec;};
 	vec2 diff = to - from;
 	vec2 interval = diff * float(1) / float(steps);
 	vector<vec2> interpolation;

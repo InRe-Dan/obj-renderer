@@ -85,11 +85,13 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	if (mid.y > bot.y) std::swap(mid, bot);
 	if (top.y > mid.y) std::swap(top, mid);
 
+
 	// Locate point at the same y level from middle vertex
-	const float height = glm::abs(top.y - bot.y);
+	int height = round(glm::abs(top.y - bot.y));
 	vector<vec2> topToBot = interpolate(top, bot, height);
-	int imaginaryY = 0;
-	int imaginaryX = 0;
+
+	int imaginaryY = mid.y;
+	int imaginaryX = mid.x;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
 			imaginaryY = i + top.y;
@@ -97,9 +99,10 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 			break;
 		}
 	}
+
 	CanvasPoint imaginary(imaginaryX, imaginaryY);
-	const float topHeight = glm::abs(top.y - mid.y);
-	const float botHeight = glm::abs(bot.y - mid.y);
+	const float topHeight = round(glm::abs(top.y - mid.y));
+	const float botHeight = round(glm::abs(bot.y - mid.y));
 
 	// Interpolate lines between all 4 points
 	vector<vec2> topToImaginary = interpolate(top, imaginary, topHeight);
@@ -218,37 +221,21 @@ void addFilledTriangle() {
 
  
 void draw(DrawingWindow &window) {
-	static int ticks;
-	ticks++;
-
-	vec3 topLeft(255, 0, 0);        // red 
-	vec3 topRight(0, 0, 255);       // blue 
-	vec3 bottomRight(0, 255, 0);    // green 
-	vec3 bottomLeft(255, 255, 0);   // yellow
-
-	vector<vec3> leftEdge = interpolate(topLeft, bottomLeft, HEIGHT);
-	vector<vec3> rightEdge = interpolate(topRight, bottomRight, HEIGHT);
-
 	for (size_t y = 0; y < window.height; y++) {
-		vector<vec3> layer = interpolate(leftEdge.at(y), rightEdge.at(y), window.width);
 		for (size_t x = 0; x < window.width; x++) {
 			window.setPixelColour(x, y, 0xff000000);
 		}
 	}
-	for (int i = 0; i < triangleVector.size(); i++) {
-		filledTriangle(triangleVector.at(i), colourVector.at(i), window);
-	}
-	for (int i = 0; i < filledTriangleVector.size(); i++) {
-		filledTriangle(filledTriangleVector.at(i), filledColourVector.at(i), window);
-	}
-	vector<ModelTriangle> cornellTriangles = cornell.getTriangles();
-	for (int i = 0; i < cornellTriangles.size(); i++) {
-		CanvasPoint a = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(0), focalLength);
-		CanvasPoint b = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(1), focalLength);
-		CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, cornellTriangles.at(i).vertices.at(2), focalLength);
-		CanvasTriangle canvasTriangle(a, b, c);
-		filledTriangle(canvasTriangle, cornellTriangles.at(i).colour, window);
-		strokedTriangle(canvasTriangle, WHITE, window);
+	vector<Object> objects = cornell.getObjects();
+	for (Object object : objects) {
+		for (ModelTriangle triangle : object.triangles) {
+			CanvasPoint a = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(0), focalLength);
+			CanvasPoint b = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(1), focalLength);
+			CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(2), focalLength);
+			CanvasTriangle canvasTriangle(a, b, c);
+			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
+			strokedTriangle(canvasTriangle, WHITE, window);
+		}
 	}
 	/*
 	CanvasPoint _one(160, 10); _one.texturePoint.x = 195, _one.texturePoint.y = 5;

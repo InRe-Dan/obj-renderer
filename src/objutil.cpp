@@ -106,7 +106,6 @@ class Object {
 	}
 	vector<ModelTriangle> triangles;
 	string material;
-	private:
 	string name;
 };
 
@@ -137,9 +136,7 @@ class ObjectFile {
 				faceVertices[0] = vertices.at(face.x - 1);
 				faceVertices[1] = vertices.at(face.y - 1);
 				faceVertices[2] = vertices.at(face.z - 1);
-				ModelTriangle faceTriangle;
-				uint32_t ci = matLib.getMaterials()[objects.at(objects.size() - 1).material].getDiffuseColour();
-				faceTriangle.colour = Colour((ci>>8) & 0x00FF0000, (ci>>16) & 0x0000FF00, (ci>>24) & 0x000000FF);
+				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
 				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
 				faces.push_back(face);
@@ -166,14 +163,13 @@ class ObjectFile {
 		cout << objects.at(0).triangles.at(0);
 	}
 
-	vector<ModelTriangle> getTriangles() {
-		vector<ModelTriangle> triangles;
-		for (int i = 0; i < objects.size(); i++) {
-			for (int j = 0; j < objects.at(i).triangles.size(); j++) {
-				triangles.push_back(objects.at(i).triangles.at(j));
-			}
-		}
-		return triangles;
+	vector<Object> getObjects() {
+		return objects;
+	}
+
+	Colour getKdOf(Object object) {
+		uint32_t ci = matLib.getMaterials()[object.material].getDiffuseColour();
+		return Colour((ci & 0x00FF0000) >> 16, (ci & 0x0000FF00) >> 8, ci & 0x000000FF);
 	}
 
 	private:

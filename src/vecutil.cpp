@@ -15,6 +15,18 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
+vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight) {
+  vector<CanvasPoint> returnVector;
+  for (CanvasPoint point : input) {
+    if (topLeft.x > point.x) continue;
+    if (bottomRight.x < point.x) continue;
+    if (topLeft.y > point.y) continue;
+    if (bottomRight.y < point.y) continue;
+    returnVector.push_back(point);
+  }
+  return returnVector;
+}
+
 uint32_t vec3ToColour(vec3 vect, int alpha) {
 	// Convert an RGB value and an alpha value to an int encoding them.
 	uint32_t colour = (alpha << 24) + (int(vect.x) << 16) + (int(vect.y) << 8) + int(vect.z);

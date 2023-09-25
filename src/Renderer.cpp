@@ -56,25 +56,21 @@ CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition,
 
 	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
 	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
-	return CanvasPoint(u, v, vertexToCamera.length());
+	return CanvasPoint(u, v, vertexToCamera.z);
 }
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
-	// TODO use existing functions? workbook implies so
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
 	float steps = glm::max(glm::abs(xDiff), glm::abs(yDiff));
-	float xStepSize = xDiff / steps;
-	float yStepSize = yDiff / steps;
+	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(0, 0), vec2(WIDTH-1, HEIGHT-1));
 	vec3 colVect(colour.red, colour.green, colour.blue);
-	float x = from.x;
-	float y = from.y;
-	for (int i = 0; i < steps; i++) {
-		x += xStepSize;
-		y += yStepSize;
-		window.setPixelColour(round(x), round(y), vec3ToColour(colVect, 255));
-	}
-	
+  for (CanvasPoint point : interpolation) {
+    if (depthBuffer.at(round(point.y)).at(round(point.x)) < 1 / point.depth) {
+      depthBuffer.at(round(point.y)).at(round(point.x)) = 1 / point.depth;
+      window.setPixelColour(round(point.x), round(point.y), vec3ToColour(colVect, 255));
+    }
+  }
 }
 
 void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &window) {
@@ -84,7 +80,6 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &win
 }
 
 void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, DrawingWindow &window) {
-  cout << point << " | " << base1 << " | " << base2 << "\n";
 	assert(round(base1.y) == round(base2.y));
 	vector<CanvasPoint> pointToOne = interpolate(point, base1, round(abs(point.y - base1.y)));
 	vector<CanvasPoint> pointToTwo = interpolate(point, base2, round(abs(point.y - base2.y)));

@@ -86,11 +86,11 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &win
 void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, DrawingWindow &window) {
   cout << point << " | " << base1 << " | " << base2 << "\n";
 	assert(round(base1.y) == round(base2.y));
-	vector<vec2> pointToOne = interpolate(point, base1, round(abs(point.y - base1.y)));
-	vector<vec2> pointToTwo = interpolate(point, base2, round(abs(point.y - base2.y)));
+	vector<CanvasPoint> pointToOne = interpolate(point, base1, round(abs(point.y - base1.y)));
+	vector<CanvasPoint> pointToTwo = interpolate(point, base2, round(abs(point.y - base2.y)));
 	for (int i = 0; i < round(abs(point.y - base1.y)); i++) {
-		vec2 to = pointToOne.at(i);
-		vec2 from = pointToTwo.at(i);
+		CanvasPoint to = pointToOne.at(i);
+		CanvasPoint from = pointToTwo.at(i);
 		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
 	}
 }
@@ -112,7 +112,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 
 	// Locate point at the same y level from middle vertex
 	int height = round(glm::abs(top.y - bot.y));
-	vector<vec2> topToBot = interpolate(top, bot, height);
+	vector<CanvasPoint> topToBot = interpolate(top, bot, height);
 
 
 	float imaginaryY = mid.y;
@@ -152,7 +152,7 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 
 	// Locate point at the same y level from middle vertex
 	const float height = glm::abs(top.y - bot.y);
-	vector<vec2> topToBot = interpolate(top, bot, height);
+	vector<CanvasPoint> topToBot = interpolate(top, bot, height);
 	vector<vec2> topToBotT = interpolate(top.texturePoint, bot.texturePoint, height);
 	int imaginaryY = 0;
 	int imaginaryX = 0;
@@ -174,10 +174,10 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 	const float botHeight = glm::abs(bot.y - mid.y);
 
 	// Interpolate lines between all 4 points
-	vector<vec2> topToImaginary = interpolate(top, imaginary, topHeight);
-	vector<vec2> topToMid = interpolate(top, mid, topHeight);
-	vector<vec2> imaginaryToBot = interpolate(imaginary, bot, botHeight);
-	vector<vec2> midToBot = interpolate(mid, bot, botHeight);
+	vector<CanvasPoint> topToImaginary = interpolate(top, imaginary, topHeight);
+	vector<CanvasPoint> topToMid = interpolate(top, mid, topHeight);
+	vector<CanvasPoint> imaginaryToBot = interpolate(imaginary, bot, botHeight);
+	vector<CanvasPoint> midToBot = interpolate(mid, bot, botHeight);
 
 	vector<vec2> topToImaginaryT = interpolate(top.texturePoint, imaginary.texturePoint, topHeight);
 	vector<vec2> topToMidT = interpolate(top.texturePoint, mid.texturePoint, topHeight);
@@ -185,12 +185,12 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 	vector<vec2> midToBotT = interpolate(mid.texturePoint, bot.texturePoint, botHeight);
 	// Colour between top two lines
 	for (int i = 0; i < topHeight; i++) {
-		vec2 to = topToImaginary.at(i);
-		vec2 from = topToMid.at(i);
+		CanvasPoint to = topToImaginary.at(i);
+		CanvasPoint from = topToMid.at(i);
 		vec2 toT = topToImaginaryT.at(i);
 		vec2 fromT = topToMidT.at(i);
 		int width = abs(to.x - from.x);
-		vector<vec2> interpolated = interpolate(to, from, width);
+		vector<CanvasPoint> interpolated = interpolate(to, from, width);
 		vector<vec2> interpolatedT = interpolate(toT, fromT, width);
 		for (int j = 0; j < width; j++) {
 			int x = round(interpolated.at(j).x);
@@ -202,12 +202,12 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 	}
 	// Colour between bottom two lines
 	for (int i = 0; i < botHeight; i++) {
-		vec2 to = imaginaryToBot.at(i);
-		vec2 from = midToBot.at(i);
+		CanvasPoint to = imaginaryToBot.at(i);
+		CanvasPoint from = midToBot.at(i);
 		vec2 toT = imaginaryToBotT.at(i);
 		vec2 fromT = midToBotT.at(i);
 		int width = abs(to.x - from.x);
-		vector<vec2> interpolated = interpolate(to, from, width);
+		vector<CanvasPoint> interpolated = interpolate(to, from, width);
 		vector<vec2> interpolatedT = interpolate(toT, fromT, width);
 		for (int j = 0; j < width; j++) {
 			int x = round(interpolated.at(j).x);

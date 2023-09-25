@@ -44,10 +44,17 @@ vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
 	return interpolation;
 }
 
-vector<vec2> interpolate(CanvasPoint from, CanvasPoint to, int steps) {
-	vec2 fromP(from.x, from.y);
-	vec2 toP(to.x, to.y);
-	return interpolate(fromP, toP, steps);
+vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
+  vec3 to(toC.x, toC.y, toC.depth);
+  vec3 from(fromC.x, fromC.y, fromC.depth);
+	vec3 diff = to - from;
+	vec3 interval = diff * float(1) / float(steps);
+	vector<CanvasPoint> interpolation;
+	for (int i = 0; i < steps; i++) {
+    vec3 newCP = from + float(i) * interval;
+		interpolation.push_back(CanvasPoint(newCP.x, newCP.y, newCP.z));
+	}
+	return interpolation;
 }
 vector<vec2> interpolate(TexturePoint from, TexturePoint to, int steps) {
 	vec2 fromP(from.x, from.y);

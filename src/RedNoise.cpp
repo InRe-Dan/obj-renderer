@@ -29,9 +29,11 @@ vector<CanvasTriangle> filledTriangleVector;
 vector<Colour> filledColourVector;
 
 // Convention will be that the positive Z axis goes from the image plane towards the camera.
-vec3 cameraPosition(0.0, 0.0, 4);
+vec3 cameraPosition(0.0, 0.0, 4.0);
 float focalLength = 2;
 ObjectFile cornell("cornell-box.obj", 0.17f);
+ObjectFile plane("simple-plane.obj", 0.17f);
+
 
 TextureMap brickMap("texture.ppm");
 
@@ -48,11 +50,12 @@ CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition,
 	vec3 vertexToCamera = vertexPosition - cameraPosition;
 
 	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
-	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50+ HEIGHT/2;
+	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
 	return CanvasPoint(u, v);
 }
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
+	cout << "L";
 	// TODO use existing functions? workbook implies so
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
@@ -76,7 +79,21 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &win
 	line(triangle.v2(), triangle.v0(), colour, window);
 }
 
+void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, DrawingWindow &window) {
+	assert(round(base1.y) == round(base2.y));
+	vector<vec2> pointToOne = interpolate(point, base1, round(abs(point.y - base1.y)));
+	vector<vec2> pointToTwo = interpolate(point, base2, round(abs(point.y - base1.y)));
+	for (int i = 0; i < round(point.y - base1.y); i++) {
+		vec2 to = pointToOne.at(i);
+		vec2 from = pointToTwo.at(i);
+		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
+	}
+}
+
+
+
 void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &window) {
+	cout << "Triangle: " << "\n";
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
 	CanvasPoint mid = triangle.v1();
@@ -84,14 +101,18 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	if (top.y > mid.y) std::swap(top, mid);
 	if (mid.y > bot.y) std::swap(mid, bot);
 	if (top.y > mid.y) std::swap(top, mid);
+	top = CanvasPoint(round(top.x), round(top.y));
+	mid = CanvasPoint(round(mid.x), round(mid.y));
+	bot = CanvasPoint(round(bot.x), round(bot.y));
 
 
 	// Locate point at the same y level from middle vertex
 	int height = round(glm::abs(top.y - bot.y));
 	vector<vec2> topToBot = interpolate(top, bot, height);
 
-	int imaginaryY = mid.y;
-	int imaginaryX = mid.x;
+
+	float imaginaryY = mid.y;
+	float imaginaryX = mid.x;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
 			imaginaryY = i + top.y;
@@ -101,25 +122,20 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	}
 
 	CanvasPoint imaginary(imaginaryX, imaginaryY);
-	const float topHeight = round(glm::abs(top.y - mid.y));
-	const float botHeight = round(glm::abs(bot.y - mid.y));
 
-	// Interpolate lines between all 4 points
-	vector<vec2> topToImaginary = interpolate(top, imaginary, topHeight);
-	vector<vec2> topToMid = interpolate(top, mid, topHeight);
-	vector<vec2> imaginaryToBot = interpolate(imaginary, bot, botHeight);
-	vector<vec2> midToBot = interpolate(mid, bot, botHeight);
-	// Colour between top two lines
-	for (int i = 0; i < topHeight; i++) {
-		vec2 to = topToImaginary.at(i);
-		vec2 from = topToMid.at(i);
-		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
-	}
-	// Colour between bottom two lines
-	for (int i = 0; i < botHeight; i++) {
-		vec2 to = imaginaryToBot.at(i);
-		vec2 from = midToBot.at(i);
-		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
+	if (round(mid.y) == round(top.y)) {
+		cout << "\nCase 1";
+		rasterizeTriangle(bot, top, mid, colour, window);
+	} 
+	else if (round(mid.y) == round(bot.y)) {
+		cout << "\nCase 2";
+
+		rasterizeTriangle(top, mid, bot, colour, window);
+	} else {
+		cout << "\nCase 3";
+		rasterizeTriangle(top, mid, imaginary, colour, window);
+		cout << "\nPart 2";
+		rasterizeTriangle(bot, mid, imaginary, colour, window);
 	}
 	// Outline the triangle (For debug purposes)
 	strokedTriangle(triangle, WHITE, window);
@@ -228,15 +244,18 @@ void draw(DrawingWindow &window) {
 	}
 	vector<Object> objects = cornell.getObjects();
 	for (Object object : objects) {
+		cout << "OBJECT " << object.name << "=================\n";
 		for (ModelTriangle triangle : object.triangles) {
 			CanvasPoint a = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(0), focalLength);
 			CanvasPoint b = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(1), focalLength);
 			CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(2), focalLength);
 			CanvasTriangle canvasTriangle(a, b, c);
+			cout << canvasTriangle << "with colour " << cornell.getKdOf(object) << "\n";
 			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
-			strokedTriangle(canvasTriangle, WHITE, window);
 		}
 	}
+
+	cout << std::endl;
 	/*
 	CanvasPoint _one(160, 10); _one.texturePoint.x = 195, _one.texturePoint.y = 5;
 	CanvasPoint _two(300, 230); _two.texturePoint.x = 395; _two.texturePoint.y = 380;
@@ -285,6 +304,7 @@ int main(int argc, char *argv[]) {
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 	// test();
+	plane.printObjectMaterials();
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);

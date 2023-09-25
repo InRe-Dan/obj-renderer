@@ -48,13 +48,13 @@ class Material {
 			packedDiffuseRGB = 255 << 24;
 			packedDiffuseRGB += int(colour.x * 255) << 16;
 			packedDiffuseRGB += int(colour.y * 255) << 8;
-			packedDiffuseRGB += int(colour.z);
+			packedDiffuseRGB += int(colour.z * 255);
 		}
 		uint32_t getDiffuseColour() {
 			return packedDiffuseRGB;
 		}
+	string materialName;
 	private:
-		string materialName;
 		vec3 floatDiffuseColour;
 		uint32_t packedDiffuseRGB = 0;
 };
@@ -144,6 +144,17 @@ class ObjectFile {
 		}
 		inputStream.close();
 	}
+	void printObjectMaterials() {
+		for (Object object : objects) {
+			Material mat = matLib.getMaterials()[object.material];
+			uint32_t col = mat.getDiffuseColour();
+			cout << object.name << " is " << mat.materialName << " which is " << col << '\n';
+			cout << "RGB: " << ((col & 0x00FF0000) >> 16) << " " << ((col & 0x0000FF00) >> 8) << " " << (col & 0x000000FF) << '\n';
+			cout << "Object has " << object.triangles.size() << " triangles.\n";
+		}
+		cout << std::endl;
+	}
+
 	void printVertices() {
 		cout << "Vertices of " << file << std::endl;
 		for (int i = 0; i < vertices.size(); i++) {

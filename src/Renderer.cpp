@@ -56,7 +56,7 @@ CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition,
 
 	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
 	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
-	return CanvasPoint(u, v, vertexToCamera.z);
+	return CanvasPoint(u, v, glm::length(vertexToCamera));
 }
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
@@ -86,7 +86,7 @@ void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, 
 	for (int i = 0; i < round(abs(point.y - base1.y)); i++) {
 		CanvasPoint to = pointToOne.at(i);
 		CanvasPoint from = pointToTwo.at(i);
-		line(CanvasPoint(to.x, to.y), CanvasPoint(from.x, from.y), colour, window);
+		line(to, from, colour, window);
 	}
 }
 
@@ -100,9 +100,9 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	if (top.y > mid.y) std::swap(top, mid);
 	if (mid.y > bot.y) std::swap(mid, bot);
 	if (top.y > mid.y) std::swap(top, mid);
-	top = CanvasPoint(round(top.x), round(top.y));
-	mid = CanvasPoint(round(mid.x), round(mid.y));
-	bot = CanvasPoint(round(bot.x), round(bot.y));
+	top = CanvasPoint(round(top.x), round(top.y), top.depth);
+	mid = CanvasPoint(round(mid.x), round(mid.y), mid.depth);
+	bot = CanvasPoint(round(bot.x), round(bot.y), bot.depth);
 
 
 	// Locate point at the same y level from middle vertex
@@ -112,15 +112,17 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 
 	float imaginaryY = mid.y;
 	float imaginaryX = mid.x;
+  float imaginaryDepth = mid.depth;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
 			imaginaryY = i + top.y;
 			imaginaryX = topToBot.at(i).x;
+      imaginaryDepth = topToBot.at(i).depth;
 			break;
 		}
 	}
 
-	CanvasPoint imaginary(imaginaryX, imaginaryY);
+	CanvasPoint imaginary(imaginaryX, imaginaryY, imaginaryDepth);
 
 	if (round(mid.y) == round(top.y)) {
 		rasterizeTriangle(bot, top, mid, colour, window);
@@ -132,7 +134,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 		rasterizeTriangle(top, mid, imaginary, colour, window);
 		rasterizeTriangle(bot, mid, imaginary, colour, window);
 	}
-	// Outline the triangle (For debug purposes)
+	// Outrose arose the triangle (For debug purposes)
 	// strokedTriangle(triangle, WHITE, window);
 }
 
@@ -217,8 +219,8 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 
  
 void draw(DrawingWindow &window) {
-	for (size_t y = 0; y < window.height; y++) {
-		for (size_t x = 0; x < window.width; x++) {
+	for (size_t y = 0; y < HEIGHT; y++) {
+		for (size_t x = 0; x < WIDTH; x++) {
 			window.setPixelColour(x, y, 0xff000000);
       depthBuffer.at(y).at(x) = 0.0f;
 		}
@@ -231,6 +233,21 @@ void draw(DrawingWindow &window) {
 			CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(2), focalLength);
 			CanvasTriangle canvasTriangle(a, b, c);
 			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
+		}
+	}
+
+  for (size_t y = 0; y < HEIGHT; y++) {
+		for (size_t x = 0; x < WIDTH; x++) {
+      uint8_t luminance = round(depthBuffer.at(y).at(x) * 255);
+      uint32_t col = 255;
+      col <<= 8;
+      col += luminance;
+      col <<= 8;
+      col += luminance;
+      col <<= 8;
+      col += luminance;
+      // if (luminance) cout << depthBuffer.at(y).at(x)<< '\n';
+			window.setPixelColour(x + WIDTH, y, col);
 		}
 	}
 
@@ -277,7 +294,7 @@ void test() {
 
 int main(int argc, char *argv[]) {
 	// srand(time(NULL));
-	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
+	DrawingWindow window = DrawingWindow(WIDTH * 2, HEIGHT, false);
 	SDL_Event event;
 	// test();
   initialize();

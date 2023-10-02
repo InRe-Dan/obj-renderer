@@ -56,7 +56,7 @@ CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition,
 
 	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
 	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
-	return CanvasPoint(u, v, glm::length(vertexToCamera));
+	return CanvasPoint(u, v, - vertexToCamera.z);
 }
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
@@ -68,7 +68,8 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window
   for (CanvasPoint point : interpolation) {
     if (depthBuffer.at(round(point.y)).at(round(point.x)) < 1 / point.depth) {
       depthBuffer.at(round(point.y)).at(round(point.x)) = 1 / point.depth;
-      window.setPixelColour(round(point.x), round(point.y), vec3ToColour(colVect, 255));
+      window.setPixelColour(point.x, point.y, vec3ToColour(colVect, 255));
+
     }
   }
 }
@@ -128,7 +129,6 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 		rasterizeTriangle(bot, top, mid, colour, window);
 	} 
 	else if (round(mid.y) == round(bot.y)) {
-
 		rasterizeTriangle(top, mid, bot, colour, window);
 	} else {
 		rasterizeTriangle(top, mid, imaginary, colour, window);
@@ -236,9 +236,21 @@ void draw(DrawingWindow &window) {
 		}
 	}
 
+  float min = 1000000000000;
+  float max = 0;
   for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
-      uint8_t luminance = round(depthBuffer.at(y).at(x) * 255);
+      if (depthBuffer.at(y).at(x) < 0.0005 && depthBuffer.at(y).at(x) > -0.0005);
+      else if (1 / depthBuffer.at(y).at(x) < min) min = 1 / depthBuffer.at(y).at(x);
+      else if (1 / depthBuffer.at(y).at(x) > max) max = 1 / depthBuffer.at(y).at(x);
+    }
+  }
+  float range = max - min;
+  cout << min << " " << max << " " << range << "\n";
+  for (size_t y = 0; y < HEIGHT; y++) {
+		for (size_t x = 0; x < WIDTH; x++) {
+      float position = (((1 / depthBuffer.at(y).at(x)) - min)/range);
+      uint8_t luminance = round(position * 255);
       uint32_t col = 255;
       col <<= 8;
       col += luminance;

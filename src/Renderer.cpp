@@ -30,6 +30,7 @@ float focalLength = 2;
 ObjectFile cornell("cornell-box.obj", 0.17f);
 ObjectFile plane("simple-plane.obj", 0.17f);
 vector<vector<float>> depthBuffer;
+vector<vector<uint32_t>> frameBuffer;
 TextureMap brickMap("texture.ppm");
 
 void initialize() {
@@ -40,6 +41,24 @@ void initialize() {
       depthBuffer.at(i).push_back(0.0f);
     }
   }
+  frameBuffer = vector<vector<uint32_t>>();
+  for (int i = 0; i < HEIGHT; i++) {
+    frameBuffer.push_back(vector<uint32_t>());
+    for (int j = 0; j < WIDTH * 2; j++) {
+      frameBuffer.at(i).push_back(0);
+    }
+  }
+}
+
+void leftClickedOn(int x, int y) {
+  cout << "====================" << '\n';
+  if (x > WIDTH) (x -= WIDTH);
+  cout << "Pixel Clicked: " << x << ", " << y << '\n';
+  cout << "R: " <<  ((frameBuffer.at(y).at(x) & 0x00FF0000) >> 16) << '\n';
+  cout << "G: " <<  ((frameBuffer.at(y).at(x) & 0x0000FF00) >> 8) << '\n';
+  cout << "B: " <<  (frameBuffer.at(y).at(x) & 0x000000FF) << '\n';
+  cout << "Depth: " << depthBuffer.at(y).at(x) << "\n";
+  cout << "====================" << '\n';
 }
 
 CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition, float focalLength) {
@@ -56,19 +75,19 @@ CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition,
 
 	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
 	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
-	return CanvasPoint(u, v, - vertexToCamera.z);
+	return CanvasPoint(u, v, glm::length(vertexToCamera));
 }
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
-	float steps = glm::max(glm::abs(xDiff), glm::abs(yDiff));
+	float steps = round(glm::max(glm::abs(xDiff), glm::abs(yDiff)));
 	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(0, 0), vec2(WIDTH-1, HEIGHT-1));
 	vec3 colVect(colour.red, colour.green, colour.blue);
   for (CanvasPoint point : interpolation) {
     if (depthBuffer.at(round(point.y)).at(round(point.x)) < 1 / point.depth) {
       depthBuffer.at(round(point.y)).at(round(point.x)) = 1 / point.depth;
-      window.setPixelColour(point.x, point.y, vec3ToColour(colVect, 255));
+			frameBuffer.at(point.y).at(point.x) = vec3ToColour(colVect, 255);
 
     }
   }
@@ -82,9 +101,9 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &win
 
 void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, DrawingWindow &window) {
 	assert(round(base1.y) == round(base2.y));
-	vector<CanvasPoint> pointToOne = interpolate(point, base1, round(abs(point.y - base1.y)));
-	vector<CanvasPoint> pointToTwo = interpolate(point, base2, round(abs(point.y - base2.y)));
-	for (int i = 0; i < round(abs(point.y - base1.y)); i++) {
+	vector<CanvasPoint> pointToOne = interpolate(point, base1, ceil(abs(point.y - base1.y)));
+	vector<CanvasPoint> pointToTwo = interpolate(point, base2, ceil(abs(point.y - base2.y)));
+	for (int i = 0; i < ceil(pointToOne.size()); i++) {
 		CanvasPoint to = pointToOne.at(i);
 		CanvasPoint from = pointToTwo.at(i);
 		line(to, from, colour, window);
@@ -116,7 +135,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
   float imaginaryDepth = mid.depth;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
-			imaginaryY = i + top.y;
+			imaginaryY = topToBot.at(i).y;
 			imaginaryX = topToBot.at(i).x;
       imaginaryDepth = topToBot.at(i).depth;
 			break;
@@ -211,7 +230,7 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 			int y = round(interpolated.at(j).y);
 			int xT = round(interpolatedT.at(j).x);
 			int yT = round(interpolatedT.at(j).y);
-			window.setPixelColour(x, y, map.pixels.at(yT * map.width + xT));
+      frameBuffer.at(y).at(x) = map.pixels.at(yT * map.width + xT);
 		}
 	}
 	strokedTriangle(triangle, WHITE, window);
@@ -221,8 +240,8 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 void draw(DrawingWindow &window) {
 	for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
-			window.setPixelColour(x, y, 0xff000000);
       depthBuffer.at(y).at(x) = 0.0f;
+      frameBuffer.at(y).at(x) = 0;
 		}
 	}
 	vector<Object> objects = cornell.getObjects();
@@ -236,7 +255,7 @@ void draw(DrawingWindow &window) {
 		}
 	}
 
-  float min = 1000000000000;
+  float min = 999999;
   float max = 0;
   for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
@@ -246,7 +265,6 @@ void draw(DrawingWindow &window) {
     }
   }
   float range = max - min;
-  cout << min << " " << max << " " << range << "\n";
   for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
       float position = (((1 / depthBuffer.at(y).at(x)) - min)/range);
@@ -259,21 +277,15 @@ void draw(DrawingWindow &window) {
       col <<= 8;
       col += luminance;
       // if (luminance) cout << depthBuffer.at(y).at(x)<< '\n';
-			window.setPixelColour(x + WIDTH, y, col);
+			frameBuffer.at(y).at(x + WIDTH) = col;
 		}
 	}
-
-	/*
-	CanvasPoint _one(160, 10); _one.texturePoint.x = 195, _one.texturePoint.y = 5;
-	CanvasPoint _two(300, 230); _two.texturePoint.x = 395; _two.texturePoint.y = 380;
-	CanvasPoint _three(10, 150); _three.texturePoint.x = 65; _three.texturePoint.y = 330;
-	const CanvasPoint one = _one;
-	const CanvasPoint two = _two;
-	// const CanvasPoint three = _three;
-	// CanvasTriangle triangle(one, two, three);
-	// texturedTriangle(triangle, brickMap, window);
-	*/
-
+  
+  for (size_t y = 0; y < HEIGHT; y++) {
+		for (size_t x = 0; x < WIDTH * 2; x++) {
+      window.setPixelColour(x, y, frameBuffer.at(y).at(x));
+    }
+  }
 }
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
@@ -290,8 +302,12 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		cout << "Focal Length: " << focalLength << std::endl;
 
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-		window.savePPM("output.ppm");
-		window.saveBMP("output.bmp");
+      if (event.button.button == SDL_BUTTON_RIGHT) {
+        window.savePPM("output.ppm");
+        window.saveBMP("output.bmp");
+    } else if (event.button.button == SDL_BUTTON_LEFT) {
+      leftClickedOn(event.button.x, event.button.y);
+    }
 	}
 }
 

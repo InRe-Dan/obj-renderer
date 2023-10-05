@@ -34,6 +34,7 @@ uint32_t vec3ToColour(vec3 vect, int alpha) {
 }
 
 
+
 vector<float> interpolate(float from, float to, int steps) {
 	float diff = to - from;
 	float interval = diff / steps;
@@ -57,14 +58,18 @@ vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
 }
 
 vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
+  vector<CanvasPoint> interpolation;
+  if (steps < 3) {
+    interpolation.push_back(fromC);
+    interpolation.push_back(toC);
+    return interpolation;
+  }
   vec3 to(toC.x, toC.y, toC.depth);
   vec3 from(fromC.x, fromC.y, fromC.depth);
 	vec3 diff = to - from;
-	vec3 interval = diff * float(1) / float(steps);
-	vector<CanvasPoint> interpolation;
-	for (int i = 0; i < steps; i++) {
-    vec3 newCP = from + float(i) * interval;
-		interpolation.push_back(CanvasPoint(newCP.x, newCP.y, newCP.z));
+	for (int i = 0; i <= steps; i++) {
+    vec3 newCP = from + (float(i) / steps) * diff;
+		interpolation.push_back(CanvasPoint(round(newCP.x), round(newCP.y), newCP.z));
 	}
 	return interpolation;
 }

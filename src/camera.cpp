@@ -16,8 +16,10 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
+// Object to represent a camera in a scene.
 class Camera {
   public:
+    // Takes parameters for camera resolution.
     Camera(int w, int h) {
       canvasHeight = h;
       canvasWidth = w;

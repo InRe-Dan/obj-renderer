@@ -27,12 +27,16 @@ using glm::round;
 // Convention will be that the positive Z axis goes from the image plane towards the camera.
 Camera camera(WIDTH, HEIGHT);
 ObjectFile cornell("cornell-box.obj", 1.0f);
+// Simple plane object (modified cornell) used for debugging
 ObjectFile plane("simple-plane.obj", 1.0f);
-vector<vector<float>> depthBuffer;
-vector<vector<uint32_t>> frameBuffer;
 TextureMap brickMap("texture.ppm");
 
+vector<vector<float>> depthBuffer;
+vector<vector<uint32_t>> frameBuffer;
+
+// Ran when starting program. Initializes buffers.
 void initialize() {
+  // Initialize a depth buffer with 0 values
   depthBuffer = vector<vector<float>>();
   for (int i = 0; i < HEIGHT; i++) {
     depthBuffer.push_back(vector<float>());
@@ -40,6 +44,9 @@ void initialize() {
       depthBuffer.at(i).push_back(0.0f);
     }
   }
+  // Initialize a frame buffer with black. Twice as wide as the default camera resolution
+  // to accommodate a display side and a debug side.
+  // This frame buffer is redundant but enables easier debugging.
   frameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
     frameBuffer.push_back(vector<uint32_t>());
@@ -49,6 +56,7 @@ void initialize() {
   }
 }
 
+// Print debug information about the depth and colour of a clicked pixel
 void leftClickedOn(int x, int y) {
   cout << "====================" << '\n';
   if (x > WIDTH) (x -= WIDTH);
@@ -60,7 +68,7 @@ void leftClickedOn(int x, int y) {
   cout << "====================" << '\n';
 }
 
-
+// Draw a line from a point to another on a window.
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
@@ -75,12 +83,14 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window
   }
 }
 
+// Draw a wireframe triangle
 void strokedTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &window) {
 	line(triangle.v0(), triangle.v1(), colour, window);
 	line(triangle.v1(), triangle.v2(), colour, window);
 	line(triangle.v2(), triangle.v0(), colour, window);
 }
 
+// Draw a triangle which has a flat top or flat bottom. This is intended as a helper function.
 void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, DrawingWindow &window) {
 	assert(round(base1.y) == round(base2.y));
 	vector<CanvasPoint> pointToOne = interpolate(point, base1, ceil(abs(point.y - base1.y)));
@@ -92,8 +102,7 @@ void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, 
 	}
 }
 
-
-
+// Draw a full triangle
 void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &window) {
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
@@ -111,32 +120,30 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, DrawingWindow &wind
 	int height = round(glm::abs(top.y - bot.y));
 	vector<CanvasPoint> topToBot = interpolate(top, bot, height);
 
-
+  // Create an imaginary point at the same height as the middle point, along the midpoint of top and bottom
 	float imaginaryY = mid.y;
 	float imaginaryX = mid.x;
   float imaginaryDepth = mid.depth;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
-			imaginaryY = topToBot.at(i).y;
-			imaginaryX = topToBot.at(i).x;
+			imaginaryY = round(topToBot.at(i).y);
+			imaginaryX = round(topToBot.at(i).x);
       imaginaryDepth = topToBot.at(i).depth;
 			break;
 		}
 	}
-
 	CanvasPoint imaginary(imaginaryX, imaginaryY, imaginaryDepth);
 
-	if (round(mid.y) == round(top.y)) {
+  // Call helper function to rasterize a triangle in parts from left to right, top to bottom.
+	if (mid.y == top.y) {
 		rasterizeTriangle(bot, top, mid, colour, window);
 	} 
-	else if (round(mid.y) == round(bot.y)) {
+	else if (mid.y == bot.y) {
 		rasterizeTriangle(top, mid, bot, colour, window);
 	} else {
 		rasterizeTriangle(top, mid, imaginary, colour, window);
 		rasterizeTriangle(bot, mid, imaginary, colour, window);
 	}
-	// Outrose arose the triangle (For debug purposes)
-	// strokedTriangle(triangle, WHITE, window);
 }
 
 void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &window) {
@@ -218,7 +225,7 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 	strokedTriangle(triangle, WHITE, window);
 }
 
- 
+// Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
 void draw(DrawingWindow &window) {
 	for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
@@ -293,6 +300,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 	}
 }
 
+// Test function for hand-checking outputs of simple functions.
 void test() {
 	vec3 one(255, 0, 0);
 	vec3 two(0, 255, 0);
@@ -308,6 +316,7 @@ int main(int argc, char *argv[]) {
 	SDL_Event event;
 	// test();
   initialize();
+  // Debug information
 	cornell.printObjectMaterials();
   camera.lookAt(vec3(0, 0, 0));
 	while (true) {

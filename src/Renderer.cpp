@@ -10,7 +10,7 @@
 #include <TextureMap.h>
 #include <ModelTriangle.h>
 #include "objutil.cpp"
-#include "vecutil.cpp"
+#include "camera.cpp"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -25,10 +25,9 @@ using glm::round;
 
 
 // Convention will be that the positive Z axis goes from the image plane towards the camera.
-vec3 cameraPosition(0.0, 0.0, 4.0);
-float focalLength = 2;
-ObjectFile cornell("cornell-box.obj", 0.17f);
-ObjectFile plane("simple-plane.obj", 0.17f);
+Camera camera(WIDTH, HEIGHT);
+ObjectFile cornell("cornell-box.obj", 1.0f);
+ObjectFile plane("simple-plane.obj", 1.0f);
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
 TextureMap brickMap("texture.ppm");
@@ -61,34 +60,17 @@ void leftClickedOn(int x, int y) {
   cout << "====================" << '\n';
 }
 
-CanvasPoint getCanvasIntersectionPoint(vec3 cameraPosition, vec3 vertexPosition, float focalLength) {
-	// CanvasPoint = u, v
-	// Vertex = x, y, z
-	// Focal length = f
-	// Plane dimensions = W, H
-	// u = f * (x/z) + W/2
-	// v = f * (y/z) + H/2
-	// All coordinates are relative to the camera!
-
-	// First we need to translate the vertex point
-	vec3 vertexToCamera = vertexPosition - cameraPosition;
-
-	float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + WIDTH/2;
-	float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + HEIGHT/2;
-	return CanvasPoint(u, v, glm::length(vertexToCamera));
-}
 
 void line(CanvasPoint to, CanvasPoint from, Colour colour, DrawingWindow &window) {
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
 	float steps = round(glm::max(glm::abs(xDiff), glm::abs(yDiff)));
-	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(0, 0), vec2(WIDTH-1, HEIGHT-1));
+	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(1, 1), vec2(WIDTH-2, HEIGHT-2));
 	vec3 colVect(colour.red, colour.green, colour.blue);
   for (CanvasPoint point : interpolation) {
     if (depthBuffer.at(round(point.y)).at(round(point.x)) < 1 / point.depth) {
       depthBuffer.at(round(point.y)).at(round(point.x)) = 1 / point.depth;
-			frameBuffer.at(point.y).at(point.x) = vec3ToColour(colVect, 255);
-
+			frameBuffer.at(round(point.y)).at(round(point.x)) = vec3ToColour(colVect, 255);
     }
   }
 }
@@ -247,11 +229,12 @@ void draw(DrawingWindow &window) {
 	vector<Object> objects = cornell.getObjects();
 	for (Object object : objects) {
 		for (ModelTriangle triangle : object.triangles) {
-			CanvasPoint a = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(0), focalLength);
-			CanvasPoint b = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(1), focalLength);
-			CanvasPoint c = getCanvasIntersectionPoint(cameraPosition, triangle.vertices.at(2), focalLength);
+			CanvasPoint a = camera.getCanvasIntersectionPoint(triangle.vertices.at(0));
+			CanvasPoint b = camera.getCanvasIntersectionPoint(triangle.vertices.at(1));
+			CanvasPoint c = camera.getCanvasIntersectionPoint(triangle.vertices.at(2));
 			CanvasTriangle canvasTriangle(a, b, c);
 			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
+      // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
 		}
 	}
 
@@ -290,17 +273,16 @@ void draw(DrawingWindow &window) {
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
-		if (event.key.keysym.sym == SDLK_LEFT) cameraPosition += vec3(-0.1, 0, 0);
-		else if (event.key.keysym.sym == SDLK_RIGHT) cameraPosition += vec3(+0.1, 0, 0);
-		else if (event.key.keysym.sym == SDLK_UP) cameraPosition += vec3(0, 0.1, 0);
-		else if (event.key.keysym.sym == SDLK_DOWN) cameraPosition += vec3(0, -0.1, 0);
-		else if (event.key.keysym.sym == SDLK_w) cameraPosition += vec3(0, 0, -0.1);
-		else if (event.key.keysym.sym == SDLK_s) cameraPosition += vec3(0, 0, +0.1);
-		else if (event.key.keysym.sym == SDLK_a) focalLength -= 0.1;
-		else if (event.key.keysym.sym == SDLK_d) focalLength += 0.1;
-		cout << "Camera Position: " << cameraPosition.x << " " << cameraPosition.y << " " << cameraPosition.z << std::endl;
-		cout << "Focal Length: " << focalLength << std::endl;
-
+		if (event.key.keysym.sym == SDLK_LEFT) camera.moveBy(vec3(-0.1, 0, 0));
+		else if (event.key.keysym.sym == SDLK_RIGHT) camera.moveBy(vec3(+0.1, 0, 0));
+		else if (event.key.keysym.sym == SDLK_UP) camera.moveBy(vec3(0, 0.1, 0));
+		else if (event.key.keysym.sym == SDLK_DOWN) camera.moveBy(vec3(0, -0.1, 0));
+		else if (event.key.keysym.sym == SDLK_w) camera.moveBy(vec3(0, 0, -0.1));
+		else if (event.key.keysym.sym == SDLK_s) camera.moveBy(vec3(0, 0, +0.1));
+		else if (event.key.keysym.sym == SDLK_a) camera.changeF(-0.1);
+		else if (event.key.keysym.sym == SDLK_d) camera.changeF(0.1);
+    else if (event.key.keysym.sym == SDLK_m) camera.toggleOrbit();
+    else if (event.key.keysym.sym == SDLK_n) camera.toggleLookAt();
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");
@@ -327,9 +309,11 @@ int main(int argc, char *argv[]) {
 	// test();
   initialize();
 	cornell.printObjectMaterials();
+  camera.lookAt(vec3(0, 0, 0));
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
+    camera.update();
 		draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();

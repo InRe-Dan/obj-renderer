@@ -15,13 +15,37 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
+glm::mat3 getXRotationMatrix(float degrees) {
+  return glm::mat3(
+    1, 0, 0,
+    0, glm::cos(glm::radians(degrees)), - glm::sin(glm::radians(degrees)),
+    0, glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees))
+  );
+}
+
+glm::mat3 getYRotationMatrix(float degrees) {
+  return glm::mat3(
+    glm::cos(glm::radians(degrees)), 0, glm::sin(glm::radians(degrees)),
+    0, 1, 0,
+    -glm::sin(glm::radians(degrees)), 0, glm::cos(glm::radians(degrees))
+  );
+}
+
+glm::mat3 getZRotationMatrix(float degrees) {
+  return glm::mat3(
+    glm::cos(glm::radians(degrees)), -glm::sin(glm::radians(degrees)), 0,
+    glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees)), 0,
+    0, 0, 1
+  );
+}
+
 vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight) {
   vector<CanvasPoint> returnVector;
   for (CanvasPoint point : input) {
-    if (topLeft.x > point.x) continue;
-    if (bottomRight.x < point.x) continue;
-    if (topLeft.y > point.y) continue;
-    if (bottomRight.y < point.y) continue;
+    if (topLeft.x > round(point.x)) continue;
+    if (bottomRight.x < round(point.x)) continue;
+    if (topLeft.y > round(point.y)) continue;
+    if (bottomRight.y < round(point.y)) continue;
     returnVector.push_back(point);
   }
   return returnVector;
@@ -57,6 +81,20 @@ vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
 	return interpolation;
 }
 
+vector<vec3> interpolate(vec3 from, vec3 to, int steps) {
+	vector<vec3> interpolation;
+  if (steps < 3) {
+    interpolation.push_back(from);
+    interpolation.push_back(to);
+    return interpolation;
+  }
+  vec3 diff = to - from;
+	for (int i = 0; i < steps; i++) {
+		interpolation.push_back(from + (float(i) / steps) * diff);
+	}
+	return interpolation;
+}
+
 vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
   vector<CanvasPoint> interpolation;
   if (steps < 3) {
@@ -77,28 +115,4 @@ vector<vec2> interpolate(TexturePoint from, TexturePoint to, int steps) {
 	vec2 fromP(from.x, from.y);
 	vec2 toP(to.x, to.y);
 	return interpolate(fromP, toP, steps);
-}
-
-
-vector<vec3> interpolate(vec3 from, vec3 to, int steps) {
-	vec3 diff = to - from;
-	vec3 interval = diff * float(1) / float(steps);
-	vector<vec3> interpolation;
-	for (int i = 0; i < steps; i++) {
-		interpolation.push_back(from + float(i) * interval);
-	}
-	return interpolation;
-}
-
-vector<ModelTriangle> readOBJ(const char *filename, float scale) {
-	std::ifstream inputStream;
-	inputStream.open(filename, std::ios::in);
-	vector<vec3> vertices;
-	vector<ModelTriangle> triangles;
-	std::string line;
-	for (int lines = 0; std::getline(inputStream,line); lines++) {
-		std::cout << line << '\n';
-	}
-	inputStream.close();
-	return triangles;
 }

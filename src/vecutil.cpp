@@ -15,28 +15,39 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
-glm::mat3 getXRotationMatrix(float degrees) {
-  return glm::mat3(
-    1, 0, 0,
-    0, glm::cos(glm::radians(degrees)), - glm::sin(glm::radians(degrees)),
-    0, glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees))
+glm::mat4 getXRotationMatrix(float degrees) {
+  return glm::mat4(
+    1, 0, 0, 0,
+    0, glm::cos(glm::radians(degrees)), - glm::sin(glm::radians(degrees)), 0, 
+    0, glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees)), 0,
+    0, 0, 0, 1
   );
 }
 
-glm::mat3 getYRotationMatrix(float degrees) {
-  return glm::mat3(
-    glm::cos(glm::radians(degrees)), 0, glm::sin(glm::radians(degrees)),
-    0, 1, 0,
-    -glm::sin(glm::radians(degrees)), 0, glm::cos(glm::radians(degrees))
+glm::mat4 getYRotationMatrix(float degrees) {
+  return glm::mat4(
+    glm::cos(glm::radians(degrees)), 0, glm::sin(glm::radians(degrees)), 0, 
+    0, 1, 0, 0, 
+    -glm::sin(glm::radians(degrees)), 0, glm::cos(glm::radians(degrees)), 0,
+    0, 0, 0, 1
   );
 }
 
-glm::mat3 getZRotationMatrix(float degrees) {
-  return glm::mat3(
-    glm::cos(glm::radians(degrees)), -glm::sin(glm::radians(degrees)), 0,
-    glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees)), 0,
-    0, 0, 1
+glm::mat4 getZRotationMatrix(float degrees) {
+  return glm::mat4(
+    glm::cos(glm::radians(degrees)), -glm::sin(glm::radians(degrees)), 0, 0,
+    glm::sin(glm::radians(degrees)), glm::cos(glm::radians(degrees)), 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
   );
+}
+
+glm::mat4 getTranslationMatrix(vec3 vect) {
+  glm::mat4 matrix;
+  matrix[0][3] = vect.x;
+  matrix[1][3] = vect.y;
+  matrix[2][3] = vect.z;
+  return matrix;
 }
 
 vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight) {

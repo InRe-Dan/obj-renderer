@@ -318,7 +318,7 @@ int main(int argc, char *argv[]) {
   initialize();
   // Debug information
 	cornell.printObjectMaterials();
-  camera.lookAt(vec3(0, 0, 0));
+  camera.lookAt(vec4(0, 0, 0, 1));
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);

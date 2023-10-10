@@ -6,8 +6,10 @@
 #include "Colour.h"
 #include "TexturePoint.h"
 
+using glm::vec4;
+
 struct ModelTriangle {
-	std::array<glm::vec3, 3> vertices{};
+	std::array<glm::vec4, 3> vertices{};
 	std::array<TexturePoint, 3> texturePoints{};
 	Colour colour{};
 	glm::vec3 normal{};

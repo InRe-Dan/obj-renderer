@@ -9,6 +9,8 @@
 
 using std::string;
 using std::vector;
+using std::array;
+using glm::vec4;
 
 class Object {
 	public:

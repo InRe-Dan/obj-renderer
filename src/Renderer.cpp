@@ -236,9 +236,9 @@ void draw(DrawingWindow &window) {
 	vector<Object> objects = cornell.getObjects();
 	for (Object object : objects) {
 		for (ModelTriangle triangle : object.triangles) {
-			CanvasPoint a = camera.getCanvasIntersectionPoint(triangle.vertices.at(0));
-			CanvasPoint b = camera.getCanvasIntersectionPoint(triangle.vertices.at(1));
-			CanvasPoint c = camera.getCanvasIntersectionPoint(triangle.vertices.at(2));
+			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+			CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+			CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
 			CanvasTriangle canvasTriangle(a, b, c);
 			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
       // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);

@@ -47,10 +47,10 @@ class ObjectFile {
 				vertices.push_back(vertex * scaleFactor);
 			} else if (code.compare("f") == 0) {
 				vec3 face = parseFace(line);
-				std::array<vec3, 3> faceVertices;
-				faceVertices[0] = vertices.at(face.x - 1);
-				faceVertices[1] = vertices.at(face.y - 1);
-				faceVertices[2] = vertices.at(face.z - 1);
+				std::array<vec4, 3> faceVertices;
+				faceVertices[0] = vec4(vertices.at(face.x - 1), 1);
+				faceVertices[1] = vec4(vertices.at(face.y - 1), 1);
+				faceVertices[2] = vec4(vertices.at(face.z - 1), 1);
 				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
 				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
@@ -102,7 +102,7 @@ class ObjectFile {
 
   static vec3 parseVertex(std::string input) {
     vector<std::string> splitStr = split(input, ' ');
-    vec3 result(stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
+    vec3 result(- stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
     return result;
   }
 

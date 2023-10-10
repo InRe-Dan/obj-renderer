@@ -57,8 +57,6 @@ uint32_t vec3ToColour(vec3 vect, int alpha) {
 	return colour; 
 }
 
-
-
 vector<float> interpolate(float from, float to, int steps) {
 	float diff = to - from;
 	float interval = diff / steps;
@@ -70,13 +68,15 @@ vector<float> interpolate(float from, float to, int steps) {
 }
 
 vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
-	if (steps == 1) {vector<vec2> vec; vec.push_back(from); return vec;};
-	if (steps == 1) {vector<vec2> vec; vec.push_back(from); vec.push_back(to); return vec;};
-	vec2 diff = to - from;
-	vec2 interval = diff * float(1) / float(steps);
 	vector<vec2> interpolation;
-	for (int i = 0; i < steps; i++) {
-		interpolation.push_back(from + float(i) * interval);
+  if (steps < 3) {
+    interpolation.push_back(from);
+    interpolation.push_back(to);
+    return interpolation;
+  }
+  vec2 diff = to - from;
+	for (int i = 0; i <= steps; i++) {
+		interpolation.push_back(from + (float(i) / steps) * diff);
 	}
 	return interpolation;
 }
@@ -89,7 +89,7 @@ vector<vec3> interpolate(vec3 from, vec3 to, int steps) {
     return interpolation;
   }
   vec3 diff = to - from;
-	for (int i = 0; i < steps; i++) {
+	for (int i = 0; i <= steps; i++) {
 		interpolation.push_back(from + (float(i) / steps) * diff);
 	}
 	return interpolation;
@@ -97,17 +97,11 @@ vector<vec3> interpolate(vec3 from, vec3 to, int steps) {
 
 vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
   vector<CanvasPoint> interpolation;
-  if (steps < 3) {
-    interpolation.push_back(fromC);
-    interpolation.push_back(toC);
-    return interpolation;
-  }
   vec3 to(toC.x, toC.y, toC.depth);
   vec3 from(fromC.x, fromC.y, fromC.depth);
-	vec3 diff = to - from;
-	for (int i = 0; i <= steps; i++) {
-    vec3 newCP = from + (float(i) / steps) * diff;
-		interpolation.push_back(CanvasPoint(round(newCP.x), round(newCP.y), newCP.z));
+  vector<vec3> vecInterpolation = interpolate(from, to, steps);
+	for (vec3 vect : vecInterpolation) {
+		interpolation.push_back(CanvasPoint(round(vect.x), round(vect.y), vect.z));
 	}
 	return interpolation;
 }

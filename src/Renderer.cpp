@@ -9,8 +9,8 @@
 #include <glm/glm.hpp>
 #include <TextureMap.h>
 #include <ModelTriangle.h>
-#include "objutil.cpp"
-#include "camera.cpp"
+#include "ObjectFile.cpp"
+#include "Camera.cpp"
 
 #define WIDTH 640
 #define HEIGHT 480

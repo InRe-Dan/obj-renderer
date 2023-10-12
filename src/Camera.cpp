@@ -41,7 +41,13 @@ class Camera {
     void update() {
       if (isOrbiting) {
         vec3 pos = getPosition();
-        placement = getTranslationMatrix(pos) * getYRotationMatrix(2) * getTranslationMatrix(-pos) * placement;
+        output(placement, "Initial placement");
+        output(getTranslationMatrix(-pos), "Translation matrix");
+        output(getYRotationMatrix(10), "Rotation matrix");
+        output(getTranslationMatrix(pos), "Retranslation matrix");
+        vec3 newPos = vec3(getYRotationMatrix(3) * vec4(pos, 1));
+        placement = glm::mat4(vec4(0, 0, 0, newPos.x), vec4(0, 0, 0, newPos.y), vec4(0, 0, 0, newPos.z), vec4(0, 0, 0 , 0)) + (placement + getTranslationMatrix(-pos));
+        output(placement, "New placement");
       }
       if (isLooking) {
         vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());
@@ -51,7 +57,6 @@ class Camera {
         vec3 pos = getPosition();
         placement = glm::mat4(vec4(-right, pos.x), vec4(up, pos.y), vec4(forward, pos.z), vec4(0, 0, 0, 1));
       }
-      printPlacement();
     }
     glm::mat4 getPlacement() {
       return placement;
@@ -79,17 +84,6 @@ class Camera {
 
     void changeF(float diff) {
       focalLength += diff;
-    }
-
-    void printPlacement() {
-      cout << "======== CAMERA PLACEMENT ======" << "\n";
-      for (int i = 0; i < 4; i++ ) {
-        for (int j = 0; j < 4; j++) {
-          cout << placement[i][j] << " ";
-        }
-        cout << "\n";
-      }
-      cout << "================================" << "\n";
     }
 
     private:

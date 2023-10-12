@@ -239,8 +239,10 @@ void draw(DrawingWindow &window) {
 			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
 			CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
 			CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-			CanvasTriangle canvasTriangle(a, b, c);
-			filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
+      if (isInBounds(a, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(b, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(c, vec4(0, 0, WIDTH, HEIGHT))) {
+		  	CanvasTriangle canvasTriangle(a, b, c);
+			  filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
+      }
       // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
 		}
 	}
@@ -280,14 +282,14 @@ void draw(DrawingWindow &window) {
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
-		if (event.key.keysym.sym == SDLK_LEFT) camera.moveBy(vec3(-0.1, 0, 0));
-		else if (event.key.keysym.sym == SDLK_RIGHT) camera.moveBy(vec3(+0.1, 0, 0));
-		else if (event.key.keysym.sym == SDLK_UP) camera.moveBy(vec3(0, 0.1, 0));
-		else if (event.key.keysym.sym == SDLK_DOWN) camera.moveBy(vec3(0, -0.1, 0));
-		else if (event.key.keysym.sym == SDLK_w) camera.moveBy(vec3(0, 0, -0.1));
-		else if (event.key.keysym.sym == SDLK_s) camera.moveBy(vec3(0, 0, +0.1));
-		else if (event.key.keysym.sym == SDLK_a) camera.changeF(-0.1);
-		else if (event.key.keysym.sym == SDLK_d) camera.changeF(0.1);
+		if (event.key.keysym.sym == SDLK_RIGHT) camera.moveBy(vec3(-0.2, 0, 0));
+		else if (event.key.keysym.sym == SDLK_LEFT) camera.moveBy(vec3(+0.2, 0, 0));
+		else if (event.key.keysym.sym == SDLK_UP) camera.moveBy(vec3(0, 0.2, 0));
+		else if (event.key.keysym.sym == SDLK_DOWN) camera.moveBy(vec3(0, -0.2, 0));
+		else if (event.key.keysym.sym == SDLK_w) camera.moveBy(vec3(0, 0, -0.2));
+		else if (event.key.keysym.sym == SDLK_s) camera.moveBy(vec3(0, 0, +0.2));
+		else if (event.key.keysym.sym == SDLK_a) camera.changeF(-0.2);
+		else if (event.key.keysym.sym == SDLK_d) camera.changeF(0.2);
     else if (event.key.keysym.sym == SDLK_m) camera.toggleOrbit();
     else if (event.key.keysym.sym == SDLK_n) camera.toggleLookAt();
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {

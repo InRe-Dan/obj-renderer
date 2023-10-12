@@ -11,6 +11,7 @@
 #include <ModelTriangle.h>
 #include "ObjectFile.cpp"
 #include "Camera.cpp"
+#include "font8x8_basic.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -53,6 +54,29 @@ void initialize() {
     for (int j = 0; j < WIDTH * 2; j++) {
       frameBuffer.at(i).push_back(0);
     }
+  }
+}
+
+void renderDebugString(string str, DrawingWindow window) {
+  int yOffset = 20;
+  int xOffset = 20;
+  for (unsigned char character : str) {
+    if (character > 127) character = '$';
+    if (character == '\n') {
+      yOffset += 10;
+      xOffset = 20;
+      continue;
+    }
+    cout << "drawing " << character << "\n";
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        if ((font8x8_basic[character][i] >> j) & 1) {
+          cout << "(" << yOffset + i << ", " << xOffset + j << ")\n";
+          frameBuffer[yOffset + i][xOffset + j] = vec3ToColour(vec3(255, 255, 255), 255);
+        }
+      }
+    }
+    xOffset += 8;
   }
 }
 
@@ -246,7 +270,7 @@ void draw(DrawingWindow &window) {
       // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
 		}
 	}
-
+  renderDebugString("Hello World!", window);
   float min = 999999;
   float max = 0;
   for (size_t y = 0; y < HEIGHT; y++) {

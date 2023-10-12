@@ -59,13 +59,13 @@ bool isInBounds(CanvasPoint point, vec4 bounds) {
   return true;
 }
 
-void output(glm::mat4 matrix, string title) {
-  cout << title << ":\n";
+void output(glm::mat4 matrix, std::string title) {
+  std::cout << title << ":\n";
   for (int i = 0; i < 4; i++ ) {
     for (int j = 0; j < 4; j++) {
-      cout << std::setw(3) << matrix[i][j] << " ";
+      std::cout << std::setw(3) << matrix[i][j] << " ";
     }
-    cout << "\n";
+    std::cout << "\n";
   }
 }
 

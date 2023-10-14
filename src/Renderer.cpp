@@ -12,9 +12,11 @@
 #include "ObjectFile.cpp"
 #include "Camera.cpp"
 #include "font8x8_basic.h"
+#include <chrono>
+#include <ctime> 
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 1280
+#define HEIGHT 720
 #define WHITE Colour(255, 255, 255)
 #define RED Colour(255, 0, 0)
 #define PURPLE Colour(255, 0, 255)
@@ -34,6 +36,9 @@ TextureMap brickMap("texture.ppm");
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
+
+string debugString;
+std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
@@ -58,38 +63,24 @@ void initialize() {
 }
 
 void renderDebugString(string str, DrawingWindow window) {
-  int yOffset = 20;
-  int xOffset = 20;
+  int yOffset = 8;
+  int xOffset = 8;
   for (unsigned char character : str) {
     if (character > 127) character = '$';
     if (character == '\n') {
-      yOffset += 10;
-      xOffset = 20;
+      yOffset += 12;
+      xOffset = 8;
       continue;
     }
-    cout << "drawing " << character << "\n";
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         if ((font8x8_basic[character][i] >> j) & 1) {
-          cout << "(" << yOffset + i << ", " << xOffset + j << ")\n";
           frameBuffer[yOffset + i][xOffset + j] = vec3ToColour(vec3(255, 255, 255), 255);
         }
       }
     }
     xOffset += 8;
   }
-}
-
-// Print debug information about the depth and colour of a clicked pixel
-void leftClickedOn(int x, int y) {
-  cout << "====================" << '\n';
-  if (x > WIDTH) (x -= WIDTH);
-  cout << "Pixel Clicked: " << x << ", " << y << '\n';
-  cout << "R: " <<  ((frameBuffer.at(y).at(x) & 0x00FF0000) >> 16) << '\n';
-  cout << "G: " <<  ((frameBuffer.at(y).at(x) & 0x0000FF00) >> 8) << '\n';
-  cout << "B: " <<  (frameBuffer.at(y).at(x) & 0x000000FF) << '\n';
-  cout << "Depth: " << depthBuffer.at(y).at(x) << "\n";
-  cout << "====================" << '\n';
 }
 
 // Draw a line from a point to another on a window.
@@ -270,33 +261,18 @@ void draw(DrawingWindow &window) {
       // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
 		}
 	}
-  renderDebugString("Hello World!", window);
-  float min = 999999;
-  float max = 0;
-  for (size_t y = 0; y < HEIGHT; y++) {
-		for (size_t x = 0; x < WIDTH; x++) {
-      if (depthBuffer.at(y).at(x) < 0.0005 && depthBuffer.at(y).at(x) > -0.0005);
-      else if (1 / depthBuffer.at(y).at(x) < min) min = 1 / depthBuffer.at(y).at(x);
-      else if (1 / depthBuffer.at(y).at(x) > max) max = 1 / depthBuffer.at(y).at(x);
-    }
-  }
-  float range = max - min;
-  for (size_t y = 0; y < HEIGHT; y++) {
-		for (size_t x = 0; x < WIDTH; x++) {
-      float position = (((1 / depthBuffer.at(y).at(x)) - min)/range);
-      uint8_t luminance = round(position * 255);
-      uint32_t col = 255;
-      col <<= 8;
-      col += luminance;
-      col <<= 8;
-      col += luminance;
-      col <<= 8;
-      col += luminance;
-      // if (luminance) cout << depthBuffer.at(y).at(x)<< '\n';
-			frameBuffer.at(y).at(x + WIDTH) = col;
-		}
-	}
-  
+
+	int xMouse, yMouse;
+  SDL_GetMouseState(&xMouse,&yMouse);
+	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
+	uint32_t colour = frameBuffer[yMouse][xMouse];
+	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
+	debugString += ", " + std::to_string((colour >> 8) & 255);
+	debugString += ", " + std::to_string(colour & 255);
+	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
+	debugString += "Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+  renderDebugString(debugString, window);
+
   for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH * 2; x++) {
       window.setPixelColour(x, y, frameBuffer.at(y).at(x));
@@ -321,7 +297,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
         window.savePPM("output.ppm");
         window.saveBMP("output.bmp");
     } else if (event.button.button == SDL_BUTTON_LEFT) {
-      leftClickedOn(event.button.x, event.button.y);
+		// Deprecated debug info
     }
 	}
 }
@@ -338,7 +314,7 @@ void test() {
 
 int main(int argc, char *argv[]) {
 	// srand(time(NULL));
-	DrawingWindow window = DrawingWindow(WIDTH * 2, HEIGHT, false);
+	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 	// test();
   initialize();
@@ -346,11 +322,15 @@ int main(int argc, char *argv[]) {
 	cornell.printObjectMaterials();
   camera.lookAt(vec4(0, 0, 0, 1));
 	while (true) {
+		debugString = "";
+		debugString += "FPS: " + std::to_string(1 / frameTime.count()) + "\n";
+		auto start = std::chrono::system_clock::now();
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
-    camera.update();
+    	camera.update();
 		draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
+		frameTime = std::chrono::system_clock::now() - start;
 	}
 }

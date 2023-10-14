@@ -16,6 +16,32 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
+string formatFloat(float num, int width) {
+  string returnString;
+  string floatString = std::to_string(num);
+  bool foundPoint = false;
+  int originalWidth = width;
+  if (num >= 0.0f) {
+    width--;
+    returnString += " ";
+  }
+  for (char c : floatString) {
+    if (c == '.') {
+      foundPoint = true;
+    }
+    if (foundPoint && width == 0) break;
+    returnString += c;
+    width--;
+  }
+  if (width < 0) {
+    return std::string(">", originalWidth);
+  }
+  for (int i = 0; i < width; i++) {
+    returnString += "0";
+  }
+  return returnString;
+}
+
 glm::mat4 getXRotationMatrix(float degrees) {
   return glm::mat4(
     1, 0, 0, 0,

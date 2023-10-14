@@ -271,6 +271,13 @@ void draw(DrawingWindow &window) {
 	debugString += ", " + std::to_string(colour & 255);
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
 	debugString += "Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+	glm::mat4 placement = camera.getPlacement();
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			debugString += formatFloat(placement[i][j], 7) + " ";
+		}
+		debugString += "\n";
+	}
   renderDebugString(debugString, window);
 
   for (size_t y = 0; y < HEIGHT; y++) {
@@ -304,9 +311,10 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-	vec3 one(255, 0, 0);
-	vec3 two(0, 255, 0);
-	vector<vec3> thing = interpolate(one, two, 3);
+	cout << formatFloat(-0.5124, 5) << "\n";
+	cout << formatFloat(-0.512312, 5) << "\n";
+	cout << formatFloat(0.1235, 5) << "\n";
+	cout << formatFloat(121243.125121, 5) << "\n";
 	std::cout.flush();
 	quick_exit(0);
 }

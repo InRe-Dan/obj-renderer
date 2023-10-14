@@ -41,13 +41,8 @@ class Camera {
     void update() {
       if (isOrbiting) {
         vec3 pos = getPosition();
-        output(placement, "Initial placement");
-        output(getTranslationMatrix(-pos), "Translation matrix");
-        output(getYRotationMatrix(10), "Rotation matrix");
-        output(getTranslationMatrix(pos), "Retranslation matrix");
         vec3 newPos = vec3(getYRotationMatrix(3) * vec4(pos, 1));
         placement = glm::mat4(vec4(0, 0, 0, newPos.x), vec4(0, 0, 0, newPos.y), vec4(0, 0, 0, newPos.z), vec4(0, 0, 0 , 0)) + (placement + getTranslationMatrix(-pos));
-        output(placement, "New placement");
       }
       if (isLooking) {
         vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());

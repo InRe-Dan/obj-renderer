@@ -52,7 +52,7 @@ class Camera {
         vec3 up = glm::normalize(glm::cross(vec3(forward), vec3(right)));
         // Not flipping the rightways vector seems to flip the scene... ¯\_(ツ)_/¯
         vec3 pos = getPosition();
-        placement = glm::mat4(vec4(-right, pos.x), vec4(up, pos.y), vec4(forward, pos.z), vec4(0, 0, 0, 1));
+        placement = glm::mat4(vec4(right, pos.x), vec4(-up, pos.y), vec4(-forward, pos.z), vec4(0, 0, 0, 1));
       }
     }
     glm::mat4 getPlacement() {

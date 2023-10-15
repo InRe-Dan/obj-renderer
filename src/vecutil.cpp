@@ -15,6 +15,7 @@ using std::vector;
 using glm::vec3;
 using glm::vec2;
 using glm::round;
+using std::string;
 
 string formatFloat(float num, int width) {
   string returnString;

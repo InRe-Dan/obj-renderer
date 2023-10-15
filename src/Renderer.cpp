@@ -15,8 +15,8 @@
 #include <chrono>
 #include <ctime> 
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define WIDTH 600
+#define HEIGHT 600
 #define WHITE Colour(255, 255, 255)
 #define RED Colour(255, 0, 0)
 #define PURPLE Colour(255, 0, 255)
@@ -39,6 +39,7 @@ vector<vector<uint32_t>> frameBuffer;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
+int renderMode = 1;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
@@ -240,15 +241,7 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, DrawingWindow &
 	strokedTriangle(triangle, WHITE, window);
 }
 
-// Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
-void draw(DrawingWindow &window) {
-	for (size_t y = 0; y < HEIGHT; y++) {
-		for (size_t x = 0; x < WIDTH; x++) {
-      depthBuffer.at(y).at(x) = 0.0f;
-      frameBuffer.at(y).at(x) = 0;
-		}
-	}
-	vector<Object> objects = cornell.getObjects();
+void rasterRender(vector<Object> objects, DrawingWindow &window) {
 	for (Object object : objects) {
 		for (ModelTriangle triangle : object.triangles) {
 			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
@@ -258,8 +251,42 @@ void draw(DrawingWindow &window) {
 		  	CanvasTriangle canvasTriangle(a, b, c);
 			  filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
       }
-      // strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
 		}
+	}
+}
+
+void wireframeRender(vector<Object> objects, DrawingWindow &window) {
+	for (Object object : objects) {
+		for (ModelTriangle triangle : object.triangles) {
+			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+			CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+			CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
+      if (isInBounds(a, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(b, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(c, vec4(0, 0, WIDTH, HEIGHT))) {
+		  	CanvasTriangle canvasTriangle(a, b, c);
+			  strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
+      }
+		}
+	}
+}
+
+void raytraceRender(vector<Object> objects, DrawingWindow &window) {
+
+}
+
+// Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
+void draw(DrawingWindow &window) {
+	for (size_t y = 0; y < HEIGHT; y++) {
+		for (size_t x = 0; x < WIDTH; x++) {
+      depthBuffer.at(y).at(x) = 0.0f;
+      frameBuffer.at(y).at(x) = 0;
+		}
+	}
+	vector<Object> objects = cornell.getObjects();
+	switch (renderMode) {
+		cout << renderMode;
+		case 1: rasterRender(objects, window); break;
+		case 2: raytraceRender(objects, window); break;
+		default: wireframeRender(objects, window); break;
 	}
 
 	int xMouse, yMouse;
@@ -299,6 +326,9 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_d) camera.changeF(0.2);
     else if (event.key.keysym.sym == SDLK_m) camera.toggleOrbit();
     else if (event.key.keysym.sym == SDLK_n) camera.toggleLookAt();
+		else if (event.key.keysym.sym == SDLK_i) renderMode = 0;
+		else if (event.key.keysym.sym == SDLK_o) renderMode = 1;
+		else if (event.key.keysym.sym == SDLK_p) renderMode = 2;
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");

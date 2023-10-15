@@ -270,7 +270,13 @@ void wireframeRender(vector<Object> objects, DrawingWindow &window) {
 }
 
 void raytraceRender(vector<Object> objects, DrawingWindow &window) {
-
+	for (int i = 0; i < HEIGHT; i++) {
+		for (int j = 0; j < WIDTH; j++) {
+			RayTriangleIntersection intersection = camera.getClosestIntersection(j, i, objects);
+			ModelTriangle t = intersection.intersectedTriangle;
+			frameBuffer[i][j] = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
+		}
+	}
 }
 
 // Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.

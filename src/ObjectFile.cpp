@@ -53,6 +53,7 @@ class ObjectFile {
 				faceVertices[2] = vec4(vertices.at(face.z - 1), 1);
 				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
+				faceTriangle.colour = getKdOf(objects.at(objects.size() - 1));
 				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
 				faces.push_back(face);
 			}

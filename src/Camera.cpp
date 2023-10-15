@@ -24,6 +24,7 @@ class Camera {
     Camera(int w, int h) {
       canvasHeight = h;
       canvasWidth = w;
+      raytracingImagePlaneWidth = 5.0f;
       focalLength = 2;
       placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 10, 0, 0, 0, 0);
     }
@@ -72,25 +73,47 @@ class Camera {
       return CanvasPoint(u, v, glm::length(vertexToCamera));
     }
 
+    vec3 getRayDirection(int x, int y) {
+      glm::mat3 o = getOrientation();
+      vec3 forward = glm::normalize(vec3(o[0][0], o[1][0], o[2][0]));
+      vec3 up = glm::normalize(vec3(o[0][1], o[1][1], o[2][1]));
+      vec3 right = glm::normalize(vec3(o[0][2], o[1][2], o[2][2]));
+      float pixelLength = raytracingImagePlaneWidth / canvasWidth;
+      vec3 imagePlaneTopLeft = forward + (-up * raytracingImagePlaneWidth * 0.5f * float(canvasHeight / canvasWidth)) + (-right  * 0.5f * raytracingImagePlaneWidth);
+      return imagePlaneTopLeft + float(x) * pixelLength * -right + float(y) * -up * pixelLength;
+    }
+
+    bool validatePointInTriangle(vec3 s, ModelTriangle t) {
+      vec3 point = vec3(t.vertices[0]) + vec3(t.vertices[1] - t.vertices[0]) * s.y + vec3(t.vertices[2] - t.vertices[0]) * s.z;
+
+    }
+
     RayTriangleIntersection getClosestIntersection(int xPos, int yPos, vector<Object> objects) {
-      RayTriangleIntersection intersection;
-      vec3 rayDirection;
+      vec3 rayDirection = getRayDirection(xPos, yPos);
       vec3 closestSolution = vec3(INFINITY, 0, 0);
-      ModelTriangle solutionTriangle;
+      ModelTriangle solutionT;
 
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
-          glm::vec3 e0 = vec3(triangle.vertices[1]) - vec3(triangle.vertices[0]);
-          glm::vec3 e1 = vec3(triangle.vertices[2]) - vec3(triangle.vertices[0]);
-          glm::vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
+          vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
+          vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
+          vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
           glm::mat3 DEMatrix(-rayDirection, e0, e1);
-          glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+          vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+          validatePointInTriangle(possibleSolution, triangle);
           if (possibleSolution.x < closestSolution.x) {
             closestSolution = possibleSolution;
-            solutionTriangle = triangle;
+            solutionT = triangle;
           }
         }
       }
+
+
+      vec3 point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
+      float distance = closestSolution.x;
+      size_t index = 0;
+      RayTriangleIntersection intersection(point, distance, solutionT, index);
+
       return intersection;
     }
 
@@ -144,5 +167,6 @@ class Camera {
       bool isLooking;
       vec4 lookTarget;
       float focalLength;
+      float raytracingImagePlaneWidth;
       glm::mat4 placement;
 };

@@ -10,6 +10,7 @@
 #include <TextureMap.h>
 #include <ModelTriangle.h>
 #include "vecutil.cpp"
+#include "RayTriangleIntersection.h"
 
 using std::vector;
 using glm::vec3;
@@ -38,6 +39,7 @@ class Camera {
     void toggleLookAt() {
       isLooking = !isLooking;
     }
+
     void update() {
       if (isOrbiting) {
         vec3 pos = getPosition();
@@ -70,11 +72,65 @@ class Camera {
       return CanvasPoint(u, v, glm::length(vertexToCamera));
     }
 
+    RayTriangleIntersection getClosestIntersection(int xPos, int yPos, vector<Object> objects) {
+      RayTriangleIntersection intersection;
+      vec3 rayDirection;
+      vec3 closestSolution = vec3(INFINITY, 0, 0);
+      ModelTriangle solutionTriangle;
+
+      for (Object object : objects) {
+        for (ModelTriangle triangle : object.triangles) {
+          glm::vec3 e0 = vec3(triangle.vertices[1]) - vec3(triangle.vertices[0]);
+          glm::vec3 e1 = vec3(triangle.vertices[2]) - vec3(triangle.vertices[0]);
+          glm::vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
+          glm::mat3 DEMatrix(-rayDirection, e0, e1);
+          glm::vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+          if (possibleSolution.x < closestSolution.x) {
+            closestSolution = possibleSolution;
+            solutionTriangle = triangle;
+          }
+        }
+      }
+      return intersection;
+    }
+
     void moveBy(vec3 vect) {
       // placement[3] += vect;
       placement[0][3] += vect.x;
       placement[1][3] += vect.y;
       placement[2][3] += vect.z;
+    }
+
+    void moveRight(float a) {
+      moveBy(-a * glm::normalize(vec3(placement[0])));
+    }
+
+    void moveLeft(float a) {
+      moveRight(-a);
+    }
+
+    void moveForward(float a) {
+      moveBy(-a * glm::normalize(vec3(placement[2])));
+    }
+
+    void moveBack(float a) {
+      moveForward(-a);
+    }
+
+    void lookUp(float degrees) {
+      placement = getXRotationMatrix(-degrees) * placement;
+    }
+
+    void lookDown(float degrees) {
+      placement = getXRotationMatrix(degrees) * placement;
+    }
+
+    void lookRight(float degrees) {
+      placement = getYRotationMatrix(-2) * placement;
+    }
+
+    void lookLeft(float degrees) {
+      placement = getYRotationMatrix(2) * placement;
     }
 
     void changeF(float diff) {

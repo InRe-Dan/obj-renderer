@@ -330,6 +330,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		if (event.key.keysym.sym == SDLK_s) camera.moveBack(0.2);
 		if (event.key.keysym.sym == SDLK_a) camera.moveLeft(0.2);
 		if (event.key.keysym.sym == SDLK_d) camera.moveRight(0.2);
+    if (event.key.keysym.sym == SDLK_q) camera.moveUp(0.2);
+    if (event.key.keysym.sym == SDLK_e) camera.moveDown(0.2);
     if (event.key.keysym.sym == SDLK_m) camera.toggleOrbit();
     if (event.key.keysym.sym == SDLK_n) camera.toggleLookAt();
 		if (event.key.keysym.sym == SDLK_i) renderMode = 0;
@@ -347,12 +349,10 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-	cout << formatFloat(-0.5124, 5) << "\n";
-	cout << formatFloat(-0.512312, 5) << "\n";
-	cout << formatFloat(0.1235, 5) << "\n";
-	cout << formatFloat(121243.125121, 5) << "\n";
+ 	RayTriangleIntersection intersection = camera.getClosestIntersection(WIDTH / 2, HEIGHT/2, cornell.getObjects());
+  cout << intersection;
 	std::cout.flush();
-	quick_exit(0);
+  // std::exit(0);
 }
 
 
@@ -360,18 +360,18 @@ int main(int argc, char *argv[]) {
 	// srand(time(NULL));
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
-	// test();
   initialize();
   // Debug information
 	cornell.printObjectMaterials();
   camera.lookAt(vec4(0, 0, 0, 1));
+  test();
 	while (true) {
 		debugString = "";
 		debugString += "FPS: " + std::to_string(1 / frameTime.count()) + "\n";
 		auto start = std::chrono::system_clock::now();
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
-    	camera.update();
+    camera.update();
 		draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();

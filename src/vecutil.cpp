@@ -17,6 +17,10 @@ using glm::vec2;
 using glm::round;
 using std::string;
 
+string printVec(vec3 v) {
+  return "[" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z) + "]";
+}
+
 string formatFloat(float num, int width) {
   string returnString;
   string floatString = std::to_string(num);

@@ -75,9 +75,9 @@ class Camera {
 
     vec3 getRayDirection(int x, int y) {
       glm::mat3 o = getOrientation();
-      vec3 right = glm::normalize(vec3(o[0][0], o[1][0], o[2][0]));
-      vec3 up = glm::normalize(vec3(o[0][1], o[1][1], o[2][1]));
-      vec3 forward = glm::normalize(vec3(o[0][2], o[1][2], o[2][2]));
+      vec3 right = glm::normalize(o[0]);
+      vec3 up = - glm::normalize(o[1]);
+      vec3 forward = glm::normalize(o[2]);
       float pixelLength = raytracingImagePlaneWidth / canvasWidth;
       vec3 imagePlaneTopLeft = forward * focalLength + (up * raytracingImagePlaneWidth * 0.5f * float(canvasHeight / canvasWidth)) + (-right  * 0.5f * raytracingImagePlaneWidth);
       return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;

@@ -86,51 +86,78 @@ class Camera {
     bool validatePointInTriangle(vec3 s, ModelTriangle t) {
       // https://math.stackexchange.com/a/28552
       // https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates.html
-      vec3 A = vec3(t.vertices[0]);
-      vec3 B = vec3(t.vertices[1]);
-      vec3 C = vec3(t.vertices[2]);
-      vec3 point = vec3(t.vertices[0]) + vec3(t.vertices[1] - t.vertices[0]) * s.y + vec3(t.vertices[2] - t.vertices[0]) * s.z;
-      cout << "Is point " << printVec(point) << "? ";
-      float area = glm::length(glm::cross(B - A, C - A)) / 2;
-      float alpha = glm::length(glm::cross(point - B, point - C)) / 2 * area;
-      float beta = glm::length(glm::cross(point - C, point - A)) / 2 * area;
-      float gamma = 1 - alpha - beta;
-      cout << printVec(vec3(alpha, beta, gamma)) << ". ";
-      if (0 <= alpha && alpha <= 1 && 0 <= beta && beta <= 1 && 0 <= gamma && gamma <= 1) {cout << "Yes. "; 
-      return true;};
-      cout << "No. ";
-      return false;
+      // https://gamedev.stackexchange.com/a/23745
+      vec3 v0 = vec3(t.vertices[1] - t.vertices[0]);
+      vec3 v1 = vec3(t.vertices[2] - t.vertices[1]);
+      vec3 v2 = s - vec3(t.vertices[0]);
+      float d00 = glm::dot(v0, v0);
+      float d01 = glm::dot(v0, v1);
+      float d11 = glm::dot(v1, v1);
+      float d20 = glm::dot(v2, v0);
+      float d21 = glm::dot(v2, v1);
+      float denom = d00 * d11 - d01 * d01;
+      float v = (d11 * d20 - d01 * d21) / denom;
+      float w = (d00 * d21 - d01 * d20) / denom;
+      float u = 1.0f - v - w;
+      cout << "Point " << printVec(vec3(u, w, v)) << " is in " << printVec(vec3(t.vertices[0])) << "? ";
+      if (v <= 0.0f) return false;
+      if (v >= 1.0f) return false;
+      if (w <= 0.0f) return false;
+      if (w >= 1.0f) return false;
+      if (u <= 0.0f) return false;
+      if (u >= 1.0f) return false;
+      cout << "Yes! ";
+      return true;
+
+      
+      // vec3 A = vec3(t.vertices[0]);
+      // vec3 B = vec3(t.vertices[1]);
+      // vec3 C = vec3(t.vertices[2]);
+      // vec3 point = vec3(t.vertices[0]) + vec3(t.vertices[1] - t.vertices[0]) * s.y + vec3(t.vertices[2] - t.vertices[0]) * s.z;
+      // cout << "Is point " << printVec(point) << "? ";
+      // float area = glm::length(glm::cross(B - A, C - A)) / 2;
+      // float alpha = glm::length(glm::cross(point - B, point - C)) / 2 * area;
+      // float beta = glm::length(glm::cross(point - C, point - A)) / 2 * area;
+      // float gamma = 1 - alpha - beta;
+      // cout << printVec(vec3(alpha, beta, gamma)) << ". ";
+      // if (0 <= alpha && alpha <= 1 && 0 <= beta && beta <= 1 && 0 <= gamma && gamma <= 1) {cout << "Yes. "; 
+      // return true;};
+      // return false;
     }
 
     RayTriangleIntersection getClosestIntersection(int xPos, int yPos, vector<Object> objects) {
       vec3 rayDirection = getRayDirection(xPos, yPos);
-      cout << "Ray shot at " + printVec(rayDirection) << "\n";
+      // cout << "Ray shot at " + printVec(rayDirection) << "\n";
       vec3 closestSolution = vec3(HUGE_VAL, 0, 0);
+      vec3 closestPoint;
+      vec3 point;
       ModelTriangle solutionT;
+      solutionT.colour = Colour(0, 0, 0);
 
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
-          cout << "Testing " << triangle.colour << " triangle. ";
+          // cout << "Testing " << triangle.colour << " triangle. ";
           vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
           vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
           vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
           glm::mat3 DEMatrix(-rayDirection, e0, e1);
           vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+          // cout << "Possible solution: " << printVec(possibleSolution) << ". ";
           if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
-            if (validatePointInTriangle(possibleSolution, triangle)) {
+            point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
+            if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f) {
+              closestPoint = point;
               closestSolution = possibleSolution;
               solutionT = triangle;
             }
           }
-          cout << "\n";
+          // cout << "\n";
         }
       }
 
-
-      vec3 point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
       float distance = closestSolution.x;
-      size_t index = 3;
-      RayTriangleIntersection intersection(point, distance, solutionT, index);
+      size_t index = 3; // random number cause the program crashes with 0
+      RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
 
       return intersection;
     }

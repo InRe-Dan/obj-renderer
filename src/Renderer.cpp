@@ -349,7 +349,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
- 	RayTriangleIntersection intersection = camera.getClosestIntersection(WIDTH / 2, HEIGHT/2, cornell.getObjects());
+  cout << printVec(camera.getRayDirection(187, 367));
+ 	RayTriangleIntersection intersection = camera.getClosestIntersection(187, 367, cornell.getObjects());
   cout << intersection;
 	std::cout.flush();
   // std::exit(0);

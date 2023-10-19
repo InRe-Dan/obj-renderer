@@ -85,7 +85,6 @@ class Camera {
 
     RayTriangleIntersection getClosestIntersection(int xPos, int yPos, vector<Object> objects) {
       vec3 rayDirection = getRayDirection(xPos, yPos);
-      // cout << "Ray shot at " + printVec(rayDirection) << "\n";
       vec3 closestSolution = vec3(HUGE_VAL, 0, 0);
       vec3 closestPoint;
       vec3 point;
@@ -94,22 +93,19 @@ class Camera {
 
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
-          // cout << "Testing " << triangle.colour << " triangle. ";
           vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
           vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
           vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
           glm::mat3 DEMatrix(-rayDirection, e0, e1);
           vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
-          // cout << "Possible solution: " << printVec(possibleSolution) << ". ";
           if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
             point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
-            if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f) {
+            if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f) {
               closestPoint = point;
               closestSolution = possibleSolution;
               solutionT = triangle;
             }
           }
-          // cout << "\n";
         }
       }
 

@@ -14,6 +14,7 @@
 #include "font8x8_basic.h"
 #include <chrono>
 #include <ctime> 
+#include <thread>
 
 #define WIDTH 600
 #define HEIGHT 600
@@ -36,6 +37,7 @@ TextureMap brickMap("texture.ppm");
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
+int threadCount = 6;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
@@ -63,7 +65,7 @@ void initialize() {
   }
 }
 
-void renderDebugString(string str, DrawingWindow window) {
+void renderDebugString(string str) {
   int yOffset = 8;
   int xOffset = 8;
   for (unsigned char character : str) {
@@ -270,12 +272,14 @@ void wireframeRender(vector<Object> objects, DrawingWindow &window) {
 }
 
 void raytraceRender(vector<Object> objects, DrawingWindow &window) {
-	for (int i = 0; i < HEIGHT; i++) {
-		for (int j = 0; j < WIDTH; j++) {
-			RayTriangleIntersection intersection = camera.getClosestIntersection(j, i, objects);
-			ModelTriangle t = intersection.intersectedTriangle;
-			frameBuffer[i][j] = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
-		}
+	vector<std::thread> threadVect;
+	int slice_height = HEIGHT / threadCount;
+	for (int i = 0; i < threadCount - 1; i++) {
+		threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects));
+	}
+	threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * (threadCount - 1), HEIGHT, &frameBuffer, &objects));
+	for (int i = 0; i < threadVect.size(); i++) {
+		threadVect.at(i).join();
 	}
 }
 
@@ -295,15 +299,39 @@ void draw(DrawingWindow &window) {
 		default: wireframeRender(objects, window); break;
 	}
 
+	// Get mouse state
 	int xMouse, yMouse;
   SDL_GetMouseState(&xMouse,&yMouse);
+
+	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
 	uint32_t colour = frameBuffer[yMouse][xMouse];
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
-	debugString += "Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+
+	// Print mode-specific information
+	debugString += "\n";
+	switch (renderMode) {
+		case 0:
+			debugString += "Mode: Wireframe \n";
+			debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			break;
+		case 1:
+			debugString += "Mode: Rasterization \n";
+			debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			break;
+		case 2:
+			debugString += "Mode: Raytracing\n";
+			debugString += "    Threads: " + std::to_string(threadCount) + "\n";
+			break;
+		default:
+			debugString += "Mode: Unknown\n";
+	}
+
+	// Print orientation matrix
+	debugString += '\n';
 	glm::mat4 placement = camera.getPlacement();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
@@ -311,8 +339,10 @@ void draw(DrawingWindow &window) {
 		}
 		debugString += "\n";
 	}
-  renderDebugString(debugString, window);
+	// Overlay debug string onto frame buffer
+  renderDebugString(debugString);
 
+	// Send frame buffer to SDL
   for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH * 2; x++) {
       window.setPixelColour(x, y, frameBuffer.at(y).at(x));
@@ -337,6 +367,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		if (event.key.keysym.sym == SDLK_i) renderMode = 0;
 		if (event.key.keysym.sym == SDLK_o) renderMode = 1;
 		if (event.key.keysym.sym == SDLK_p) renderMode = 2;
+		if (event.key.keysym.sym == SDLK_EQUALS) threadCount++;
+		if (event.key.keysym.sym == SDLK_MINUS) if (threadCount > 1) threadCount--;
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");
@@ -365,7 +397,7 @@ int main(int argc, char *argv[]) {
   // Debug information
 	cornell.printObjectMaterials();
   camera.lookAt(vec4(0, 0, 0, 1));
-  test();
+  // test();
 	while (true) {
 		debugString = "";
 		debugString += "FPS: " + std::to_string(1 / frameTime.count()) + "\n";

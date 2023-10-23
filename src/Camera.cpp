@@ -116,6 +116,16 @@ class Camera {
       return intersection;
     }
 
+    void raytraceSection(int x1, int x2, int y1, int y2, vector<vector<uint32_t>> *frameBuffer, vector<Object> *objects) {
+      for (int i = y1; i < y2; i++) {
+        for (int j = x1; j < x2; j++) {
+          RayTriangleIntersection intersection = getClosestIntersection(j, i, *objects);
+			    ModelTriangle t = intersection.intersectedTriangle;
+			    (*frameBuffer).at(i).at(j) = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
+        }
+      }
+    }
+
     void moveBy(vec3 vect) {
       // placement[3] += vect;
       placement[0][3] += vect.x;

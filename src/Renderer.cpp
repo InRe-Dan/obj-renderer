@@ -284,6 +284,22 @@ void raytraceRender(vector<Object> objects, DrawingWindow &window) {
 	}
 }
 
+void drawFancyBackground(DrawingWindow &window) {
+  // Inspired by a Sebastian Lague video, I think.
+  vec3 topLeft = glm::normalize(camera.getRayDirection(0, 0));
+  vec3 topRight = glm::normalize(camera.getRayDirection(WIDTH, 0));
+  vec3 bottomLeft = glm::normalize(camera.getRayDirection(0, HEIGHT));
+  vec3 bottomRight = glm::normalize(camera.getRayDirection(WIDTH, HEIGHT));
+  vector<vec3> leftEdge = interpolate(topLeft, bottomLeft, HEIGHT);
+  vector<vec3> rightEdge = interpolate(topRight, bottomRight, HEIGHT);
+  for (int i = 0; i < HEIGHT; i++) {
+    vector<vec3> horizontalLine = interpolate(leftEdge.at(i), rightEdge.at(i), WIDTH);
+    for (int j = 0; j < WIDTH; j++) {
+      frameBuffer.at(i).at(j) = vec3ToColour(horizontalLine.at(j) * 50.0f, 255);
+    }
+  }
+}
+
 // Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
 void draw(DrawingWindow &window) {
 	for (size_t y = 0; y < HEIGHT; y++) {
@@ -292,6 +308,8 @@ void draw(DrawingWindow &window) {
       frameBuffer.at(y).at(x) = 0;
 		}
 	}
+
+  drawFancyBackground(window);
 	vector<Object> objects = cornell.getObjects();
 	switch (renderMode) {
 		cout << renderMode;
@@ -301,8 +319,8 @@ void draw(DrawingWindow &window) {
 	}
 
 	// Apply effects
-  frameBuffer = blackAndWhite(frameBuffer);
-	frameBuffer = applyKernel(frameBuffer, edgeDetectionKernel);
+  // frameBuffer = blackAndWhite(frameBuffer);
+  // frameBuffer = applyKernel(frameBuffer, edgeDetectionKernel);
 
 	// Get mouse state
 	int xMouse, yMouse;

@@ -167,11 +167,11 @@ class Camera {
     }
 
     void lookRight(float degrees) {
-      placement = getYRotationMatrix(-2) * placement;
+      placement = getYRotationMatrix(-degrees) * placement;
     }
 
     void lookLeft(float degrees) {
-      placement = getYRotationMatrix(2) * placement;
+      placement = getYRotationMatrix(degrees) * placement;
     }
 
     void changeF(float diff) {

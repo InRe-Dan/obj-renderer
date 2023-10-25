@@ -70,3 +70,21 @@ vector<vector<uint32_t>> applyKernel(vector<vector<uint32_t>> &target, Kernel &k
   }
   return result;
 }
+
+vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
+  int targetW = target.at(0).size();
+  int targetH = target.size();
+  for (int i = 0; i < targetH; i++) {
+    for (int j = 0; j < targetW; j++){
+      uint32_t col = target.at(i).at(j);
+      // These weights are based on approximations of how the eye percieves different channels.
+      // Source: e2eml.school - Course 137
+      uint32_t sum = ((col >> 16) & 0x00FF0000) * 0.299 + ((col >> 8) & 0x0000FF00) * 0.587 + (col & 0x000000FF) * 0.114;
+      sum = sum > 255? 255 : sum;
+      uint32_t repacked = (sum << 16) + (sum << 8) + sum;
+      target.at(i).at(j) = repacked;
+
+    }
+  }
+  return target;
+}

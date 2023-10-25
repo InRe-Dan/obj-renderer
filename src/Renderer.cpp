@@ -301,6 +301,7 @@ void draw(DrawingWindow &window) {
 	}
 
 	// Apply effects
+  frameBuffer = blackAndWhite(frameBuffer);
 	frameBuffer = applyKernel(frameBuffer, edgeDetectionKernel);
 
 	// Get mouse state

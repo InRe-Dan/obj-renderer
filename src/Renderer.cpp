@@ -12,6 +12,7 @@
 #include "ObjectFile.cpp"
 #include "Camera.cpp"
 #include "font8x8_basic.h"
+#include "postprocessing.cpp"
 #include <chrono>
 #include <ctime> 
 #include <thread>
@@ -298,6 +299,9 @@ void draw(DrawingWindow &window) {
 		case 2: raytraceRender(objects, window); break;
 		default: wireframeRender(objects, window); break;
 	}
+
+	// Apply effects
+	frameBuffer = applyKernel(frameBuffer, edgeDetectionKernel);
 
 	// Get mouse state
 	int xMouse, yMouse;

@@ -121,6 +121,7 @@ class Camera {
         for (int j = x1; j < x2; j++) {
           RayTriangleIntersection intersection = getClosestIntersection(j, i, *objects);
 			    ModelTriangle t = intersection.intersectedTriangle;
+          if (intersection.distanceFromCamera == HUGE_VAL) continue;
 			    (*frameBuffer).at(i).at(j) = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
         }
       }

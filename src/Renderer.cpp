@@ -295,7 +295,7 @@ void drawFancyBackground(DrawingWindow &window) {
   for (int i = 0; i < HEIGHT; i++) {
     vector<vec3> horizontalLine = interpolate(leftEdge.at(i), rightEdge.at(i), WIDTH);
     for (int j = 0; j < WIDTH; j++) {
-      frameBuffer.at(i).at(j) = vec3ToColour(horizontalLine.at(j) * 50.0f, 255);
+      frameBuffer.at(i).at(j) = vec3ToColour(horizontalLine.at(j) * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
     }
   }
 }

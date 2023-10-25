@@ -114,7 +114,7 @@ vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec
 
 uint32_t vec3ToColour(vec3 vect, int alpha) {
 	// Convert an RGB value and an alpha value to an int encoding them.
-	uint32_t colour = (alpha << 24) + (int(vect.x) << 16) + (int(vect.y) << 8) + int(vect.z);
+	uint32_t colour = (alpha << 24) + (uint8_t(vect.x) << 16) + (uint8_t(vect.y) << 8) + uint8_t(vect.z);
 	return colour; 
 }
 

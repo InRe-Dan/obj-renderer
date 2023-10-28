@@ -83,20 +83,20 @@ class Camera {
       return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;
     }
 
-    RayTriangleIntersection getClosestIntersection(int xPos, int yPos, vector<Object> objects) {
-      vec3 rayDirection = getRayDirection(xPos, yPos);
+    RayTriangleIntersection getClosestIntersection(vec3 ray, vector<Object> objects) {
       vec3 closestSolution = vec3(HUGE_VAL, 0, 0);
       vec3 closestPoint;
       vec3 point;
       ModelTriangle solutionT;
       solutionT.colour = Colour(0, 0, 0);
-
+      int solutionIndex = -1; // Represents No Solution
+      int i = 0;
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
           vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
           vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
           vec3 SPVector = getPosition() - vec3(triangle.vertices[0]);
-          glm::mat3 DEMatrix(-rayDirection, e0, e1);
+          glm::mat3 DEMatrix(-ray, e0, e1);
           vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
           if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
             point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
@@ -104,22 +104,33 @@ class Camera {
               closestPoint = point;
               closestSolution = possibleSolution;
               solutionT = triangle;
+              solutionIndex = i;
             }
           }
+          i++;
         }
       }
-
       float distance = closestSolution.x;
-      size_t index = 3; // random number cause the program crashes with 0
+      size_t index = solutionIndex;
       RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
-
       return intersection;
     }
 
-    void raytraceSection(int x1, int x2, int y1, int y2, vector<vector<uint32_t>> *frameBuffer, vector<Object> *objects) {
+    RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, vector<Object> objects, vec3 lightSource) {
+      vec3 rayDirection = getRayDirection(xPos, yPos);
+      RayTriangleIntersection intersection = getClosestIntersection(rayDirection, objects);
+      vec3 pointToLight = lightSource - intersection.intersectionPoint;
+      RayTriangleIntersection lightIntersection = getClosestIntersection(pointToLight, objects);
+      if (lightIntersection.triangleIndex == intersection.triangleIndex) {
+        intersection.intersectedTriangle.colour = Colour(0, 0, 0);
+      }
+      return intersection;
+    }
+
+    void raytraceSection(int x1, int x2, int y1, int y2, vector<vector<uint32_t>> *frameBuffer, vector<Object> *objects, vec3 *lightSource) {
       for (int i = y1; i < y2; i++) {
         for (int j = x1; j < x2; j++) {
-          RayTriangleIntersection intersection = getClosestIntersection(j, i, *objects);
+          RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *objects, *lightSource);
 			    ModelTriangle t = intersection.intersectedTriangle;
           if (intersection.distanceFromCamera == HUGE_VAL) continue;
 			    (*frameBuffer).at(i).at(j) = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);

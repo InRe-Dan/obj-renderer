@@ -35,6 +35,7 @@ ObjectFile cornell("cornell-box.obj", 1.0f);
 // Simple plane object (modified cornell) used for debugging
 ObjectFile plane("simple-plane.obj", 1.0f);
 TextureMap brickMap("texture.ppm");
+vec3 lightSource = vec3(0, 0.5, 0);
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
@@ -276,9 +277,9 @@ void raytraceRender(vector<Object> objects, DrawingWindow &window) {
 	vector<std::thread> threadVect;
 	int slice_height = HEIGHT / threadCount;
 	for (int i = 0; i < threadCount - 1; i++) {
-		threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects));
+		threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
 	}
-	threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * (threadCount - 1), HEIGHT, &frameBuffer, &objects));
+	threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * (threadCount - 1), HEIGHT, &frameBuffer, &objects, &lightSource));
 	for (int i = 0; i < threadVect.size(); i++) {
 		threadVect.at(i).join();
 	}
@@ -320,7 +321,7 @@ void draw(DrawingWindow &window) {
 
 	// Apply effects
   // frameBuffer = blackAndWhite(frameBuffer);
-  // frameBuffer = applyKernel(frameBuffer, edgeDetectionKernel);
+  // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
 
 	// Get mouse state
 	int xMouse, yMouse;
@@ -405,7 +406,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 // Test function for hand-checking outputs of simple functions.
 void test() {
   cout << printVec(camera.getRayDirection(187, 367));
- 	RayTriangleIntersection intersection = camera.getClosestIntersection(187, 367, cornell.getObjects());
+ 	RayTriangleIntersection intersection = camera.getRaytracedPixelIntersection(187, 367, cornell.getObjects(), lightSource);
   cout << intersection;
 	std::cout.flush();
   // std::exit(0);

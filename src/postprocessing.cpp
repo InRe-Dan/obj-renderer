@@ -88,3 +88,15 @@ vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
   }
   return target;
 }
+
+vector<vector<uint32_t>> simpleUpscale(vector<vector<uint32_t>> &source, vector<vector<uint32_t>> &target, int scale) {
+  for (int i = 0; i <= source.size(); i++) {
+    for (int j = 0; j <= source.at(0).size(); j++) {
+      for (int y = 0; y < scale; y++) {
+        for (int x = 0; x < scale; x++) {
+          target.at(i * scale + y).at(j * scale + x) = source.at(y).at(x);
+        }
+      }
+    }
+  }
+}

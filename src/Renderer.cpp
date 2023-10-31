@@ -35,7 +35,7 @@ ObjectFile cornell("cornell-box.obj", 1.0f);
 // Simple plane object (modified cornell) used for debugging
 ObjectFile plane("simple-plane.obj", 1.0f);
 TextureMap brickMap("texture.ppm");
-vec3 lightSource = vec3(0, 0.5, 0);
+vec3 lightSource = vec3(0, 0, 5);
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
@@ -405,8 +405,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-  cout << printVec(camera.getRayDirection(187, 367));
- 	RayTriangleIntersection intersection = camera.getRaytracedPixelIntersection(187, 367, cornell.getObjects(), lightSource);
+ 	RayTriangleIntersection intersection = camera.getRaytracedPixelIntersection(WIDTH/2, HEIGHT/2, cornell.getObjects(), lightSource);
   cout << intersection;
 	std::cout.flush();
   // std::exit(0);
@@ -421,7 +420,7 @@ int main(int argc, char *argv[]) {
   // Debug information
 	cornell.printObjectMaterials();
   camera.lookAt(vec4(0, 0, 0, 1));
-  // test();
+  test();
 	while (true) {
 		debugString = "";
 		debugString += "FPS: " + std::to_string(1 / frameTime.count()) + "\n";

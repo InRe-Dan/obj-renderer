@@ -15,7 +15,6 @@
 #include "postprocessing.cpp"
 #include <chrono>
 #include <ctime> 
-#include <thread>
 
 #define WIDTH 600
 #define HEIGHT 600
@@ -88,47 +87,6 @@ void renderDebugString(string str) {
   }
 }
 
-
-void rasterRender(vector<Object> objects, DrawingWindow &window) {
-	for (Object object : objects) {
-		for (ModelTriangle triangle : object.triangles) {
-			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-			CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-			CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-      if (isInBounds(a, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(b, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(c, vec4(0, 0, WIDTH, HEIGHT))) {
-		  	CanvasTriangle canvasTriangle(a, b, c);
-			  filledTriangle(canvasTriangle, cornell.getKdOf(object), window);
-      }
-		}
-	}
-}
-
-void wireframeRender(vector<Object> objects, DrawingWindow &window) {
-	for (Object object : objects) {
-		for (ModelTriangle triangle : object.triangles) {
-			CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-			CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-			CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-      if (isInBounds(a, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(b, vec4(0, 0, WIDTH, HEIGHT)) && isInBounds(c, vec4(0, 0, WIDTH, HEIGHT))) {
-		  	CanvasTriangle canvasTriangle(a, b, c);
-			  strokedTriangle(canvasTriangle, cornell.getKdOf(object), window);
-      }
-		}
-	}
-}
-
-void raytraceRender(vector<Object> objects, DrawingWindow &window) {
-	vector<std::thread> threadVect;
-	int slice_height = HEIGHT / threadCount;
-	for (int i = 0; i < threadCount - 1; i++) {
-		threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
-	}
-	threadVect.push_back(std::thread(&Camera::raytraceSection, &camera, 0, WIDTH, slice_height * (threadCount - 1), HEIGHT, &frameBuffer, &objects, &lightSource));
-	for (int i = 0; i < threadVect.size(); i++) {
-		threadVect.at(i).join();
-	}
-}
-
 void drawFancyBackground(DrawingWindow &window) {
   // Inspired by a Sebastian Lague video, I think.
   vec3 topLeft = glm::normalize(camera.getRayDirection(0, 0));
@@ -158,9 +116,9 @@ void draw(DrawingWindow &window) {
 	vector<Object> objects = cornell.getObjects();
 	switch (renderMode) {
 		cout << renderMode;
-		case 1: rasterRender(objects, window); break;
-		case 2: raytraceRender(objects, window); break;
-		default: wireframeRender(objects, window); break;
+		case 1: camera.rasterRender(objects, frameBuffer, depthBuffer); break;
+		case 2: camera.raytraceRender(objects, frameBuffer, depthBuffer); break;
+		default: camera.wireframeRender(objects, frameBuffer, depthBuffer); break;
 	}
 
 	// Apply effects

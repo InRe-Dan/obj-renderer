@@ -11,6 +11,9 @@
 #include <ModelTriangle.h>
 #include "vecutil.cpp"
 #include "RayTriangleIntersection.h"
+#include "drawing.cpp"
+#include <thread>
+
 
 using std::vector;
 using glm::vec3;
@@ -137,6 +140,46 @@ class Camera {
           if (intersection.triangleIndex == -1) continue;
 			    (*frameBuffer).at(i).at(j) = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
         }
+      }
+    }
+
+    void rasterRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+      for (Object object : objects) {
+        for (ModelTriangle triangle : object.triangles) {
+          CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+          CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+          CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
+          if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+            CanvasTriangle canvasTriangle(a, b, c);
+            filledTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
+          }
+        }
+      }
+    }
+
+    void wireframeRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+      for (Object object : objects) {
+        for (ModelTriangle triangle : object.triangles) {
+          CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+          CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+          CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
+          if (isInBounds(a, vec4(0, 0, canvasHeight, canvasWidth)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+            CanvasTriangle canvasTriangle(a, b, c);
+            strokedTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
+          }
+        }
+      }
+    }
+
+    void raytraceRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+      vector<std::thread> threadVect;
+      int slice_height = canvasHeight / threadCount;
+      for (int i = 0; i < threadCount - 1; i++) {
+        threadVect.push_back(std::thread(&raytraceSection, this, 0, canvasWidth, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
+      }
+      threadVect.push_back(std::thread(&raytraceSection, this, 0, canvasWidth, slice_height * (threadCount - 1), canvasHeight, &frameBuffer, &objects, &lightSource));
+      for (int i = 0; i < threadVect.size(); i++) {
+        threadVect.at(i).join();
       }
     }
 

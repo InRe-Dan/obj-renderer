@@ -12,7 +12,7 @@
 #include <vecutil.cpp>
 
 // Draw a line from a point to another on a window.
-void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<uint32_t>> &depthBuffer) {
+void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	float xDiff = to.x - from.x;
 	float yDiff = to.y - from.y;
 	float steps = round(glm::max(glm::abs(xDiff), glm::abs(yDiff)));
@@ -27,14 +27,14 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_
 }
 
 // Draw a wireframe triangle
-void strokedTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<uint32_t>> &depthBuffer) {
+void strokedTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	line(triangle.v0(), triangle.v1(), colour, frameBuffer, depthBuffer);
 	line(triangle.v1(), triangle.v2(), colour, frameBuffer, depthBuffer);
 	line(triangle.v2(), triangle.v0(), colour, frameBuffer, depthBuffer);
 }
 
 // Draw a triangle which has a flat top or flat bottom. This is intended as a helper function.
-void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<uint32_t>> &depthBuffer) {
+void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	assert(round(base1.y) == round(base2.y));
 	vector<CanvasPoint> pointToOne = interpolate(point, base1, ceil(abs(point.y - base1.y)));
 	vector<CanvasPoint> pointToTwo = interpolate(point, base2, ceil(abs(point.y - base2.y)));
@@ -46,7 +46,7 @@ void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, 
 }
 
 // Draw a full triangle
-void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<uint32_t>> &depthBuffer) {
+void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
 	CanvasPoint mid = triangle.v1();
@@ -89,7 +89,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	}
 }
 
-void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<uint32_t>> &frameBuffer, vector<vector<uint32_t>> &depthBuffer) {
+void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
 	CanvasPoint mid = triangle.v1();

@@ -36,6 +36,7 @@ vec3 lightSource = vec3(0, 0, 5);
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
+vector<vector<uint32_t>> upscaledFrameBuffer;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
@@ -45,19 +46,26 @@ int renderMode = 1;
 void initialize() {
   // Initialize a depth buffer with 0 values
   depthBuffer = vector<vector<float>>();
-  for (int i = 0; i < HEIGHT; i++) {
+  for (int i = 0; i < 150; i++) {
     depthBuffer.push_back(vector<float>());
-    for (int j = 0; j < WIDTH; j++) {
+    for (int j = 0; j < 150; j++) {
       depthBuffer.at(i).push_back(0.0f);
     }
   }
   // Initialize a frame buffer with black. Twice as wide as the default camera resolution
   // to accommodate a display side and a debug side.
   // This frame buffer is redundant but enables easier debugging.
-  frameBuffer = vector<vector<uint32_t>>();
+  upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
+    upscaledFrameBuffer.push_back(vector<uint32_t>());
+    for (int j = 0; j < WIDTH; j++) {
+      upscaledFrameBuffer.at(i).push_back(0);
+    }
+  }
+  frameBuffer = vector<vector<uint32_t>>();
+  for (int i = 0; i < 150; i++) {
     frameBuffer.push_back(vector<uint32_t>());
-    for (int j = 0; j < WIDTH * 2; j++) {
+    for (int j = 0; j < 150; j++) {
       frameBuffer.at(i).push_back(0);
     }
   }
@@ -76,7 +84,7 @@ void renderDebugString(string str) {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         if ((font8x8_basic[character][i] >> j) & 1) {
-          frameBuffer[yOffset + i][xOffset + j] = vec3ToColour(vec3(255, 255, 255), 255);
+          upscaledFrameBuffer[yOffset + i][xOffset + j] = vec3ToColour(vec3(255, 255, 255), 255);
         }
       }
     }
@@ -92,9 +100,9 @@ void drawFancyBackground(DrawingWindow &window) {
   vec3 bottomRight = glm::normalize(camera.getRayDirection(WIDTH, HEIGHT));
   vector<vec3> leftEdge = interpolate(topLeft, bottomLeft, HEIGHT);
   vector<vec3> rightEdge = interpolate(topRight, bottomRight, HEIGHT);
-  for (int i = 0; i < HEIGHT; i++) {
+  for (int i = 0; i < 150; i++) {
     vector<vec3> horizontalLine = interpolate(leftEdge.at(i), rightEdge.at(i), WIDTH);
-    for (int j = 0; j < WIDTH; j++) {
+    for (int j = 0; j < 150; j++) {
       frameBuffer.at(i).at(j) = vec3ToColour(horizontalLine.at(j) * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
     }
   }
@@ -104,6 +112,11 @@ void drawFancyBackground(DrawingWindow &window) {
 void draw(DrawingWindow &window) {
 	for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
+      upscaledFrameBuffer.at(y).at(x) = 0;
+		}
+	}
+  for (size_t y = 0; y < 150; y++) {
+		for (size_t x = 0; x < 150; x++) {
       depthBuffer.at(y).at(x) = 0.0f;
       frameBuffer.at(y).at(x) = 0;
 		}
@@ -121,6 +134,8 @@ void draw(DrawingWindow &window) {
 	// Apply effects
   // frameBuffer = blackAndWhite(frameBuffer);
   // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
+  simpleUpscale(frameBuffer, upscaledFrameBuffer, 4);
+
 
 	// Get mouse state
 	int xMouse, yMouse;
@@ -128,7 +143,7 @@ void draw(DrawingWindow &window) {
 
 	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
-	uint32_t colour = frameBuffer[yMouse][xMouse];
+	uint32_t colour = 0xFFFFFFFF;  // upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
@@ -139,11 +154,11 @@ void draw(DrawingWindow &window) {
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			// debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			// debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
@@ -167,8 +182,8 @@ void draw(DrawingWindow &window) {
 
 	// Send frame buffer to SDL
   for (size_t y = 0; y < HEIGHT; y++) {
-		for (size_t x = 0; x < WIDTH * 2; x++) {
-      window.setPixelColour(x, y, frameBuffer.at(y).at(x));
+		for (size_t x = 0; x < WIDTH; x++) {
+      window.setPixelColour(x, y, upscaledFrameBuffer.at(y).at(x));
     }
   }
 }

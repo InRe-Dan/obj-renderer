@@ -1,3 +1,5 @@
+#pragma once
+
 #include <CanvasTriangle.h>
 #include <vector>
 #include <glm/glm.hpp>

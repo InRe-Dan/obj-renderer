@@ -1,3 +1,5 @@
+#pragma once
+
 #include <CanvasTriangle.h>
 #include <DrawingWindow.h>
 #include <CanvasPoint.h>

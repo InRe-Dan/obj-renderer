@@ -23,6 +23,8 @@ using glm::round;
 // Object to represent a camera in a scene.
 class Camera {
   public:
+    int canvasWidth;
+    int canvasHeight;
     // Takes parameters for camera resolution.
     Camera(int w, int h) {
       threadCount = 6;
@@ -83,7 +85,7 @@ class Camera {
       vec3 up = - glm::normalize(o[1]);
       vec3 forward = glm::normalize(o[2]);
       float pixelLength = raytracingImagePlaneWidth / canvasWidth;
-      vec3 imagePlaneTopLeft = forward * focalLength + (up * raytracingImagePlaneWidth * 0.5f * float(canvasHeight / canvasWidth)) + (-right  * 0.5f * raytracingImagePlaneWidth);
+      vec3 imagePlaneTopLeft = forward * focalLength + (up * (canvasHeight * 0.5f * pixelLength)) + (-right * (pixelLength * canvasWidth * 0.5f));
       return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;
     }
 
@@ -123,13 +125,13 @@ class Camera {
     RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, vector<Object> objects, vec3 lightSource) {
       vec3 rayDirection = getRayDirection(xPos, yPos);
       RayTriangleIntersection intersection = getClosestIntersection(rayDirection, objects, getPosition());
-      if (intersection.triangleIndex == -1) return intersection;
+      /* if (intersection.triangleIndex == -1) return intersection;
       vec3 pointToLight = -(intersection.intersectionPoint - lightSource);
       RayTriangleIntersection lightIntersection = getClosestIntersection(pointToLight, objects, lightSource);
       if (lightIntersection.triangleIndex != -1 && glm::abs(lightIntersection.distanceFromCamera) < glm::length(pointToLight)) {
         Colour c = intersection.intersectedTriangle.colour;
         intersection.intersectedTriangle.colour = Colour(c.red/2, c.green/2, c.blue/2);
-      }
+      } */
       return intersection;
     }
 
@@ -236,8 +238,6 @@ class Camera {
     }
 
     private:
-      int canvasWidth;
-      int canvasHeight;
       bool isOrbiting;
       bool isLooking;
       vec4 lookTarget;

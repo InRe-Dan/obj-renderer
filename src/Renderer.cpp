@@ -16,8 +16,8 @@
 #include <chrono>
 #include <ctime> 
 
-#define WIDTH 600
-#define HEIGHT 600
+#define WIDTH 1280
+#define HEIGHT 720
 #define WHITE Colour(255, 255, 255)
 #define RED Colour(255, 0, 0)
 #define PURPLE Colour(255, 0, 255)
@@ -27,9 +27,8 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
-
 // Convention will be that the positive Z axis goes from the image plane towards the camera.
-Camera camera(150, 150);
+Camera camera(256, 144);
 ObjectFile cornell("cornell-box.obj", 1.0f);
 // Simple plane object (modified cornell) used for debugging
 vec3 lightSource = vec3(0, 0, 5);
@@ -46,9 +45,9 @@ int renderMode = 1;
 void initialize() {
   // Initialize a depth buffer with 0 values
   depthBuffer = vector<vector<float>>();
-  for (int i = 0; i < 150; i++) {
+  for (int i = 0; i < camera.canvasHeight; i++) {
     depthBuffer.push_back(vector<float>());
-    for (int j = 0; j < 150; j++) {
+    for (int j = 0; j < camera.canvasWidth; j++) {
       depthBuffer.at(i).push_back(0.0f);
     }
   }
@@ -63,9 +62,9 @@ void initialize() {
     }
   }
   frameBuffer = vector<vector<uint32_t>>();
-  for (int i = 0; i < 150; i++) {
+  for (int i = 0; i < camera.canvasHeight; i++) {
     frameBuffer.push_back(vector<uint32_t>());
-    for (int j = 0; j < 150; j++) {
+    for (int j = 0; j < camera.canvasWidth; j++) {
       frameBuffer.at(i).push_back(0);
     }
   }
@@ -100,9 +99,9 @@ void drawFancyBackground(DrawingWindow &window) {
   vec3 bottomRight = glm::normalize(camera.getRayDirection(WIDTH, HEIGHT));
   vector<vec3> leftEdge = interpolate(topLeft, bottomLeft, HEIGHT);
   vector<vec3> rightEdge = interpolate(topRight, bottomRight, HEIGHT);
-  for (int i = 0; i < 150; i++) {
+  for (int i = 0; i < camera.canvasHeight; i++) {
     vector<vec3> horizontalLine = interpolate(leftEdge.at(i), rightEdge.at(i), WIDTH);
-    for (int j = 0; j < 150; j++) {
+    for (int j = 0; j < camera.canvasWidth; j++) {
       frameBuffer.at(i).at(j) = vec3ToColour(horizontalLine.at(j) * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
     }
   }
@@ -115,8 +114,8 @@ void draw(DrawingWindow &window) {
       upscaledFrameBuffer.at(y).at(x) = 0;
 		}
 	}
-  for (size_t y = 0; y < 150; y++) {
-		for (size_t x = 0; x < 150; x++) {
+  for (size_t y = 0; y < camera.canvasHeight; y++) {
+		for (size_t x = 0; x < camera.canvasWidth; x++) {
       depthBuffer.at(y).at(x) = 0.0f;
       frameBuffer.at(y).at(x) = 0;
 		}
@@ -134,7 +133,7 @@ void draw(DrawingWindow &window) {
 	// Apply effects
   // frameBuffer = blackAndWhite(frameBuffer);
   // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
-  simpleUpscale(frameBuffer, upscaledFrameBuffer, 4);
+  simpleUpscale(frameBuffer, upscaledFrameBuffer, 5);
 
 
 	// Get mouse state

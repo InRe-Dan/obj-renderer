@@ -168,7 +168,7 @@ class Camera {
           CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
           CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
           CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-          if (isInBounds(a, vec4(0, 0, canvasHeight, canvasWidth)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+          if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
             CanvasTriangle canvasTriangle(a, b, c);
             strokedTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
           }

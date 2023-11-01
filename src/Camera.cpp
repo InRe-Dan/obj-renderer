@@ -25,6 +25,7 @@ class Camera {
   public:
     // Takes parameters for camera resolution.
     Camera(int w, int h) {
+      threadCount = 6;
       canvasHeight = h;
       canvasWidth = w;
       raytracingImagePlaneWidth = 5.0f;
@@ -143,12 +144,12 @@ class Camera {
       }
     }
 
-    void rasterRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+    void rasterRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
-          CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-          CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-          CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
+          CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+          CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+          CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
           if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
             CanvasTriangle canvasTriangle(a, b, c);
             filledTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
@@ -157,12 +158,12 @@ class Camera {
       }
     }
 
-    void wireframeRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+    void wireframeRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
       for (Object object : objects) {
         for (ModelTriangle triangle : object.triangles) {
-          CanvasPoint a = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-          CanvasPoint b = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-          CanvasPoint c = camera.getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
+          CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
+          CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
+          CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
           if (isInBounds(a, vec4(0, 0, canvasHeight, canvasWidth)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
             CanvasTriangle canvasTriangle(a, b, c);
             strokedTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
@@ -171,13 +172,13 @@ class Camera {
       }
     }
 
-    void raytraceRender(vector<Object> objects, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
+    void raytraceRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer, vec3 lightSource) {
       vector<std::thread> threadVect;
       int slice_height = canvasHeight / threadCount;
       for (int i = 0; i < threadCount - 1; i++) {
-        threadVect.push_back(std::thread(&raytraceSection, this, 0, canvasWidth, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
+        threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
       }
-      threadVect.push_back(std::thread(&raytraceSection, this, 0, canvasWidth, slice_height * (threadCount - 1), canvasHeight, &frameBuffer, &objects, &lightSource));
+      threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * (threadCount - 1), canvasHeight, &frameBuffer, &objects, &lightSource));
       for (int i = 0; i < threadVect.size(); i++) {
         threadVect.at(i).join();
       }
@@ -243,4 +244,5 @@ class Camera {
       float focalLength;
       float raytracingImagePlaneWidth;
       glm::mat4 placement;
+      int threadCount;
 };

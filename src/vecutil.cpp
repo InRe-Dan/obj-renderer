@@ -1,3 +1,5 @@
+#ifndef vecutil 
+#define vecutil 
 #include <CanvasTriangle.h>
 #include <DrawingWindow.h>
 #include <CanvasPoint.h>
@@ -171,3 +173,5 @@ vector<vec2> interpolate(TexturePoint from, TexturePoint to, int steps) {
 	vec2 toP(to.x, to.y);
 	return interpolate(fromP, toP, steps);
 }
+
+#endif

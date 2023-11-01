@@ -29,16 +29,13 @@ using glm::round;
 
 
 // Convention will be that the positive Z axis goes from the image plane towards the camera.
-Camera camera(WIDTH, HEIGHT);
+Camera camera(150, 150);
 ObjectFile cornell("cornell-box.obj", 1.0f);
 // Simple plane object (modified cornell) used for debugging
-ObjectFile plane("simple-plane.obj", 1.0f);
-TextureMap brickMap("texture.ppm");
 vec3 lightSource = vec3(0, 0, 5);
 
 vector<vector<float>> depthBuffer;
 vector<vector<uint32_t>> frameBuffer;
-int threadCount = 6;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
@@ -116,9 +113,9 @@ void draw(DrawingWindow &window) {
 	vector<Object> objects = cornell.getObjects();
 	switch (renderMode) {
 		cout << renderMode;
-		case 1: camera.rasterRender(objects, frameBuffer, depthBuffer); break;
-		case 2: camera.raytraceRender(objects, frameBuffer, depthBuffer); break;
-		default: camera.wireframeRender(objects, frameBuffer, depthBuffer); break;
+		case 1: camera.rasterRender(objects, cornell, frameBuffer, depthBuffer); break;
+		case 2: camera.raytraceRender(objects, cornell, frameBuffer, depthBuffer, lightSource); break;
+		default: camera.wireframeRender(objects, cornell, frameBuffer, depthBuffer); break;
 	}
 
 	// Apply effects
@@ -150,7 +147,7 @@ void draw(DrawingWindow &window) {
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-			debugString += "    Threads: " + std::to_string(threadCount) + "\n";
+			// debugString += "    Threads: " + std::to_string(threadCount) + "\n";
 			break;
 		default:
 			debugString += "Mode: Unknown\n";
@@ -193,8 +190,6 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		if (event.key.keysym.sym == SDLK_i) renderMode = 0;
 		if (event.key.keysym.sym == SDLK_o) renderMode = 1;
 		if (event.key.keysym.sym == SDLK_p) renderMode = 2;
-		if (event.key.keysym.sym == SDLK_EQUALS) threadCount++;
-		if (event.key.keysym.sym == SDLK_MINUS) if (threadCount > 1) threadCount--;
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");

@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <TextureMap.h>
 #include <ModelTriangle.h>
-#include <vecutil.cpp>
+#include "vecutil.cpp"
 
 // Draw a line from a point to another on a window.
 void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
@@ -89,6 +89,7 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	}
 }
 
+/*
 void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();
@@ -167,3 +168,4 @@ void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<u
 	}
 	strokedTriangle(triangle, Colour(255, 255, 255), frameBuffer, depthBuffer);
 }
+*/

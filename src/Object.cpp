@@ -22,6 +22,14 @@ class Object {
 	void setMaterial(string m) {
 		material = m;
 	}
+  void translate(vec4 displacement) {
+    for (int i = 0; i < triangles.size(); i++) {
+      triangles[i].vertices[0] += displacement;
+      triangles[i].vertices[1] += displacement;
+      triangles[i].vertices[2] += displacement;
+
+    }
+  }
 	vector<ModelTriangle> triangles;
 	string material;
 	string name;

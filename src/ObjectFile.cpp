@@ -101,6 +101,12 @@ class ObjectFile {
 		return Colour((ci & 0x00FF0000) >> 16, (ci & 0x0000FF00) >> 8, ci & 0x000000FF);
 	}
 
+  void translate(vec4 displacement) {
+    for (int i = 0; i < objects.size(); i++) {
+      objects[i].translate(displacement);
+    }
+  }
+
 	private:
 
   static vec3 parseVertex(std::string input) {

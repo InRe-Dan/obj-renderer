@@ -117,26 +117,22 @@ class Camera {
       solutionT.colour = Colour(0, 0, 0);
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
-      for (ObjectFile objectFile : scene.objectFiles) {
-        for (Object object : objectFile.getObjects()) {
-          for (ModelTriangle triangle : object.triangles) {
-            vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
-            vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
-            vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
-            glm::mat3 DEMatrix(-ray, e0, e1);
-            vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
-            if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
-              point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
-              if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f && possibleSolution.x < 0.0f) {
-                closestPoint = point;
-                closestSolution = possibleSolution;
-                solutionT = triangle;
-                solutionIndex = i;
-              }
-            }
-            i++;
+      for (ModelTriangle triangle : scene.getModelTriangles()) {
+        vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
+        vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
+        vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
+        glm::mat3 DEMatrix(-ray, e0, e1);
+        vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+        if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
+          point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
+          if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f && possibleSolution.x < 0.0f) {
+            closestPoint = point;
+            closestSolution = possibleSolution;
+            solutionT = triangle;
+            solutionIndex = i;
           }
         }
+        i++;
       }
       float distance = closestSolution.x;
       size_t index = solutionIndex;
@@ -169,33 +165,25 @@ class Camera {
     }
 
     void rasterRender(Scene scene) {
-      for (ObjectFile objectFile : scene.objectFiles) {
-        for (Object object : objectFile.getObjects()) {
-          for (ModelTriangle triangle : object.triangles) {
-            CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
-            CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
-            CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
-            if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
-              CanvasTriangle canvasTriangle(a, b, c);
-              filledTriangle(canvasTriangle, objectFile.getKdOf(object), frameBuffer, depthBuffer);
-            }
-          }
+      for (ModelTriangle triangle : scene.getModelTriangles()) {
+        CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
+        CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
+        CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
+        if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+          CanvasTriangle canvasTriangle(a, b, c);
+          filledTriangle(canvasTriangle, triangle.colour, frameBuffer, depthBuffer);
         }
       }
     }
 
     void wireframeRender(Scene scene) {
-      for (ObjectFile objectFile : scene.objectFiles) {
-        for (Object object : objectFile.getObjects()) {
-          for (ModelTriangle triangle : object.triangles) {
-            CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
-            CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
-            CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
-            if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
-              CanvasTriangle canvasTriangle(a, b, c);
-              strokedTriangle(canvasTriangle, objectFile.getKdOf(object), frameBuffer, depthBuffer);
-            }
-          }
+      for (ModelTriangle triangle : scene.getModelTriangles()) {
+        CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
+        CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
+        CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
+        if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+          CanvasTriangle canvasTriangle(a, b, c);
+          strokedTriangle(canvasTriangle, triangle.colour, frameBuffer, depthBuffer);
         }
       }
     }

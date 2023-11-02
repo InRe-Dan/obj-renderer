@@ -37,7 +37,7 @@ int renderMode = 1;
 // Ran when starting program. Initializes buffers.
 void initialize() {
   scene.lights.push_back(vec3(0, 0, 5));
-  scene.objectFiles.push_back(ObjectFile("cornell-box.obj", 1.0f));
+  scene.addObjectFile(ObjectFile("cornell-box.obj", 1.0f));
 
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {

@@ -56,7 +56,7 @@ vector<vector<uint32_t>> applyKernel(vector<vector<uint32_t>> &target, Kernel &k
         for (int x = 0; x < k.size; x++) {
           int yo = i + (y - k.padding);
           int xo = j + (x - k.padding);
-          uint32_t p = target.at(yo).at(xo);
+          uint32_t p = target[yo][xo];
           red += (p & 0x00FF0000) >> 16;
           blue += (p & 0x0000FF00) >> 8;
           green += (p & 0x000000FF);
@@ -66,7 +66,7 @@ vector<vector<uint32_t>> applyKernel(vector<vector<uint32_t>> &target, Kernel &k
       blue /= k.nFactor;
       green /= k.nFactor;
       uint32_t col = (red << 16) + (blue << 8) + green;
-      result.at(i).at(j) = col;
+      result[i][j] = col;
 
     }
   }
@@ -78,25 +78,25 @@ vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
   int targetH = target.size();
   for (int i = 0; i < targetH; i++) {
     for (int j = 0; j < targetW; j++){
-      uint32_t col = target.at(i).at(j);
+      uint32_t col = target[i][j];
       // These weights are based on approximations of how the eye percieves different channels.
       // Source: e2eml.school - Course 137
       uint32_t sum = ((col >> 16) & 0x00FF0000) * 0.299 + ((col >> 8) & 0x0000FF00) * 0.587 + (col & 0x000000FF) * 0.114;
       sum = sum > 255? 255 : sum;
       uint32_t repacked = (sum << 16) + (sum << 8) + sum;
-      target.at(i).at(j) = repacked;
+      target[i][j] = repacked;
 
     }
   }
   return target;
 }
 
-void simpleUpscale(vector<vector<uint32_t>> &source, vector<vector<uint32_t>> &target, int scale) {
+void simpleUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target, int scale) {
   for (int i = 0; i < source.size() ; i++) {
     for (int j = 0; j < source.at(0).size(); j++) {
       for (int y = 0; y < scale; y++) {
         for (int x = 0; x < scale; x++) {
-          target.at(i * scale + y).at(j * scale + x) = source.at(i).at(j);
+          target[i * scale + y][j * scale + x] = source[i][j];
         }
       }
     }

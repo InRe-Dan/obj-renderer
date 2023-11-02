@@ -15,7 +15,7 @@
 #include "RayTriangleIntersection.h"
 #include "drawing.cpp"
 #include <thread>
-
+#include "Scene.cpp"
 
 using std::vector;
 using glm::vec3;
@@ -27,6 +27,8 @@ class Camera {
   public:
     int canvasWidth;
     int canvasHeight;
+    vector<vector<uint32_t>> frameBuffer;
+    vector<vector<float>> depthBuffer;
     // Takes parameters for camera resolution.
     Camera(int w, int h) {
       threadCount = 6;
@@ -35,6 +37,16 @@ class Camera {
       raytracingImagePlaneWidth = 5.0f;
       focalLength = 2;
       placement = glm::mat4(1, 0, 0, -0.8, 0, 1, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0);
+      frameBuffer = vector<vector<uint32_t>>();
+      depthBuffer = vector<vector<float>>();
+      for (int i = 0; i < canvasHeight; i++) {
+        frameBuffer.push_back(vector<uint32_t>());
+        depthBuffer.push_back(vector<float>());
+        for (int j = 0; j < canvasWidth; j++) {
+          frameBuffer[i].push_back(0);
+          depthBuffer[i].push_back(0.0f);
+        }
+      }
     }
     void setOrbit(bool set) {
       isOrbiting = set;
@@ -50,6 +62,12 @@ class Camera {
     }
 
     void update() {
+      for (int i = 0; i < canvasHeight; i++) {
+        for (int j = 0; j < canvasWidth; j++) {
+          frameBuffer[i][j] = 0;
+          depthBuffer[i][j] = 0;
+        }
+      }
       if (isOrbiting) {
         vec3 pos = getPosition();
         vec3 newPos = vec3(getYRotationMatrix(3) * vec4(pos, 1));
@@ -91,7 +109,7 @@ class Camera {
       return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;
     }
 
-    RayTriangleIntersection getClosestIntersection(vec3 ray, vector<Object> objects, vec3 rayOrigin) {
+    RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene scene) {
       vec3 closestSolution = vec3(-HUGE_VAL, 0, 0);
       vec3 closestPoint;
       vec3 point;
@@ -99,23 +117,25 @@ class Camera {
       solutionT.colour = Colour(0, 0, 0);
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
-      for (Object object : objects) {
-        for (ModelTriangle triangle : object.triangles) {
-          vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
-          vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
-          vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
-          glm::mat3 DEMatrix(-ray, e0, e1);
-          vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
-          if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
-            point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
-            if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f && possibleSolution.x < 0.0f) {
-              closestPoint = point;
-              closestSolution = possibleSolution;
-              solutionT = triangle;
-              solutionIndex = i;
+      for (ObjectFile objectFile : scene.objectFiles) {
+        for (Object object : objectFile.getObjects()) {
+          for (ModelTriangle triangle : object.triangles) {
+            vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
+            vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
+            vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
+            glm::mat3 DEMatrix(-ray, e0, e1);
+            vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
+            if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
+              point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
+              if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f && possibleSolution.x < 0.0f) {
+                closestPoint = point;
+                closestSolution = possibleSolution;
+                solutionT = triangle;
+                solutionIndex = i;
+              }
             }
+            i++;
           }
-          i++;
         }
       }
       float distance = closestSolution.x;
@@ -124,9 +144,9 @@ class Camera {
       return intersection;
     }
 
-    RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, vector<Object> objects, vec3 lightSource) {
+    RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene scene) {
       vec3 rayDirection = getRayDirection(xPos, yPos);
-      RayTriangleIntersection intersection = getClosestIntersection(rayDirection, objects, getPosition());
+      RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
       /* if (intersection.triangleIndex == -1) return intersection;
       vec3 pointToLight = -(intersection.intersectionPoint - lightSource);
       RayTriangleIntersection lightIntersection = getClosestIntersection(pointToLight, objects, lightSource);
@@ -137,54 +157,74 @@ class Camera {
       return intersection;
     }
 
-    void raytraceSection(int x1, int x2, int y1, int y2, vector<vector<uint32_t>> *frameBuffer, vector<Object> *objects, vec3 *lightSource) {
+    void raytraceSection(int x1, int x2, int y1, int y2, Scene *scene) {
       for (int i = y1; i < y2; i++) {
         for (int j = x1; j < x2; j++) {
-          RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *objects, *lightSource);
+          RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *scene);
 			    ModelTriangle t = intersection.intersectedTriangle;
           if (intersection.triangleIndex == -1) continue;
-			    (*frameBuffer).at(i).at(j) = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
+			    frameBuffer[i][j] = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
         }
       }
     }
 
-    void rasterRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
-      for (Object object : objects) {
-        for (ModelTriangle triangle : object.triangles) {
-          CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-          CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-          CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-          if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
-            CanvasTriangle canvasTriangle(a, b, c);
-            filledTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
+    void rasterRender(Scene scene) {
+      for (ObjectFile objectFile : scene.objectFiles) {
+        for (Object object : objectFile.getObjects()) {
+          for (ModelTriangle triangle : object.triangles) {
+            CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
+            CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
+            CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
+            if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+              CanvasTriangle canvasTriangle(a, b, c);
+              filledTriangle(canvasTriangle, objectFile.getKdOf(object), frameBuffer, depthBuffer);
+            }
           }
         }
       }
     }
 
-    void wireframeRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
-      for (Object object : objects) {
-        for (ModelTriangle triangle : object.triangles) {
-          CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(0)));
-          CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(1)));
-          CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices.at(2)));
-          if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
-            CanvasTriangle canvasTriangle(a, b, c);
-            strokedTriangle(canvasTriangle, cornell.getKdOf(object), frameBuffer, depthBuffer);
+    void wireframeRender(Scene scene) {
+      for (ObjectFile objectFile : scene.objectFiles) {
+        for (Object object : objectFile.getObjects()) {
+          for (ModelTriangle triangle : object.triangles) {
+            CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
+            CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
+            CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
+            if (isInBounds(a, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(b, vec4(0, 0, canvasWidth, canvasHeight)) && isInBounds(c, vec4(0, 0, canvasWidth, canvasHeight))) {
+              CanvasTriangle canvasTriangle(a, b, c);
+              strokedTriangle(canvasTriangle, objectFile.getKdOf(object), frameBuffer, depthBuffer);
+            }
           }
         }
       }
     }
 
-    void raytraceRender(vector<Object> objects, ObjectFile cornell, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer, vec3 lightSource) {
+    void raytraceRender(Scene scene) {
       vector<std::thread> threadVect;
       int slice_height = canvasHeight / threadCount;
       for (int i = 0; i < threadCount - 1; i++) {
-        threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * i, slice_height * (i + 1), &frameBuffer, &objects, &lightSource));
+        threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * i, slice_height * (i + 1), &scene));
       }
-      threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * (threadCount - 1), canvasHeight, &frameBuffer, &objects, &lightSource));
+      threadVect.push_back(std::thread(&Camera::raytraceSection, this, 0, canvasWidth, slice_height * (threadCount - 1), canvasHeight, &scene));
       for (int i = 0; i < threadVect.size(); i++) {
         threadVect.at(i).join();
+      }
+    }
+
+    void drawFancyBackground() {
+      // Inspired by a Sebastian Lague video, I think.
+      vec3 topLeft = glm::normalize(getRayDirection(0, 0));
+      vec3 topRight = glm::normalize(getRayDirection(canvasWidth, 0));
+      vec3 bottomLeft = glm::normalize(getRayDirection(0, canvasHeight));
+      vec3 bottomRight = glm::normalize(getRayDirection(canvasWidth, canvasHeight));
+      vector<vec3> leftEdge = interpolate(topLeft, bottomLeft, canvasHeight);
+      vector<vec3> rightEdge = interpolate(topRight, bottomRight, canvasHeight);
+      for (int i = 0; i < canvasHeight; i++) {
+        vector<vec3> horizontalLine = interpolate(leftEdge[i], rightEdge[i], canvasWidth);
+        for (int j = 0; j < canvasWidth; j++) {
+          frameBuffer[i][j] = vec3ToColour(horizontalLine[j] * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
+        }
       }
     }
 

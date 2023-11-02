@@ -36,7 +36,7 @@ class Camera {
       canvasWidth = w;
       raytracingImagePlaneWidth = 5.0f;
       focalLength = 2;
-      placement = glm::mat4(1, 0, 0, -0.8, 0, 1, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0);
+      placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
       depthBuffer = vector<vector<float>>();
       for (int i = 0; i < canvasHeight; i++) {
@@ -77,7 +77,6 @@ class Camera {
         vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());
         vec3 right = glm::normalize(glm::cross(vec3(forward), vec3(0, 1, 0)));
         vec3 up = glm::normalize(glm::cross(vec3(forward), vec3(right)));
-        // Not flipping the rightways vector seems to flip the scene... ¯\_(ツ)_/¯
         vec3 pos = getPosition();
         placement = glm::mat4(vec4(right, pos.x), vec4(-up, pos.y), vec4(-forward, pos.z), vec4(0, 0, 0, 1));
       }
@@ -124,8 +123,15 @@ class Camera {
         glm::mat3 DEMatrix(-ray, e0, e1);
         vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
         if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
-          point = vec3(solutionT.vertices[0]) + vec3(solutionT.vertices[1] - solutionT.vertices[0]) * closestSolution.y + vec3(solutionT.vertices[2] - solutionT.vertices[0]) * closestSolution[1];
-          if (0.0f <= possibleSolution.y && possibleSolution.y <= 1.0f && 0.0f <= possibleSolution.z && possibleSolution.z <= 1.0f && possibleSolution.y + possibleSolution.z <= 1.0f && possibleSolution.x < 0.0f) {
+          if (0.0f <= possibleSolution.y 
+              && possibleSolution.y <= 1.0f 
+              && 0.0f <= possibleSolution.z 
+              && possibleSolution.z <= 1.0f 
+              && possibleSolution.y + possibleSolution.z <= 1.0f 
+              && possibleSolution.x < -0.001f) {
+            point = vec3(solutionT.vertices[0])
+                  + e0 * closestSolution.y
+                  + e1 * closestSolution.z;
             closestPoint = point;
             closestSolution = possibleSolution;
             solutionT = triangle;
@@ -134,7 +140,7 @@ class Camera {
         }
         i++;
       }
-      float distance = closestSolution.x;
+      float distance = glm::abs(closestSolution.x);
       size_t index = solutionIndex;
       RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
       return intersection;
@@ -143,13 +149,15 @@ class Camera {
     RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene scene) {
       vec3 rayDirection = getRayDirection(xPos, yPos);
       RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
-      /* if (intersection.triangleIndex == -1) return intersection;
-      vec3 pointToLight = -(intersection.intersectionPoint - lightSource);
-      RayTriangleIntersection lightIntersection = getClosestIntersection(pointToLight, objects, lightSource);
-      if (lightIntersection.triangleIndex != -1 && glm::abs(lightIntersection.distanceFromCamera) < glm::length(pointToLight)) {
+      if (intersection.triangleIndex == -1) return intersection;
+
+      vec3 lightSource = scene.lights[0];
+      vec3 pointToLight = (lightSource - intersection.intersectionPoint);
+      RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
+      if (lightIntersection.triangleIndex != -1 /* && (glm::abs(lightIntersection.distanceFromCamera) < glm::length(pointToLight)) */) {
         Colour c = intersection.intersectedTriangle.colour;
         intersection.intersectedTriangle.colour = Colour(c.red/2, c.green/2, c.blue/2);
-      } */
+      }
       return intersection;
     }
 

@@ -172,8 +172,12 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
- 	RayTriangleIntersection intersection = scene.getCamera()->getRaytracedPixelIntersection(WIDTH/2, HEIGHT/2, scene);
+ 	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), vec3(0, 0, 1), scene);
+  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << intersection;
+  cout << intersection.intersectedTriangle.colour;
+  cout << lightIntersection;
+  cout << lightIntersection.intersectedTriangle.colour;
 	std::cout.flush();
   // std::exit(0);
 }

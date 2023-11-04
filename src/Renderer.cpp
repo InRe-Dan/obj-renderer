@@ -38,10 +38,6 @@ int renderMode = 1;
 void initialize() {
   scene.lights.push_back(vec3(1, 1, 5));
   scene.addObjectFile(ObjectFile("cornell-box.obj", 1.0f));
-  ObjectFile secondaryCornell = ObjectFile("cornell-box.obj", 1.0f);
-  secondaryCornell.translate((vec4(0, 7, 0, 1)));
-  // scene.addObjectFile(secondaryCornell);
-
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
     upscaledFrameBuffer.push_back(vector<uint32_t>());

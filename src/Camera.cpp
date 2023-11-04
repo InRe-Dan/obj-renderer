@@ -128,7 +128,7 @@ class Camera {
               && 0.0f <= possibleSolution.z 
               && possibleSolution.z <= 1.0f 
               && possibleSolution.y + possibleSolution.z <= 1.0f 
-              && possibleSolution.x < 0.0f) {
+              && possibleSolution.x < -0.001f) {
             closestSolution = possibleSolution;
             solutionT = triangle;
             point = vec3(solutionT.vertices[0])
@@ -154,7 +154,7 @@ class Camera {
       vec3 lightSource = scene.lights[0];
       vec3 pointToLight = - (lightSource - intersection.intersectionPoint);
       RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
-      if (lightIntersection.triangleIndex != -1 && (-0.001f > lightIntersection.distanceFromCamera > -glm::length(pointToLight)) && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
+      if (lightIntersection.triangleIndex != -1 && (lightIntersection.distanceFromCamera > -glm::length(pointToLight)) && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
         Colour c = intersection.intersectedTriangle.colour;
         intersection.intersectedTriangle.colour = Colour(c.red/2, c.green/2, c.blue/2);
       }

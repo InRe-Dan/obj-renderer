@@ -160,6 +160,12 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		if (event.key.keysym.sym == SDLK_i) renderMode = 0;
 		if (event.key.keysym.sym == SDLK_o) renderMode = 1;
 		if (event.key.keysym.sym == SDLK_p) renderMode = 2;
+    if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
+    if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
+    if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(-0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_r) scene.lights[0] += vec3(0, 0, 0.2);
+    if (event.key.keysym.sym == SDLK_y) scene.lights[0] += vec3(0, 0, -0.2);
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");

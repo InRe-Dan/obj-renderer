@@ -167,7 +167,7 @@ class Camera {
           continue;
         }
         // if it can, add to the brightness factor
-        float f = 1 / (glm::length(pointToLight) * glm::length(pointToLight));
+        float f = 5 / (glm::length(pointToLight) * glm::length(pointToLight));
         colourIntensity += f;
       }
       // cap the factor to 1

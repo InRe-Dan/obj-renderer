@@ -147,17 +147,33 @@ class Camera {
     }
 
     RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene scene) {
+      // Cast a ray
       vec3 rayDirection = getRayDirection(xPos, yPos);
       RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
+      // If it intersects nothing, return early
       if (intersection.triangleIndex == -1) return intersection;
 
-      vec3 lightSource = scene.lights[0];
-      vec3 pointToLight = - (lightSource - intersection.intersectionPoint);
-      RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
-      if (lightIntersection.triangleIndex != -1 && (lightIntersection.distanceFromCamera > -glm::length(pointToLight)) && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
-        Colour c = intersection.intersectedTriangle.colour;
-        intersection.intersectedTriangle.colour = Colour(c.red/2, c.green/2, c.blue/2);
+      // Everything must be at least 10% brightness
+      float colourIntensity = 0.1f;
+      // Iterate through every light in the scene
+      for (vec3 lightSource : scene.lights) {
+        // Determine if the light can see this point
+        vec3 pointToLight = intersection.intersectionPoint - lightSource;
+        RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
+        if (lightIntersection.triangleIndex != -1 
+        && (lightIntersection.distanceFromCamera > -glm::length(pointToLight)) 
+        && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
+          // if it can't, move on
+          continue;
+        }
+        // if it can, add to the brightness factor
+        float f = 1 / (glm::length(pointToLight) * glm::length(pointToLight));
+        colourIntensity += f;
       }
+      // cap the factor to 1
+      if (colourIntensity > 1.0f) colourIntensity = 1.0f;
+      Colour c = intersection.intersectedTriangle.colour;
+      intersection.intersectedTriangle.colour = Colour(c.red*colourIntensity, c.green*colourIntensity, c.blue*colourIntensity);
       return intersection;
     }
 

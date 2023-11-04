@@ -122,25 +122,25 @@ class Camera {
         vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
         glm::mat3 DEMatrix(-ray, e0, e1);
         vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
-        if (glm::abs(possibleSolution.x) < glm::abs(closestSolution.x)) {
+        if (possibleSolution.x > closestSolution.x) {
           if (0.0f <= possibleSolution.y 
               && possibleSolution.y <= 1.0f 
               && 0.0f <= possibleSolution.z 
               && possibleSolution.z <= 1.0f 
               && possibleSolution.y + possibleSolution.z <= 1.0f 
-              && possibleSolution.x < -0.001f) {
+              && possibleSolution.x < 0.0f) {
+            closestSolution = possibleSolution;
+            solutionT = triangle;
             point = vec3(solutionT.vertices[0])
                   + e0 * closestSolution.y
                   + e1 * closestSolution.z;
             closestPoint = point;
-            closestSolution = possibleSolution;
-            solutionT = triangle;
             solutionIndex = i;
           }
         }
         i++;
       }
-      float distance = glm::abs(closestSolution.x);
+      float distance = closestSolution.x;
       size_t index = solutionIndex;
       RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
       return intersection;
@@ -152,9 +152,9 @@ class Camera {
       if (intersection.triangleIndex == -1) return intersection;
 
       vec3 lightSource = scene.lights[0];
-      vec3 pointToLight = (lightSource - intersection.intersectionPoint);
+      vec3 pointToLight = - (lightSource - intersection.intersectionPoint);
       RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
-      if (lightIntersection.triangleIndex != -1 /* && (glm::abs(lightIntersection.distanceFromCamera) < glm::length(pointToLight)) */) {
+      if (lightIntersection.triangleIndex != -1 && (-0.001f > lightIntersection.distanceFromCamera > -glm::length(pointToLight)) && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
         Colour c = intersection.intersectedTriangle.colour;
         intersection.intersectedTriangle.colour = Colour(c.red/2, c.green/2, c.blue/2);
       }

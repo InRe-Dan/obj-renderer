@@ -21,8 +21,8 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_
 	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(1, 1), vec2(frameBuffer.at(0).size() - 1, frameBuffer.size() - 1));
 	vec3 colVect(colour.red, colour.green, colour.blue);
   for (CanvasPoint point : interpolation) {
-    if (depthBuffer.at(round(point.y)).at(round(point.x)) < 1 / point.depth) {
-      depthBuffer.at(round(point.y)).at(round(point.x)) = 1 / point.depth;
+    if (depthBuffer.at(round(point.y)).at(round(point.x)) < point.depth) {
+      depthBuffer.at(round(point.y)).at(round(point.x)) = point.depth;
 			frameBuffer.at(round(point.y)).at(round(point.x)) = vec3ToColour(colVect, 255);
     }
   }

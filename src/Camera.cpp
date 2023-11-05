@@ -66,7 +66,7 @@ class Camera {
       for (int i = 0; i < canvasHeight; i++) {
         for (int j = 0; j < canvasWidth; j++) {
           frameBuffer[i][j] = 0;
-          depthBuffer[i][j] = 0;
+          depthBuffer[i][j] = 0.0f;
         }
       }
       if (isOrbiting) {
@@ -96,7 +96,7 @@ class Camera {
       vec3 vertexToCamera = (vertexLocation - getPosition()) * getOrientation();
       float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + canvasWidth/2;
       float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + canvasHeight/2;
-      return CanvasPoint(u, v, -vertexToCamera.z);
+      return CanvasPoint(u, v, -1/vertexToCamera.z);
     }
 
     vec3 getRayDirection(int x, int y) {

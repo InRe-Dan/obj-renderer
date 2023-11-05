@@ -91,7 +91,7 @@ void draw(DrawingWindow &window) {
 	// Apply effects
   // frameBuffer = blackAndWhite(frameBuffer);
   // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
-  simpleUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer, upscaleFactor);
+  arbitraryUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer);
 
 
 	// Get mouse state

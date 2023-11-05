@@ -91,12 +91,16 @@ vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
   return target;
 }
 
-void simpleUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target, int scale) {
+void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
+  assert(source.size() <= target.size());
+  float ratio = target.size() / source.size();
   for (int i = 0; i < source.size() ; i++) {
     for (int j = 0; j < source.at(0).size(); j++) {
-      for (int y = 0; y < scale; y++) {
-        for (int x = 0; x < scale; x++) {
-          target[i * scale + y][j * scale + x] = source[i][j];
+      target[glm::round(i * ratio)][glm::round(j * ratio)] = source[i][j];
+      for (int y = 0; y < glm::ceil(ratio); y++) {
+        for (int x = 0; x < glm::ceil(ratio); x++) {
+          target[i * ratio + y][j * ratio + x] = source[i][j];
+
         }
       }
     }

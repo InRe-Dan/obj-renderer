@@ -112,3 +112,31 @@ void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>&
     }
   }
 }
+
+// This doesn't work yet.
+void bilinearUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
+  assert(source.size() <= target.size());
+  int sWidth = source.at(0).size();
+  int sHeight = source.size();
+  int tWidth = target.at(0).size();
+  int tHeight = target.size();
+  for (int i = 0; i < target.size() ; i++) {
+    for (int j = 0; j < target.at(0).size(); j++) {
+      int lowerx = glm::floor((float(j)/tWidth) * sWidth);
+      int lowery = glm::floor((float(i)/tHeight) * sHeight);
+      if (lowerx < 0) lowerx = 0;
+      if (lowery < 0) lowery = 0;
+      int higherx = lowerx + 1;
+      int highery = lowery + 1;
+      if (higherx > sWidth - 1) higherx = sWidth - 1;
+      if (highery > sHeight - 1) highery = sHeight - 1;
+      uint8_t* argb1 = (uint8_t*) &(source[lowery][lowerx]);
+      uint8_t* argb2 = (uint8_t*) &(source[highery][higherx]);
+      for (int channel = 1; channel < 4; channel++) {
+        // Values here should be weighted and both dimensions (not just diagonal) should be used
+        argb1[channel] = argb1[channel] + argb2[channel] > 1;
+      }
+      target[i][j] = source[lowery][lowerx];
+    }
+  }
+}

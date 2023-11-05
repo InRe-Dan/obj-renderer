@@ -56,6 +56,9 @@ class ObjectFile {
 				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
 				faceTriangle.colour = getKdOf(objects.at(objects.size() - 1));
+        vec3 e0 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[1]);
+        vec3 e1 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[2]);
+        faceTriangle.normal = glm::normalize(glm::cross(e0, e1));
 				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
 				faces.push_back(face);
 			}

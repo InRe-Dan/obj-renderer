@@ -167,9 +167,12 @@ class Camera {
           // if it can't, move on
           continue;
         }
-        // if it can, add to the brightness factor
+        // determine brighness based on angle of incidence and distance
+        float dotP = glm::dot(glm::normalize(pointToLight), intersection.intersectedTriangle.normal);
+        if (dotP < 0.0f) dotP = 0.0f;
+        if (dotP > 1.0f) dotP = 1.0f;
         float f = 5 / (glm::length(pointToLight) * glm::length(pointToLight));
-        colourIntensity += f;
+        colourIntensity += f * dotP;
       }
       // cap the factor to 1
       if (colourIntensity > 1.0f) colourIntensity = 1.0f;

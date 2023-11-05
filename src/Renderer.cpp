@@ -26,7 +26,7 @@ using glm::vec2;
 using glm::round;
 
 // Common prime factors 2 × 2 × 2 × 2 × 5
-int upscaleFactor = 2*2*2*2;
+int upscaleFactor = 2 * 5;
 Camera primaryCamera(WIDTH/upscaleFactor, HEIGHT/upscaleFactor);
 Scene scene(&primaryCamera);
 
@@ -39,7 +39,7 @@ int renderMode = 1;
 // Ran when starting program. Initializes buffers.
 void initialize() {
   scene.lights.push_back(vec3(1, 1, 5));
-  scene.lights.push_back(vec3(-1, 1, 5));
+  // scene.lights.push_back(vec3(-1, 1, 5));
   scene.addObjectFile(ObjectFile("cornell-box.obj", 1.0f));
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {

@@ -100,6 +100,7 @@ void draw(DrawingWindow &window) {
 
 	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
+  debugString += "Resolution; " + std::to_string(scene.getCamera()->canvasWidth) + "x" + std::to_string(scene.getCamera()->canvasHeight) + "\n";
 	uint32_t colour = 0xFFFFFFFF;  // upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
@@ -111,15 +112,15 @@ void draw(DrawingWindow &window) {
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-    	debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+    	// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			debugString += "    Threads: " + std::to_string(scene.getCamera()->threadCount) + "\n";
 			break;
 		default:
@@ -160,15 +161,18 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_e) scene.getCamera()->moveDown(0.2);
     if (event.key.keysym.sym == SDLK_m) scene.getCamera()->toggleOrbit();
     if (event.key.keysym.sym == SDLK_n) scene.getCamera()->toggleLookAt();
-		if (event.key.keysym.sym == SDLK_i) renderMode = 0;
-		if (event.key.keysym.sym == SDLK_o) renderMode = 1;
-		if (event.key.keysym.sym == SDLK_p) renderMode = 2;
+		if (event.key.keysym.sym == SDLK_1) renderMode = 0;
+		if (event.key.keysym.sym == SDLK_2) renderMode = 1;
+		if (event.key.keysym.sym == SDLK_3) renderMode = 2;
     if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
     if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
     if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(0.2, 0, 0);
     if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(-0.2, 0, 0);
     if (event.key.keysym.sym == SDLK_r) scene.lights[0] += vec3(0, 0, 0.2);
     if (event.key.keysym.sym == SDLK_y) scene.lights[0] += vec3(0, 0, -0.2);
+    if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
+    if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
+    // TODO --- CHANGE BUFFER SIZES ON THESE INPUTS ^
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");

@@ -94,15 +94,21 @@ vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
 void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
   assert(source.size() <= target.size());
   float ratio = target.size() / source.size();
-  for (int i = 0; i < source.size() ; i++) {
-    for (int j = 0; j < source.at(0).size(); j++) {
-      target[glm::round(i * ratio)][glm::round(j * ratio)] = source[i][j];
-      for (int y = 0; y < glm::ceil(ratio); y++) {
-        for (int x = 0; x < glm::ceil(ratio); x++) {
-          target[i * ratio + y][j * ratio + x] = source[i][j];
-
-        }
-      }
+  int nearestx = 0;
+  int nearesty = 0;
+  int sWidth = source.at(0).size();
+  int sHeight = source.size();
+  int tWidth = target.at(0).size();
+  int tHeight = target.size();
+  for (int i = 0; i < target.size() ; i++) {
+    for (int j = 0; j < target.at(0).size(); j++) {
+      nearestx = glm::round((float(j)/tWidth) * sWidth);
+      nearesty = glm::round((float(i)/tHeight) * sHeight);
+      if (nearestx > sWidth - 1) nearestx = sWidth - 1;
+      if (nearestx < 0) nearestx = 0;
+      if (nearesty > sHeight - 1) nearesty = sHeight - 1;
+      if (nearesty < 0) nearesty = 0;
+      target[i][j] = source[nearesty][nearestx];
     }
   }
 }

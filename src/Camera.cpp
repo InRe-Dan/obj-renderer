@@ -295,6 +295,21 @@ class Camera {
     void changeF(float diff) {
       focalLength += diff;
     }
+    void changeResolutionBy(int w, int h) {
+      if (canvasWidth <= -w && canvasHeight <= -h) return;
+      canvasWidth += w;
+      canvasHeight += h;
+      frameBuffer = vector<vector<uint32_t>>();
+      depthBuffer = vector<vector<float>>();
+      for (int i = 0; i < canvasHeight; i++) {
+        frameBuffer.push_back(vector<uint32_t>());
+        depthBuffer.push_back(vector<float>());
+        for (int j = 0; j < canvasWidth; j++) {
+          frameBuffer[i].push_back(0);
+          depthBuffer[i].push_back(0.0f);
+        }
+      }
+    }
 
     private:
       bool isOrbiting;

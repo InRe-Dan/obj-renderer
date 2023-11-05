@@ -25,6 +25,7 @@ using glm::round;
 // Object to represent a camera in a scene.
 class Camera {
   public:
+    int threadCount;
     int canvasWidth;
     int canvasHeight;
     vector<vector<uint32_t>> frameBuffer;
@@ -183,6 +184,7 @@ class Camera {
           RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *scene);
 			    ModelTriangle t = intersection.intersectedTriangle;
           if (intersection.triangleIndex == -1) continue;
+          depthBuffer[i][j] = 1 / glm::length(getPosition() - intersection.intersectionPoint);
 			    frameBuffer[i][j] = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
         }
       }
@@ -298,5 +300,4 @@ class Camera {
       float focalLength;
       float raytracingImagePlaneWidth;
       glm::mat4 placement;
-      int threadCount;
 };

@@ -25,7 +25,9 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
-Camera primaryCamera(256, 144);
+// Common prime factors 2 × 2 × 2 × 2 × 5
+int upscaleFactor = 2*2*2*2;
+Camera primaryCamera(WIDTH/upscaleFactor, HEIGHT/upscaleFactor);
 Scene scene(&primaryCamera);
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
@@ -89,7 +91,7 @@ void draw(DrawingWindow &window) {
 	// Apply effects
   // frameBuffer = blackAndWhite(frameBuffer);
   // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
-  simpleUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer, 5);
+  simpleUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer, upscaleFactor);
 
 
 	// Get mouse state
@@ -109,15 +111,16 @@ void draw(DrawingWindow &window) {
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			// debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			// debugString += "    Depth: " + std::to_string(1 / depthBuffer[yMouse][xMouse]) + "\n";
+			debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-			// debugString += "    Threads: " + std::to_string(threadCount) + "\n";
+    	debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "    Threads: " + std::to_string(scene.getCamera()->threadCount) + "\n";
 			break;
 		default:
 			debugString += "Mode: Unknown\n";

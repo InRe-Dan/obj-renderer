@@ -2,3 +2,8 @@
 **/build/
 output.ppm
 output.bmp
+perf.data.old
+perf.data
+out.perf
+out.folded
+perf.svg

@@ -32,11 +32,11 @@ vector<vector<uint32_t>> upscaledFrameBuffer;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
-int renderMode = 1;
+int renderMode = 2;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
-  scene.lights.push_back(vec3(1, 1, 5));
+  scene.lights.push_back(vec3(0, 0, 2));
   // scene.lights.push_back(vec3(-1, 1, 5));
   scene.addObjectFile(ObjectFile("cornell-box.obj", 1.0f));
   upscaledFrameBuffer = vector<vector<uint32_t>>();
@@ -125,7 +125,7 @@ void draw(DrawingWindow &window) {
       if (!(scene.lights.size() > 4)) {
         for (int i = 0; i < scene.lights.size(); i++) {
 
-          debugString += (i = scene.lightIndex)? "   >" : "    ";
+          debugString += (i == scene.lightIndex)? "   >" : "    ";
           debugString += printVec(scene.lights[i]) + "\n";
         }
       }
@@ -192,10 +192,11 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
- 	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), vec3(0, 0, 1), scene);
-  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
+  vec3 ray = scene.getCamera()->getRayDirection(150 / (WIDTH / scene.getCamera()->canvasWidth), 150 / (WIDTH / scene.getCamera()->canvasWidth));
+ 	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
   cout << intersection;
   cout << intersection.intersectedTriangle.colour;
+  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << lightIntersection;
   cout << lightIntersection.intersectedTriangle.colour;
 	std::cout.flush();

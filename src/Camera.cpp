@@ -110,20 +110,24 @@ class Camera {
     }
 
     RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene scene) {
-      vec3 closestSolution = vec3(-HUGE_VAL, 0, 0);
+      vec3 closestSolution = vec3(-1e10, 0, 0);
       vec3 closestPoint;
       vec3 point;
       ModelTriangle solutionT;
       solutionT.colour = Colour(0, 0, 0);
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
+      // cout << "Triangles: " << scene.getModelTriangles().size();
       for (ModelTriangle triangle : scene.getModelTriangles()) {
         vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
         vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
         vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
         glm::mat3 DEMatrix(-ray, e0, e1);
         vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
-        if (possibleSolution.x > closestSolution.x) {
+        // cout << possibleSolution.x <<"\n";
+        if (abs(possibleSolution.x) < abs(closestSolution.x)) {
+          // cout << possibleSolution.x << " found, better than " << closestSolution.y << "\n";
+          // cout << printVec(possibleSolution) << "\n";
           if (0.0f <= possibleSolution.y 
               && possibleSolution.y <= 1.0f 
               && 0.0f <= possibleSolution.z 
@@ -141,7 +145,7 @@ class Camera {
         }
         i++;
       }
-      float distance = closestSolution.x;
+      float distance = glm::length(rayOrigin - closestPoint);
       size_t index = solutionIndex;
       RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
       return intersection;
@@ -162,7 +166,7 @@ class Camera {
         vec3 pointToLight = intersection.intersectionPoint - lightSource;
         RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
         if (lightIntersection.triangleIndex != -1 
-        && (lightIntersection.distanceFromCamera > -glm::length(pointToLight)) 
+        // && (lightIntersection.distanceFromCamera > glm::length(pointToLight)) 
         && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
           // if it can't, move on
           continue;

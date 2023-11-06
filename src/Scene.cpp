@@ -7,12 +7,15 @@ class Camera;
 
 class Scene {
   public:
+      int lightIndex;
+
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();
       lights = vector<vec3>();
       cameras = vector<Camera*>();
       cameras.push_back(camera);
       cameraIndex = 0;
+      lightIndex = 0;
       modelTriangles = vector<ModelTriangle>();
     }
 

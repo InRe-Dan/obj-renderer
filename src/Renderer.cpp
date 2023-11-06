@@ -25,9 +25,7 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
-// Common prime factors 2 × 2 × 2 × 2 × 5
-int upscaleFactor = 2 * 5;
-Camera primaryCamera(WIDTH/upscaleFactor, HEIGHT/upscaleFactor);
+Camera primaryCamera(256, 144);
 Scene scene(&primaryCamera);
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
@@ -101,7 +99,7 @@ void draw(DrawingWindow &window) {
 	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
   debugString += "Resolution; " + std::to_string(scene.getCamera()->canvasWidth) + "x" + std::to_string(scene.getCamera()->canvasHeight) + "\n";
-	uint32_t colour = 0xFFFFFFFF;  // upscaledFrameBuffer.at(yMouse).at(xMouse);
+	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
@@ -109,19 +107,28 @@ void draw(DrawingWindow &window) {
 
 	// Print mode-specific information
 	debugString += "\n";
+  float upscaleFactor = WIDTH / scene.getCamera()->canvasWidth;
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-    	// debugString += "    Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
-			debugString += "    Threads: " + std::to_string(scene.getCamera()->threadCount) + "\n";
+    	debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "  Threads: " + std::to_string(scene.getCamera()->threadCount) + "\n";
+      debugString += "  Lights: " + std::to_string(scene.lights.size()) + "\n";
+      if (!(scene.lights.size() > 4)) {
+        for (int i = 0; i < scene.lights.size(); i++) {
+
+          debugString += (i = scene.lightIndex)? "   >" : "    ";
+          debugString += printVec(scene.lights[i]) + "\n";
+        }
+      }
 			break;
 		default:
 			debugString += "Mode: Unknown\n";
@@ -132,7 +139,7 @@ void draw(DrawingWindow &window) {
 	glm::mat4 placement = scene.getCamera()->getPlacement();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			debugString += formatFloat(placement[i][j], 7) + " ";
+			debugString += formatFloat(placement[i][j], 5) + " ";
 		}
 		debugString += "\n";
 	}

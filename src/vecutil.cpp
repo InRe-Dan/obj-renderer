@@ -19,10 +19,6 @@ using glm::vec2;
 using glm::round;
 using std::string;
 
-string printVec(vec3 v) {
-  return "[" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z) + "]";
-}
-
 string formatFloat(float num, int width) {
   string returnString;
   string floatString = std::to_string(num);
@@ -47,6 +43,10 @@ string formatFloat(float num, int width) {
     returnString += "0";
   }
   return returnString;
+}
+
+string printVec(vec3 v) {
+  return "(" + formatFloat(v.x, 5) + ", " + formatFloat(v.y, 5) + ", " + formatFloat(v.z, 5) + ")";
 }
 
 glm::mat4 getXRotationMatrix(float degrees) {

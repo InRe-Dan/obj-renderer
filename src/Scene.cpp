@@ -21,17 +21,26 @@ class Scene {
 
     void addObjectFile(ObjectFile file) {
       objectFiles.push_back(file);
+      int objectFileIndex = 0;
       for (ObjectFile objectFile : objectFiles) {
+        int objectIndex = 0;
         for (Object object : objectFile.getObjects()) {
           for (ModelTriangle t : object.triangles) {
             modelTriangles.push_back(t);
+            modelTriangleRootObjectFile.push_back(objectFileIndex);
+            modelTriangleRootObject.push_back(objectIndex);
           }
+          objectIndex++;
         }
+        objectFileIndex++;
       }
 
     }
     vector<ModelTriangle> *getModelTriangles() {
       return &modelTriangles;
+    }
+    Material getMaterial(int index) {
+      return objectFiles[modelTriangleRootObjectFile[index]].getObjects()[modelTriangleRootObject[index]].material;
     }
     vector<vec3> lights;
     Camera *getCamera() {return cameras.at(cameraIndex);}
@@ -40,5 +49,7 @@ class Scene {
     vector<ObjectFile> objectFiles;
     vector<Camera*> cameras;
     vector<ModelTriangle> modelTriangles;
+    vector<int> modelTriangleRootObjectFile;
+    vector<int> modelTriangleRootObject;
     int cameraIndex;
 };

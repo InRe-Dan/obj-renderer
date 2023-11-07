@@ -42,7 +42,10 @@ class MaterialLib {
 					vector<string> lineSplit = split(line, ' ');
 					vec3 rgb(stof(lineSplit.at(1)), stof(lineSplit.at(2)), stof(lineSplit.at(3)));
 					materials[materialName].setDiffuseColour(rgb);
-				}
+				} else if (code.compare("map_Kd") == 0) {
+          vector<string> lineSplit = split(line, ' ');
+          materials[materialName].setMap_Kd(lineSplit.at(1));
+        }
 			}
 			inputStream.close();
 			printMaterials();

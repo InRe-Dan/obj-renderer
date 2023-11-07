@@ -87,11 +87,13 @@ void draw(DrawingWindow &window) {
 	}
 
 	// Apply effects
-  // frameBuffer = blackAndWhite(frameBuffer);
-  // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
   arbitraryUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer);
-  blackAndWhite(upscaledFrameBuffer);
-
+  // blackAndWhite(upscaledFrameBuffer);
+  // upscaledFrameBuffer = applyKernel(upscaledFrameBuffer, sharpenKernel);
+  // vector<vector<uint32_t>> hEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelH);
+  // vector<vector<uint32_t>> vEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelV);
+  // hypot(upscaledFrameBuffer, hEdges, vEdges);
+  // threshold(upscaledFrameBuffer, vec3(250));
 
 	// Get mouse state
 	int xMouse, yMouse;

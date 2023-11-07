@@ -118,7 +118,7 @@ class Camera {
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
       // cout << "Triangles: " << scene.getModelTriangles().size();
-      for (ModelTriangle triangle : scene.getModelTriangles()) {
+      for (ModelTriangle triangle : *scene.getModelTriangles()) {
         vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
         vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
         vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
@@ -198,7 +198,7 @@ class Camera {
     }
 
     void rasterRender(Scene scene) {
-      for (ModelTriangle triangle : scene.getModelTriangles()) {
+      for (ModelTriangle triangle : *scene.getModelTriangles()) {
         CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
         CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
         CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
@@ -210,7 +210,7 @@ class Camera {
     }
 
     void wireframeRender(Scene scene) {
-      for (ModelTriangle triangle : scene.getModelTriangles()) {
+      for (ModelTriangle triangle : *scene.getModelTriangles()) {
         CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
         CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
         CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));

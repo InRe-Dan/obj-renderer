@@ -30,8 +30,8 @@ class Scene {
       }
 
     }
-    vector<ModelTriangle> getModelTriangles() {
-      return modelTriangles;
+    vector<ModelTriangle> *getModelTriangles() {
+      return &modelTriangles;
     }
     vector<vec3> lights;
     Camera *getCamera() {return cameras.at(cameraIndex);}

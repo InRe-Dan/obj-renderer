@@ -95,10 +95,13 @@ void draw(DrawingWindow &window) {
 	// Get mouse state
 	int xMouse, yMouse;
   SDL_GetMouseState(&xMouse,&yMouse);
+  float upscaleFactor = WIDTH / scene.getCamera()->canvasWidth;
+  int mouseCanvasX = glm::min(scene.getCamera()->canvasWidth - 1, int(round(xMouse / upscaleFactor)));
+  int mouseCanvasY = glm::min(scene.getCamera()->canvasHeight - 1, int(round(yMouse / upscaleFactor)));
 
 	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
-  debugString += "Resolution; " + std::to_string(scene.getCamera()->canvasWidth) + "x" + std::to_string(scene.getCamera()->canvasHeight) + "\n";
+  debugString += "Resolution; " + std::to_string(scene.getCamera()->canvasWidth)+ "x" + std::to_string(scene.getCamera()->canvasHeight) + "\n";
 	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
@@ -107,21 +110,20 @@ void draw(DrawingWindow &window) {
 
 	// Print mode-specific information
 	debugString += "\n";
-  float upscaleFactor = WIDTH / scene.getCamera()->canvasWidth;
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
+			debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-    	debugString += "  Depth  : " + std::to_string(1 / scene.getCamera()->depthBuffer[yMouse / upscaleFactor][xMouse / upscaleFactor]) + "\n";
-			debugString += "  Threads: " + std::to_string(scene.getCamera()->threadCount) + "\n";
-      debugString += "  Lights: " + std::to_string(scene.lights.size()) + "\n";
+    	debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "  Threads : " + std::to_string(scene.getCamera()->threadCount) + "\n";
+      debugString += "  Lights  : " + std::to_string(scene.lights.size()) + "\n";
       if (!(scene.lights.size() > 4)) {
         for (int i = 0; i < scene.lights.size(); i++) {
 

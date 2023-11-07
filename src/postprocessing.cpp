@@ -93,7 +93,7 @@ vector<vector<uint32_t>> blackAndWhite(vector<vector<uint32_t>> &target) {
 
 void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
   assert(source.size() <= target.size());
-  float ratio = target.size() / source.size();
+  // float ratio = target.size() / source.size();
   int nearestx = 0;
   int nearesty = 0;
   int sWidth = source.at(0).size();

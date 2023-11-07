@@ -303,15 +303,11 @@ class Camera {
       if (canvasWidth <= -w && canvasHeight <= -h) return;
       canvasWidth += w;
       canvasHeight += h;
-      frameBuffer = vector<vector<uint32_t>>();
-      depthBuffer = vector<vector<float>>();
+      frameBuffer = vector<vector<uint32_t>>(canvasHeight);
+      depthBuffer = vector<vector<float>>(canvasHeight);
       for (int i = 0; i < canvasHeight; i++) {
-        frameBuffer.push_back(vector<uint32_t>());
-        depthBuffer.push_back(vector<float>());
-        for (int j = 0; j < canvasWidth; j++) {
-          frameBuffer[i].push_back(0);
-          depthBuffer[i].push_back(0.0f);
-        }
+        frameBuffer[i] = vector<uint32_t>(canvasWidth);
+        depthBuffer[i] = vector<float>(canvasWidth);
       }
     }
 

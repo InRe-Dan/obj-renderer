@@ -90,6 +90,7 @@ void draw(DrawingWindow &window) {
   // frameBuffer = blackAndWhite(frameBuffer);
   // frameBuffer = applyKernel(frameBuffer, boxBlurKernel);
   arbitraryUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer);
+  blackAndWhite(upscaledFrameBuffer);
 
 
 	// Get mouse state

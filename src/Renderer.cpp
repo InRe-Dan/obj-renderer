@@ -38,9 +38,9 @@ int renderMode = 2;
 void initialize() {
   scene.lights.push_back(vec3(0, 0, 2));
   // scene.lights.push_back(vec3(-1, 1, 5));
-  ObjectFile sphere = (ObjectFile("sphere.obj", 1.0f));
-  sphere.centerOn(vec4(0));
-  scene.addObjectFile(sphere);
+  ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
+  cornell.centerOn(vec4(0));
+  scene.addObjectFile(cornell);
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
     upscaledFrameBuffer.push_back(vector<uint32_t>());

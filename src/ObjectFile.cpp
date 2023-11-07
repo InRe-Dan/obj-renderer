@@ -47,15 +47,28 @@ class ObjectFile {
 			} else if (code.compare("v") == 0) {
 				vec3 vertex = parseVertex(line);
 				vertices.push_back(vertex * scaleFactor);
-			} else if (code.compare("f") == 0) {
-				vec3 face = parseFace(line);
+      } else if (code.compare("vn") == 0) {
+        vec3 vertexNormal = parseVertex(line);
+        vertexNormals.push_back(vertexNormal);
+      } else if (code.compare("vt") == 0) {
+        vec2 vertexTextureRatio = parseTextureRatio(line);
+        vertexTextureRatios.push_back(vertexTextureRatio);
+      } else if (code.compare("f") == 0) {
+				std::array<std::array<int, 3>, 3> face = parseFace(line);
 				std::array<vec4, 3> faceVertices;
-				faceVertices[0] = vec4(vertices.at(face.x - 1), 1);
-				faceVertices[1] = vec4(vertices.at(face.y - 1), 1);
-				faceVertices[2] = vec4(vertices.at(face.z - 1), 1);
+				faceVertices[0] = vec4(vertices.at(face[0][0] - 1), 1);
+				faceVertices[1] = vec4(vertices.at(face[1][0] - 1), 1);
+				faceVertices[2] = vec4(vertices.at(face[2][0] - 1), 1);
 				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
 				faceTriangle.colour = getKdOf(objects.at(objects.size() - 1));
+        if (face[0][1] > 0){
+          faceTriangle.texturePoints = std::array<TexturePoint, 3>{
+            TexturePoint(vertexTextureRatios.at(face[0][1] - 1).x, vertexTextureRatios.at(face[0][1] - 1).y),
+            TexturePoint(vertexTextureRatios.at(face[1][1] - 1).x, vertexTextureRatios.at(face[1][1] - 1).y),
+            TexturePoint(vertexTextureRatios.at(face[2][1] - 1).x, vertexTextureRatios.at(face[2][1] - 1).y)
+            };
+        }
         vec3 e0 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[1]);
         vec3 e1 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[2]);
         faceTriangle.normal = glm::normalize(glm::cross(e0, e1));
@@ -83,16 +96,6 @@ class ObjectFile {
 			cout << '(' << current.x << ", " << current.y << ", " << current.z << ")" << std::endl;
 		}
 		cout << std::endl;
-	}
-	void printFaces() {
-		cout << "Faces of " << file << std::endl;
-		for (int i = 0; i < faces.size(); i++) {
-			vec3 current = faces.at(i);
-			cout << '(' << current.x << ", " << current.y << ", " << current.z << ")" << std::endl;
-		}
-		cout << std::endl;
-		cout << "Test triangle: ";
-		cout << objects.at(0).triangles.at(0);
 	}
 
 	vector<Object> getObjects() {
@@ -127,22 +130,49 @@ class ObjectFile {
 
   static vec3 parseVertex(std::string input) {
     vector<std::string> splitStr = split(input, ' ');
+    // TODO what were you thinking with this negative sign? you cost us so much debugging...
     vec3 result(- stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
     return result;
   }
 
-  static vec3 parseFace(std::string input) {
+  static vec2 parseTextureRatio(std::string input) {
     vector<std::string> splitStr = split(input, ' ');
-    int a, b, c;
-    a = atoi(split(splitStr.at(1), '/').at(0).c_str());
-    b = atoi(split(splitStr.at(2), '/').at(0).c_str());
-    c = atoi(split(splitStr.at(3), '/').at(0).c_str());
-    return vec3(a, b, c);
+    vec2 result(stof(splitStr.at(1)), stof(splitStr.at(2)));
+    return result;
+  }
+
+  static std::array<std::array<int, 3>, 3> parseFace(std::string input) {
+    // vertex/texture/normal format
+    std::array<std::array<int, 3>, 3> faceData;
+    vector<std::string> splitStr = split(input, ' ');
+    cout << input << std::endl;
+    for (int i = 0; i < 3; i++) {
+      vector<string> information = split(splitStr.at(i + 1), '/');
+      string locationIndex = information.at(0);
+      string normalIndex = "-1";
+      string textureIndex = "-1";
+      if (information.size() > 1) {
+        if (!information.at(1).empty()) {
+          textureIndex = information.at(1);
+          cout << textureIndex << std::endl;
+        }
+      }
+      if (information.size() > 2) {
+        if (!information.at(2).empty()) {
+          normalIndex = information.at(2);
+        }
+      }
+      faceData[i] = std::array<int, 3>{atoi(locationIndex.c_str()), atoi(textureIndex.c_str()), atoi(normalIndex.c_str())};
+    }
+    cout << "done" << std::endl;
+    return faceData;
   }
 	MaterialLib matLib;
 	string materialLib;
 	vector<vec3> vertices;
-	vector<vec3> faces;
+  vector<vec3> vertexNormals;
+  vector<vec2> vertexTextureRatios;
+	vector<std::array<std::array<int, 3>, 3>> faces;
 	vector<Object> objects;
 	const char *file;
 	float scaleFactor;

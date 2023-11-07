@@ -110,6 +110,19 @@ class ObjectFile {
     }
   }
 
+  void centerOn(vec4 target) {
+    vec4 sum = vec4(0);
+    float count = 0;
+    for (Object object : objects) {
+      for (ModelTriangle triangle : object.triangles) {
+        count += 3;
+        sum += triangle.vertices[0] + triangle.vertices[1] + triangle.vertices[2];
+      }
+    }
+    vec4 average = sum / count;
+    translate(target - average);
+  }
+
 	private:
 
   static vec3 parseVertex(std::string input) {

@@ -168,8 +168,3 @@ vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
 	}
 	return interpolation;
 }
-vector<vec2> interpolate(TexturePoint from, TexturePoint to, int steps) {
-	vec2 fromP(from.x, from.y);
-	vec2 toP(to.x, to.y);
-	return interpolate(fromP, toP, steps);
-}

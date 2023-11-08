@@ -1,14 +1,14 @@
 #pragma once
 
-#include "TexturePoint.h"
 #include <iostream>
+#include <glm/glm.hpp>
 
 struct CanvasPoint {
 	float x{};
 	float y{};
 	float depth{};
 	float brightness{};
-	TexturePoint texturePoint{};
+	glm::vec2 texturePoint{};
 
 	CanvasPoint();
 	CanvasPoint(float xPos, float yPos);

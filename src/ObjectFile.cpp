@@ -64,10 +64,10 @@ class ObjectFile {
 				faceTriangle.vertices = faceVertices;
 				faceTriangle.colour = getKdOf(objects.at(objects.size() - 1));
         if (face[0][1] > 0){
-          faceTriangle.texturePoints = std::array<TexturePoint, 3>{
-            TexturePoint(vertexTextureRatios.at(face[0][1] - 1).x, vertexTextureRatios.at(face[0][1] - 1).y),
-            TexturePoint(vertexTextureRatios.at(face[1][1] - 1).x, vertexTextureRatios.at(face[1][1] - 1).y),
-            TexturePoint(vertexTextureRatios.at(face[2][1] - 1).x, vertexTextureRatios.at(face[2][1] - 1).y)
+          faceTriangle.texturePoints = std::array<vec2, 3>{
+            vertexTextureRatios.at(face[0][1] - 1),
+            vertexTextureRatios.at(face[1][1] - 1),
+            vertexTextureRatios.at(face[2][1] - 1),
             };
         }
         vec3 e0 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[1]);

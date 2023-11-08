@@ -27,13 +27,16 @@ using std::cout;
 
 class MaterialLib {
 	public:
-		MaterialLib(string filename="UNSET") {
+		MaterialLib(string filename) {
 			file = filename;
 			ifstream inputStream;
 			inputStream.open(filename, std::ios::in);
 			string line, code, materialName;
-			for (int lines = 0; std::getline(inputStream,line); lines++) {
+      cout << "reading material: ";
+      cout << filename << "\n";
+			while (std::getline(inputStream,line)) {
 				string code = split(line, ' ').at(0);
+        cout << code << "\n";
 				if (code.compare("newmtl") == 0) {
 					materialName = split(line, ' ').at(1);
 					Material newMatObject(materialName);
@@ -44,6 +47,7 @@ class MaterialLib {
 					materials[materialName].setDiffuseColour(rgb);
 				} else if (code.compare("map_Kd") == 0) {
           vector<string> lineSplit = split(line, ' ');
+          cout << "yup!!\n";
           materials[materialName].setMap_Kd(lineSplit.at(1));
         }
 			}
@@ -57,7 +61,7 @@ class MaterialLib {
 			std::unordered_map<string, Material>::iterator itr;
 			for(itr=materials.begin();itr!=materials.end();itr++)
 			{
-				cout<<itr->first<<" "<<itr->second.getDiffuseColour()<<std::endl;
+				cout<<itr->first<<" "<<itr->second.getDiffuseColour()<< " " << itr->second.isTextured<< std::endl;
 			}
 		}
 	private:

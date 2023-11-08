@@ -8,6 +8,7 @@ class Camera;
 class Scene {
   public:
       int lightIndex;
+      vector<ObjectFile> objectFiles;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();
@@ -39,14 +40,15 @@ class Scene {
     vector<ModelTriangle> *getModelTriangles() {
       return &modelTriangles;
     }
-    Material getMaterial(int index) {
-      return objectFiles[modelTriangleRootObjectFile[index]].getObjects()[modelTriangleRootObject[index]].material;
+    Material *getMaterial(int index) {
+      string matName = (objectFiles[modelTriangleRootObjectFile[index]]).getObjects()[modelTriangleRootObject[index]].material;
+      Material *mat = &objectFiles[modelTriangleRootObjectFile[index]].matLib->getMaterials()[matName];
+      return mat;
     }
     vector<vec3> lights;
     Camera *getCamera() {return cameras.at(cameraIndex);}
 
   private:
-    vector<ObjectFile> objectFiles;
     vector<Camera*> cameras;
     vector<ModelTriangle> modelTriangles;
     vector<int> modelTriangleRootObjectFile;

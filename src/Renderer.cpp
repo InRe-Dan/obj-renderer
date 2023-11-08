@@ -25,7 +25,7 @@ using glm::vec3;
 using glm::vec2;
 using glm::round;
 
-Camera primaryCamera(256, 144);
+Camera primaryCamera(64, 36);
 Scene scene(&primaryCamera);
 
 vector<vector<uint32_t>> upscaledFrameBuffer;

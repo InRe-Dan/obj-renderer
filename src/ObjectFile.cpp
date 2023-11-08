@@ -28,18 +28,19 @@ using std::cout;
 
 class ObjectFile {
 	public:
+  MaterialLib *matLib;
 	ObjectFile(const char *filename, float scale) {
 		file = filename;
 		scaleFactor = scale;
 		ifstream inputStream;
 		inputStream.open(filename, std::ios::in);
 		string line;
-		for (int lines = 0; std::getline(inputStream,line); lines++) {
+		while (std::getline(inputStream,line)) {
 			string code = split(line, ' ').at(0);
 			if (code.compare("mtllib") == 0) {
 				materialLib = split(line, ' ').at(1);
-				matLib = MaterialLib(materialLib);
-				
+        cout << "passsing" << materialLib << "\n";
+				matLib = new MaterialLib(materialLib);
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));
 			} else if (code.compare("usemtl") == 0) {
@@ -80,9 +81,9 @@ class ObjectFile {
 	}
 	void printObjectMaterials() {
 		for (Object object : objects) {
-			Material mat = matLib.getMaterials()[object.material];
+			Material mat = matLib->getMaterials()[object.material];
 			uint32_t col = mat.getDiffuseColour();
-			cout << object.name << " is " << mat.materialName << " which is " << col << '\n';
+			cout << object.name << " is " << mat.materialName << " which is " << col << " and isTextured is " << mat.isTextured << "\n";
 			cout << "RGB: " << ((col & 0x00FF0000) >> 16) << " " << ((col & 0x0000FF00) >> 8) << " " << (col & 0x000000FF) << '\n';
 			cout << "Object has " << object.triangles.size() << " triangles.\n";
 		}
@@ -103,7 +104,7 @@ class ObjectFile {
 	}
 
 	Colour getKdOf(Object object) {
-		uint32_t ci = matLib.getMaterials()[object.material].getDiffuseColour();
+		uint32_t ci = matLib->getMaterials()[object.material].getDiffuseColour();
 		return Colour((ci & 0x00FF0000) >> 16, (ci & 0x0000FF00) >> 8, ci & 0x000000FF);
 	}
 
@@ -145,7 +146,6 @@ class ObjectFile {
     // vertex/texture/normal format
     std::array<std::array<int, 3>, 3> faceData;
     vector<std::string> splitStr = split(input, ' ');
-    cout << input << std::endl;
     for (int i = 0; i < 3; i++) {
       vector<string> information = split(splitStr.at(i + 1), '/');
       string locationIndex = information.at(0);
@@ -154,7 +154,6 @@ class ObjectFile {
       if (information.size() > 1) {
         if (!information.at(1).empty()) {
           textureIndex = information.at(1);
-          cout << textureIndex << std::endl;
         }
       }
       if (information.size() > 2) {
@@ -164,10 +163,8 @@ class ObjectFile {
       }
       faceData[i] = std::array<int, 3>{atoi(locationIndex.c_str()), atoi(textureIndex.c_str()), atoi(normalIndex.c_str())};
     }
-    cout << "done" << std::endl;
     return faceData;
   }
-	MaterialLib matLib;
 	string materialLib;
 	vector<vec3> vertices;
   vector<vec3> vertexNormals;

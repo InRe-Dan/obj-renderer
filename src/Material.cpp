@@ -18,7 +18,7 @@ using std::cout;
 
 class Material {
 	public:
-      bool isTextured = false;
+    bool isTextured = false;
 		Material(string name="UNSET") {
 			materialName = name;
 		}
@@ -33,7 +33,6 @@ class Material {
       map_Kd = name;
       texture = TextureMap(name);
       isTextured = true;
-      
     }
 		uint32_t getDiffuseColour() {
 			return packedDiffuseRGB;

@@ -16,8 +16,11 @@
 using std::vector;
 using glm::vec3;
 using glm::vec2;
-using glm::round;
 using std::string;
+
+inline int roundI(float x) {
+	return (x > 0)? int(x + 0.5) : int(x - 0.5);
+}
 
 string formatFloat(float num, int width) {
   string returnString;
@@ -105,10 +108,10 @@ void output(glm::mat4 matrix, std::string title) {
 vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight) {
   vector<CanvasPoint> returnVector;
   for (CanvasPoint point : input) {
-    if (topLeft.x > round(point.x)) continue;
-    if (bottomRight.x < round(point.x)) continue;
-    if (topLeft.y > round(point.y)) continue;
-    if (bottomRight.y < round(point.y)) continue;
+    if (topLeft.x > roundI(point.x)) continue;
+    if (bottomRight.x < roundI(point.x)) continue;
+    if (topLeft.y > roundI(point.y)) continue;
+    if (bottomRight.y < roundI(point.y)) continue;
     returnVector.push_back(point);
   }
   return returnVector;
@@ -164,7 +167,7 @@ vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
   vec3 from(fromC.x, fromC.y, fromC.depth);
   vector<vec3> vecInterpolation = interpolate(from, to, steps);
 	for (vec3 vect : vecInterpolation) {
-		interpolation.push_back(CanvasPoint(round(vect.x), round(vect.y), vect.z));
+		interpolation.push_back(CanvasPoint(roundI(vect.x), roundI(vect.y), vect.z));
 	}
 	return interpolation;
 }

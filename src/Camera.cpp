@@ -20,7 +20,6 @@
 using std::vector;
 using glm::vec3;
 using glm::vec2;
-using glm::round;
 
 // Object to represent a camera in a scene.
 class Camera {

@@ -18,7 +18,6 @@
 using std::vector;
 using glm::vec3;
 using glm::vec2;
-using glm::round;
 using std::string;
 using std::ifstream;
 using std::stof;

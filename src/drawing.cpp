@@ -21,9 +21,9 @@ void line(CanvasPoint to, CanvasPoint from, Colour colour, vector<vector<uint32_
 	vector<CanvasPoint> interpolation = bindToRectangle(interpolate(to, from, steps), vec2(1, 1), vec2(frameBuffer.at(0).size() - 1, frameBuffer.size() - 1));
 	vec3 colVect(colour.red, colour.green, colour.blue);
   for (CanvasPoint point : interpolation) {
-    if (depthBuffer.at(round(point.y)).at(round(point.x)) < point.depth) {
-      depthBuffer.at(round(point.y)).at(round(point.x)) = point.depth;
-			frameBuffer.at(round(point.y)).at(round(point.x)) = vec3ToColour(colVect, 255);
+    if (depthBuffer.at(roundI(point.y)).at(roundI(point.x)) < point.depth) {
+      depthBuffer.at(roundI(point.y)).at(roundI(point.x)) = point.depth;
+			frameBuffer.at(roundI(point.y)).at(roundI(point.x)) = vec3ToColour(colVect, 255);
     }
   }
 }
@@ -37,7 +37,7 @@ void strokedTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint
 
 // Draw a triangle which has a flat top or flat bottom. This is intended as a helper function.
 void rasterizeTriangle(CanvasPoint point, CanvasPoint base1, CanvasPoint base2, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
-	assert(round(base1.y) == round(base2.y));
+	assert(roundI(base1.y) == roundI(base2.y));
 	vector<CanvasPoint> pointToOne = interpolate(point, base1, ceil(abs(point.y - base1.y)));
 	vector<CanvasPoint> pointToTwo = interpolate(point, base2, ceil(abs(point.y - base2.y)));
 	for (int i = 0; i < ceil(pointToOne.size()); i++) {
@@ -56,13 +56,13 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	if (top.y > mid.y) std::swap(top, mid);
 	if (mid.y > bot.y) std::swap(mid, bot);
 	if (top.y > mid.y) std::swap(top, mid);
-	top = CanvasPoint(round(top.x), round(top.y), top.depth);
-	mid = CanvasPoint(round(mid.x), round(mid.y), mid.depth);
-	bot = CanvasPoint(round(bot.x), round(bot.y), bot.depth);
+	top = CanvasPoint(roundI(top.x), roundI(top.y), top.depth);
+	mid = CanvasPoint(roundI(mid.x), roundI(mid.y), mid.depth);
+	bot = CanvasPoint(roundI(bot.x), roundI(bot.y), bot.depth);
 
 
 	// Locate point at the same y level from middle vertex
-	int height = round(glm::abs(top.y - bot.y));
+	int height = roundI(glm::abs(top.y - bot.y));
 	vector<CanvasPoint> topToBot = interpolate(top, bot, height);
 
   // Create an imaginary point at the same height as the middle point, along the midpoint of top and bottom
@@ -71,8 +71,8 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
   float imaginaryDepth = mid.depth;
 	for (int i = 0; i < height; i++) {
 		if (topToBot.at(i).y == mid.y) {
-			imaginaryY = round(topToBot.at(i).y);
-			imaginaryX = round(topToBot.at(i).x);
+			imaginaryY = roundI(topToBot.at(i).y);
+			imaginaryX = roundI(topToBot.at(i).x);
       imaginaryDepth = topToBot.at(i).depth;
 			break;
 		}

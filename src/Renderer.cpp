@@ -23,7 +23,6 @@
 using std::vector;
 using glm::vec3;
 using glm::vec2;
-using glm::round;
 
 Camera primaryCamera(64, 36);
 Scene scene(&primaryCamera);

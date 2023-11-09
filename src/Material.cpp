@@ -38,7 +38,9 @@ class Material {
 			return packedDiffuseRGB;
 		}
     uint32_t getTexturePointColour(vec2 uAndV) {
-      return texture.pixels[uAndV.x * texture.height + uAndV.y * texture.width];
+			// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width << "\n";
+      return texture.pixels[int(uAndV.x * texture.height + 0.5) * texture.width + int(uAndV.y * texture.width + 0.5)];
+			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
     }
 	string materialName;
 	private:

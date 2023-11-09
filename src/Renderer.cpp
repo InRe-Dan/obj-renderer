@@ -27,6 +27,7 @@ using glm::round;
 
 Camera primaryCamera(64, 36);
 Scene scene(&primaryCamera);
+TextureMap cobbles("texture.ppm");
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -230,5 +231,6 @@ int main(int argc, char *argv[]) {
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
 		frameTime = std::chrono::system_clock::now() - start;
+    // std::exit(0);
 	}
 }

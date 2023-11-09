@@ -3,6 +3,10 @@
 #include <vector>
 #include <cstdint>
 #include <stdio.h>
+#include <glm/glm.hpp>
+
+using glm::vec3;
+using glm::vec2;
 
 
 using std::vector;

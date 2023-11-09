@@ -155,6 +155,7 @@ class Camera {
         vec2 point = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
         uint32_t col = intersectionMaterial.getTexturePointColour(point);
         solutionT.colour = Colour((col >> 16) & 0xFF, (col >> 8) & 0xFF, col & 0xFF);
+        // cout << point.x << " " << point.y << "\n";
       }
       RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
       return intersection;

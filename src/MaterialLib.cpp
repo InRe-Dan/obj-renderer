@@ -26,6 +26,7 @@ using std::cout;
 
 class MaterialLib {
 	public:
+		std::unordered_map<string, Material> materials;
 		MaterialLib(string filename) {
 			file = filename;
 			ifstream inputStream;
@@ -51,19 +52,7 @@ class MaterialLib {
         }
 			}
 			inputStream.close();
-			printMaterials();
-		}
-		std::unordered_map<string, Material> getMaterials() {
-			return materials;
-		}
-		void printMaterials() {
-			std::unordered_map<string, Material>::iterator itr;
-			for(itr=materials.begin();itr!=materials.end();itr++)
-			{
-				cout<<itr->first<<" "<<itr->second.getDiffuseColour()<< " " << itr->second.isTextured<< std::endl;
-			}
 		}
 	private:
 		string file;
-		std::unordered_map<string, Material> materials;
 };

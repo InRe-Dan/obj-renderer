@@ -43,7 +43,7 @@ class ObjectFile {
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));
 			} else if (code.compare("usemtl") == 0) {
-				objects.at(objects.size() - 1).setMaterial(split(line, ' ').at(1));
+				objects.back().setMaterial(split(line, ' ').at(1));
 			} else if (code.compare("v") == 0) {
 				vec3 vertex = parseVertex(line);
 				vertices.push_back(vertex * scaleFactor);
@@ -61,7 +61,8 @@ class ObjectFile {
 				faceVertices[2] = vec4(vertices.at(face[2][0] - 1), 1);
 				ModelTriangle faceTriangle; 
 				faceTriangle.vertices = faceVertices;
-				faceTriangle.colour = getKdOf(objects.at(objects.size() - 1));
+				faceTriangle.colour = getKdOf(objects.back());
+        faceTriangle.material = &(matLib->materials.at(objects.back().material));
         if (face[0][1] > 0){
           faceTriangle.texturePoints = std::array<vec2, 3>{
             vertexTextureRatios.at(face[0][1] - 1),
@@ -72,21 +73,11 @@ class ObjectFile {
         vec3 e0 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[1]);
         vec3 e1 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[2]);
         faceTriangle.normal = glm::normalize(glm::cross(e0, e1));
-				objects.at(objects.size() - 1).triangles.push_back(faceTriangle);
+				objects.back().triangles.push_back(faceTriangle);
 				faces.push_back(face);
 			}
 		}
 		inputStream.close();
-	}
-	void printObjectMaterials() {
-		for (Object object : objects) {
-			Material mat = matLib->getMaterials()[object.material];
-			uint32_t col = mat.getDiffuseColour();
-			cout << object.name << " is " << mat.materialName << " which is " << col << " and isTextured is " << mat.isTextured << "\n";
-			cout << "RGB: " << ((col & 0x00FF0000) >> 16) << " " << ((col & 0x0000FF00) >> 8) << " " << (col & 0x000000FF) << '\n';
-			cout << "Object has " << object.triangles.size() << " triangles.\n";
-		}
-		cout << std::endl;
 	}
 
 	void printVertices() {
@@ -103,7 +94,7 @@ class ObjectFile {
 	}
 
 	Colour getKdOf(Object object) {
-		uint32_t ci = matLib->getMaterials()[object.material].getDiffuseColour();
+		uint32_t ci = matLib->materials.at(object.material).getDiffuseColour();
 		return Colour((ci & 0x00FF0000) >> 16, (ci & 0x0000FF00) >> 8, ci & 0x000000FF);
 	}
 

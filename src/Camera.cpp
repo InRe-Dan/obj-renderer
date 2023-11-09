@@ -145,18 +145,16 @@ class Camera {
         i++;
       }
       float distance = glm::length(rayOrigin - closestPoint);
-      size_t index = solutionIndex;
-      Material intersectionMaterial = *scene.getMaterial(index);
-      if (intersectionMaterial.isTextured) {
+      if (solutionIndex == -1) {}
+      else if (solutionT.material->isTextured) {
         std::array<vec2, 3> ts = solutionT.texturePoints;
         vec2 e0 = ts[1] - ts[0];
         vec2 e1 = ts[2] - ts[0];
         vec2 point = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
-        uint32_t col = intersectionMaterial.getTexturePointColour(point);
+        uint32_t col = solutionT.material->getTexturePointColour(point);
         solutionT.colour = Colour((col >> 16) & 0xFF, (col >> 8) & 0xFF, col & 0xFF);
-        // cout << point.x << " " << point.y << "\n";
       }
-      RayTriangleIntersection intersection(closestPoint, distance, solutionT, index);
+      RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex);
       return intersection;
     }
 

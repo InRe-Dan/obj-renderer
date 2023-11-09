@@ -93,8 +93,8 @@ class Camera {
     CanvasPoint getCanvasIntersectionPoint(vec3 vertexLocation) {
       // All coordinates are relative to the camera!
       vec3 vertexToCamera = (vertexLocation - getPosition()) * getOrientation();
-      float u = focalLength * (vertexToCamera.x/vertexToCamera.z) * 50 + canvasWidth/2;
-      float v = focalLength * (vertexToCamera.y/vertexToCamera.z) * 50 + canvasHeight/2;
+      float u = focalLength * (vertexToCamera.x/vertexToCamera.z) + canvasWidth/2;
+      float v = focalLength * (vertexToCamera.y/vertexToCamera.z) + canvasHeight/2;
       return CanvasPoint(u, v, -1/vertexToCamera.z);
     }
 

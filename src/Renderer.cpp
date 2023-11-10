@@ -39,7 +39,6 @@ void initialize() {
   scene.lights.push_back(vec3(0, 0, 2));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
-  cornell.centerOn(vec4(0));
   scene.addObjectFile(cornell);
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
@@ -106,33 +105,32 @@ void draw(DrawingWindow &window) {
   int mouseCanvasY = glm::min(camera.canvasHeight - 1, int(round(yMouse / upscaleFactor)));
 
 	// Print generic information
-	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
-  debugString += "Resolution; " + std::to_string(camera.canvasWidth)+ "x" + std::to_string(camera.canvasHeight) + "\n";
+	debugString += "Mouse        : " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
+  debugString += "Resolution   : " + std::to_string(camera.canvasWidth)+ "x" + std::to_string(camera.canvasHeight) + "\n";
 	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
-	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
+	debugString += "RGBA         : " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
-  debugString += "Focal Length: " + formatFloat(camera.getFocalLength(), 5) + "\n";
+  debugString += "FOV          : " + std::to_string(roundI(glm::degrees(2 * glm::tanh(camera.getImagePlaneWidth() / (2 * camera.getFocalLength()))))) + "\n";
 
 	// Print mode-specific information
 	debugString += "\n";
 
 	switch (renderMode) {
 		case 0:
-			debugString += "Mode: Wireframe \n";
-			debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "Mode         : Wireframe \n";
+			debugString += "  Depth      : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 1:
-			debugString += "Mode: Rasterization \n";
-			debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "Mode         : Rasterization \n";
+			debugString += "  Depth      : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 2:
-			debugString += "Mode: Raytracing\n";
-    	debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
-      debugString += "  FOV     : " + formatFloat(glm::degrees(2 * glm::tanh(camera.getRaytracingImagePlaneWidth() / (2 * camera.getFocalLength()))), 5);
-			debugString += "  Threads : " + std::to_string(camera.threadCount) + "\n";
-      debugString += "  Lights  : " + std::to_string(scene.lights.size()) + "\n";
+			debugString += "Mode         : Raytracing\n";
+    	debugString += "  Depth      : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "  Threads    : " + std::to_string(camera.threadCount) + "\n";
+      debugString += "  Lights     : " + std::to_string(scene.lights.size()) + "\n";
       if (!(scene.lights.size() > 4)) {
         for (int i = 0; i < scene.lights.size(); i++) {
 

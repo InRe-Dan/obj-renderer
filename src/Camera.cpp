@@ -34,7 +34,7 @@ class Camera {
       threadCount = 6;
       canvasHeight = h;
       canvasWidth = w;
-      raytracingImagePlaneWidth = 5.0f;
+      imagePlaneWidth = 5.0f;
       focalLength = 3;
       placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
@@ -91,11 +91,13 @@ class Camera {
       return glm::mat3(placement);
     }
     CanvasPoint getCanvasIntersectionPoint(vec3 vertexLocation) {
+      // https://www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html
       // All coordinates are relative to the camera!
+      float pixelLength = imagePlaneWidth / canvasWidth;
       vec3 vertexToCamera = (vertexLocation - getPosition()) * getOrientation();
-      float u = focalLength * (vertexToCamera.x/vertexToCamera.z) + canvasWidth/2;
-      float v = focalLength * (vertexToCamera.y/vertexToCamera.z) + canvasHeight/2;
-      return CanvasPoint(u, v, -1/vertexToCamera.z);
+      float u = focalLength * (vertexToCamera.x/vertexToCamera.z) + imagePlaneWidth/2;
+      float v = focalLength * (vertexToCamera.y/vertexToCamera.z) + (canvasHeight * imagePlaneWidth / canvasWidth)/2;
+      return CanvasPoint(glm::floor(canvasWidth * (u / imagePlaneWidth)), glm::floor(canvasHeight * v/ (canvasHeight * imagePlaneWidth / canvasWidth)), -1/vertexToCamera.z);
     }
 
     vec3 getRayDirection(int x, int y) {
@@ -103,7 +105,7 @@ class Camera {
       vec3 right = glm::normalize(o[0]);
       vec3 up = - glm::normalize(o[1]);
       vec3 forward = glm::normalize(o[2]);
-      float pixelLength = raytracingImagePlaneWidth / canvasWidth;
+      float pixelLength = imagePlaneWidth / canvasWidth;
       vec3 imagePlaneTopLeft = forward * focalLength + (up * (canvasHeight * 0.5f * pixelLength)) + (-right * (pixelLength * canvasWidth * 0.5f));
       return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;
     }
@@ -307,8 +309,8 @@ class Camera {
       focalLength += diff;
     }
 
-    float getRaytracingImagePlaneWidth() {
-      return raytracingImagePlaneWidth;
+    float getImagePlaneWidth() {
+      return imagePlaneWidth;
     }
 
     float getFocalLength() {
@@ -331,6 +333,6 @@ class Camera {
       bool isLooking;
       vec4 lookTarget;
       float focalLength;
-      float raytracingImagePlaneWidth;
+      float imagePlaneWidth;
       glm::mat4 placement;
 };

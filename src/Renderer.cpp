@@ -101,8 +101,8 @@ void draw(DrawingWindow &window) {
 	int xMouse, yMouse;
   SDL_GetMouseState(&xMouse,&yMouse);
   float upscaleFactor = WIDTH / camera.canvasWidth;
-  int mouseCanvasX = glm::min(camera.canvasWidth - 1, int(round(xMouse / upscaleFactor)));
-  int mouseCanvasY = glm::min(camera.canvasHeight - 1, int(round(yMouse / upscaleFactor)));
+  int mouseCanvasX = glm::min(camera.canvasWidth - 1, roundI(xMouse / upscaleFactor));
+  int mouseCanvasY = glm::min(camera.canvasHeight - 1, roundI(yMouse / upscaleFactor));
 
 	// Print generic information
 	debugString += "Mouse        : " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";

@@ -93,7 +93,6 @@ class Camera {
     CanvasPoint getCanvasIntersectionPoint(vec3 vertexLocation) {
       // https://www.scratchapixel.com/lessons/3d-basic-rendering/computing-pixel-coordinates-of-3d-point/mathematics-computing-2d-coordinates-of-3d-points.html
       // All coordinates are relative to the camera!
-      float pixelLength = imagePlaneWidth / canvasWidth;
       vec3 vertexToCamera = (vertexLocation - getPosition()) * getOrientation();
       float u = focalLength * (vertexToCamera.x/vertexToCamera.z) + imagePlaneWidth/2;
       float v = focalLength * (vertexToCamera.y/vertexToCamera.z) + (canvasHeight * imagePlaneWidth / canvasWidth)/2;

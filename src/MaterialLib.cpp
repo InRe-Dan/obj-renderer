@@ -28,9 +28,9 @@ class MaterialLib {
 	public:
 		std::unordered_map<string, Material> materials;
 		MaterialLib(string filename) {
-			file = filename;
+			file = "assets/mtl/" + filename;
 			ifstream inputStream;
-			inputStream.open(filename, std::ios::in);
+			inputStream.open(file, std::ios::in);
 			string line, code, materialName;
       cout << "reading material: ";
       cout << filename << "\n";

@@ -1,8 +1,9 @@
 #include "TextureMap.h"
 
 TextureMap::TextureMap() = default;
-TextureMap::TextureMap(const std::string &filename) {
-	std::ifstream inputStream(filename, std::ifstream::binary);
+TextureMap::TextureMap(const std::string filename) {
+	std::string realFileName = "assets/texture/" + filename;
+	std::ifstream inputStream(realFileName, std::ifstream::binary);
 	std::string nextLine;
 	// Get the "P6" magic number
 	std::getline(inputStream, nextLine);

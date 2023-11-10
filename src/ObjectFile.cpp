@@ -28,11 +28,11 @@ using std::cout;
 class ObjectFile {
 	public:
   MaterialLib *matLib;
-	ObjectFile(const char *filename, float scale) {
-		file = filename;
+	ObjectFile(std::string filename, float scale) {
+		file = "assets/obj/" + filename;
 		scaleFactor = scale;
 		ifstream inputStream;
-		inputStream.open(filename, std::ios::in);
+		inputStream.open(file, std::ios::in);
 		string line;
 		while (std::getline(inputStream,line)) {
 			string code = split(line, ' ').at(0);
@@ -161,7 +161,7 @@ class ObjectFile {
   vector<vec2> vertexTextureRatios;
 	vector<std::array<std::array<int, 3>, 3>> faces;
 	vector<Object> objects;
-	const char *file;
+	std::string file;
 	float scaleFactor;
 };
 

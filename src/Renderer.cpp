@@ -26,7 +26,7 @@ using glm::vec2;
 
 Camera primaryCamera(64, 36);
 Scene scene(&primaryCamera);
-TextureMap cobbles("texture.ppm");
+TextureMap cobbles("assets/texture/texture.ppm");
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -112,7 +112,7 @@ void draw(DrawingWindow &window) {
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
-  debugString += "FOV          : " + std::to_string(roundI(glm::degrees(2 * glm::tanh(camera.getImagePlaneWidth() / (2 * camera.getFocalLength()))))) + "\n";
+  debugString += "FOV          : " + std::to_string(roundI(glm::degrees(2 * glm::atan(camera.getImagePlaneWidth() / (2 * camera.getFocalLength()))))) + "\n";
 
 	// Print mode-specific information
 	debugString += "\n";
@@ -207,7 +207,7 @@ void test() {
  	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
   cout << intersection << "\n";
   cout << intersection.triangleIndex << "\n";
-  cout << intersection.intersectedTriangle.colour;
+  // cout << printVec(intersection.normal) << "\n";
   RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << lightIntersection;
   cout << lightIntersection.intersectedTriangle.colour;

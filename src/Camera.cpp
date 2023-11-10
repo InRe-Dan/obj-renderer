@@ -146,16 +146,34 @@ class Camera {
         i++;
       }
       float distance = glm::length(rayOrigin - closestPoint);
-      if (solutionIndex == -1) {}
-      else if (solutionT.material->isTextured) {
-        std::array<vec2, 3> ts = solutionT.texturePoints;
-        vec2 e0 = ts[1] - ts[0];
-        vec2 e1 = ts[2] - ts[0];
-        vec2 point = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
-        uint32_t col = solutionT.material->getTexturePointColour(point);
+      if (solutionIndex == -1) {
+        RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex, solutionT.normal);
+        return intersection;
+      }
+
+      std::array<vec2, 3> ts = solutionT.texturePoints;
+      vec2 e0 = ts[1] - ts[0];
+      vec2 e1 = ts[2] - ts[0];
+      vec2 texturePoint = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
+      if (solutionT.material->isTextured) {
+        uint32_t col = solutionT.material->getTexturePointColour(texturePoint);
         solutionT.colour = Colour((col >> 16) & 0xFF, (col >> 8) & 0xFF, col & 0xFF);
       }
-      RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex);
+      vec3 normal = solutionT.normal;
+      if (solutionT.material->hasNormalMap) {
+        // https://en.wikipedia.org/wiki/Rotation_matrix
+        vec3 tangentSpaceNormal = solutionT.material->getNormalMapVector(texturePoint);
+        float angle = glm::acos(glm::dot(normal, tangentSpaceNormal));
+        vec3 axis = glm::cross(normal, tangentSpaceNormal);
+        float c = cos(angle);
+        float s = sin(angle);
+        float t = 1 - c;
+        glm::mat3 rotation = glm::mat3(c + axis.x * axis.x * t, axis.x * axis.y * t - axis.z * s, axis.x * axis.z * t + axis.y * s,
+        axis.y * axis.x * t + axis.z * s, c + axis.y * axis.y * t, axis.y * axis.z * t - axis.x * s,
+        axis.z * axis.x * t - axis.y * s, axis.z * axis.y * t + axis.x * s, c + axis.z * axis.z * t);
+        normal = tangentSpaceNormal * rotation;
+      }
+      RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex, normal);
       return intersection;
     }
 
@@ -180,7 +198,7 @@ class Camera {
           continue;
         }
         // determine brighness based on angle of incidence and distance
-        float dotP = glm::dot(glm::normalize(pointToLight), intersection.intersectedTriangle.normal);
+        float dotP = glm::dot(glm::normalize(pointToLight), intersection.normal);
         if (dotP < 0.0f) dotP = 0.0f;
         if (dotP > 1.0f) dotP = 1.0f;
         float f = 5 / (glm::length(pointToLight) * glm::length(pointToLight));

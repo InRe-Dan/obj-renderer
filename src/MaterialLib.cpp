@@ -32,11 +32,8 @@ class MaterialLib {
 			ifstream inputStream;
 			inputStream.open(file, std::ios::in);
 			string line, code, materialName;
-      cout << "reading material: ";
-      cout << filename << "\n";
 			while (std::getline(inputStream,line)) {
 				string code = split(line, ' ').at(0);
-        cout << code << "\n";
 				if (code.compare("newmtl") == 0) {
 					materialName = split(line, ' ').at(1);
 					Material newMatObject(materialName);
@@ -47,8 +44,10 @@ class MaterialLib {
 					materials[materialName].setDiffuseColour(rgb);
 				} else if (code.compare("map_Kd") == 0) {
           vector<string> lineSplit = split(line, ' ');
-          cout << "yup!!\n";
           materials[materialName].setMap_Kd(lineSplit.at(1));
+        } else if (code.compare("map_bump") == 0) {
+          vector<string> lineSplit = split(line, ' ');
+          materials[materialName].setMap_Bump(lineSplit.at(1));
         }
 			}
 			inputStream.close();

@@ -1,10 +1,11 @@
 #include "RayTriangleIntersection.h"
 
 RayTriangleIntersection::RayTriangleIntersection() = default;
-RayTriangleIntersection::RayTriangleIntersection(const glm::vec3 &point, float distance, const ModelTriangle &triangle, int index) :
+RayTriangleIntersection::RayTriangleIntersection(const glm::vec3 &point, float distance, const ModelTriangle &triangle, int index, glm::vec3 normalVec) :
 		intersectionPoint(point),
 		distanceFromCamera(distance),
 		intersectedTriangle(triangle),
+		normal(normalVec),
 		triangleIndex(index) {}
 
 std::ostream &operator<<(std::ostream &os, const RayTriangleIntersection &intersection) {

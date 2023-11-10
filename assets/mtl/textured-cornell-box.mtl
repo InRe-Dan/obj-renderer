@@ -26,6 +26,7 @@ newmtl Cobbles
 Kd 1.000000 1.000000 1.000000
 map_Kd texture.ppm
 
-newmtl Wood
+newmtl stone
 Kd 1.000000 1.000000 1.000000
-map_Kd wood.ppm
+map_Kd stone.ppm
+map_bump stone.ppm

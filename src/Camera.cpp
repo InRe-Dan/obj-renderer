@@ -35,7 +35,7 @@ class Camera {
       canvasHeight = h;
       canvasWidth = w;
       raytracingImagePlaneWidth = 5.0f;
-      focalLength = 2;
+      focalLength = 3;
       placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
       depthBuffer = vector<vector<float>>();
@@ -305,6 +305,14 @@ class Camera {
 
     void changeF(float diff) {
       focalLength += diff;
+    }
+
+    float getRaytracingImagePlaneWidth() {
+      return raytracingImagePlaneWidth;
+    }
+
+    float getFocalLength() {
+      return focalLength;
     }
     void changeResolutionBy(int w, int h) {
       if (canvasWidth <= -w && canvasHeight <= -h) return;

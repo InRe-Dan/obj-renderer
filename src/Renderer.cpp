@@ -74,22 +74,23 @@ void renderDebugString(string str) {
 
 // Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
 void draw(DrawingWindow &window) {
+  Camera camera = *(scene.getCamera());
 	for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
       upscaledFrameBuffer.at(y).at(x) = 0;
 		}
 	}
 
-  scene.getCamera()->drawFancyBackground();
+  camera.drawFancyBackground();
 	switch (renderMode) {
 		cout << renderMode;
-		case 1: scene.getCamera()->rasterRender(scene); break;
-		case 2: scene.getCamera()->raytraceRender(scene); break;
-		default: scene.getCamera()->wireframeRender(scene); break;
+		case 1: camera.rasterRender(scene); break;
+		case 2: camera.raytraceRender(scene); break;
+		default: camera.wireframeRender(scene); break;
 	}
 
 	// Apply effects
-  arbitraryUpscale(scene.getCamera()->frameBuffer, upscaledFrameBuffer);
+  arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
   // blackAndWhite(upscaledFrameBuffer);
   // upscaledFrameBuffer = applyKernel(upscaledFrameBuffer, sharpenKernel);
   // vector<vector<uint32_t>> hEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelH);
@@ -100,34 +101,37 @@ void draw(DrawingWindow &window) {
 	// Get mouse state
 	int xMouse, yMouse;
   SDL_GetMouseState(&xMouse,&yMouse);
-  float upscaleFactor = WIDTH / scene.getCamera()->canvasWidth;
-  int mouseCanvasX = glm::min(scene.getCamera()->canvasWidth - 1, int(round(xMouse / upscaleFactor)));
-  int mouseCanvasY = glm::min(scene.getCamera()->canvasHeight - 1, int(round(yMouse / upscaleFactor)));
+  float upscaleFactor = WIDTH / camera.canvasWidth;
+  int mouseCanvasX = glm::min(camera.canvasWidth - 1, int(round(xMouse / upscaleFactor)));
+  int mouseCanvasY = glm::min(camera.canvasHeight - 1, int(round(yMouse / upscaleFactor)));
 
 	// Print generic information
 	debugString += "Mouse: " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
-  debugString += "Resolution; " + std::to_string(scene.getCamera()->canvasWidth)+ "x" + std::to_string(scene.getCamera()->canvasHeight) + "\n";
+  debugString += "Resolution; " + std::to_string(camera.canvasWidth)+ "x" + std::to_string(camera.canvasHeight) + "\n";
 	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA: " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
 	debugString += ", " + std::to_string(colour & 255);
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
+  debugString += "Focal Length: " + formatFloat(camera.getFocalLength(), 5) + "\n";
 
 	// Print mode-specific information
 	debugString += "\n";
+
 	switch (renderMode) {
 		case 0:
 			debugString += "Mode: Wireframe \n";
-			debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 1:
 			debugString += "Mode: Rasterization \n";
-			debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+			debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			break;
 		case 2:
 			debugString += "Mode: Raytracing\n";
-    	debugString += "  Depth   : " + std::to_string(1 / scene.getCamera()->depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
-			debugString += "  Threads : " + std::to_string(scene.getCamera()->threadCount) + "\n";
+    	debugString += "  Depth   : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
+      debugString += "  FOV     : " + formatFloat(glm::degrees(2 * glm::tanh(camera.getRaytracingImagePlaneWidth() / (2 * camera.getFocalLength()))), 5);
+			debugString += "  Threads : " + std::to_string(camera.threadCount) + "\n";
       debugString += "  Lights  : " + std::to_string(scene.lights.size()) + "\n";
       if (!(scene.lights.size() > 4)) {
         for (int i = 0; i < scene.lights.size(); i++) {
@@ -143,7 +147,7 @@ void draw(DrawingWindow &window) {
 
 	// Print orientation matrix
 	debugString += '\n';
-	glm::mat4 placement = scene.getCamera()->getPlacement();
+	glm::mat4 placement = camera.getPlacement();
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
 			debugString += formatFloat(placement[i][j], 5) + " ";
@@ -175,6 +179,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_e) scene.getCamera()->moveDown(0.2);
     if (event.key.keysym.sym == SDLK_m) scene.getCamera()->toggleOrbit();
     if (event.key.keysym.sym == SDLK_n) scene.getCamera()->toggleLookAt();
+    if (event.key.keysym.sym == SDLK_z) scene.getCamera()->changeF(0.1);
+    if (event.key.keysym.sym == SDLK_x) scene.getCamera()->changeF(-0.1);
 		if (event.key.keysym.sym == SDLK_1) renderMode = 0;
 		if (event.key.keysym.sym == SDLK_2) renderMode = 1;
 		if (event.key.keysym.sym == SDLK_3) renderMode = 2;

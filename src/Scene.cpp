@@ -41,6 +41,10 @@ class Scene {
 
     Camera *getCamera() {return cameras.at(cameraIndex);}
 
+    void addCamera(Camera *camera) {
+      cameras.push_back(camera);
+    }
+
     void nextCamera() {
       if (cameraIndex == cameras.size() - 1) cameraIndex = 0;
       else cameraIndex++;

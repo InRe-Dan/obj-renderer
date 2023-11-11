@@ -30,13 +30,15 @@ class Camera {
     vector<vector<uint32_t>> frameBuffer;
     vector<vector<float>> depthBuffer;
     // Takes parameters for camera resolution.
-    Camera(int w, int h) {
+    Camera(vec2 resolution = vec2(640, 360), 
+           vec3 position = vec3(0, 0, 10)
+           ) {
       threadCount = 6;
-      canvasHeight = h;
-      canvasWidth = w;
+      canvasHeight = resolution.y;
+      canvasWidth = resolution.x;
       imagePlaneWidth = 5.0f;
       focalLength = 3;
-      placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 7.4, 0, 0, 0, 0);
+      placement = glm::mat4(1, 0, 0, position.x, 0, 1, 0, position.y, 0, 0, 1, position.z, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
       depthBuffer = vector<vector<float>>();
       for (int i = 0; i < canvasHeight; i++) {

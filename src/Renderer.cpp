@@ -24,10 +24,8 @@ using std::vector;
 using glm::vec3;
 using glm::vec2;
 
-Camera primaryCamera(640, 360);
+Camera primaryCamera;
 Scene scene(&primaryCamera);
-TextureMap normalStone("assets/normal/stone.ppm");
-
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
 string debugString;
@@ -36,6 +34,8 @@ int renderMode = 2;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
+  Camera *secondaryCamera = new Camera();
+  scene.addCamera(secondaryCamera);
   scene.lights.push_back(vec3(0, 0, 3));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
@@ -181,6 +181,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_n) scene.getCamera()->toggleLookAt();
     if (event.key.keysym.sym == SDLK_z) scene.getCamera()->changeF(0.1);
     if (event.key.keysym.sym == SDLK_x) scene.getCamera()->changeF(-0.1);
+    if (event.key.keysym.sym == SDLK_l) scene.nextCamera();
+    if (event.key.keysym.sym == SDLK_k) scene.prevCamera();
     // MODE CONTROLS
 		if (event.key.keysym.sym == SDLK_KP_1) renderMode = 0;
 		if (event.key.keysym.sym == SDLK_KP_2) renderMode = 1;
@@ -188,7 +190,6 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_KP_4) scene.lightingEnabled = !scene.lightingEnabled;
     if (event.key.keysym.sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
     if (event.key.keysym.sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
-
     // LIGHT CONTROLS
     if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
     if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
@@ -214,9 +215,6 @@ void test() {
   vec3 ray = scene.getCamera()->getRayDirection(724.0f / (float(WIDTH) / float(scene.getCamera()->canvasWidth)), 250.0f / (float(HEIGHT) / float(scene.getCamera()->canvasHeight)));
  	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
   cout << intersection << "\n";
-  cout << intersection.triangleIndex << "\n";
-  cout << intersection.intersectedTriangle.material->materialName << "\n";
-  cout << printVec(intersection.normal) << "\n";
   // cout << printVec(intersection.normal) << "\n";
   RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << lightIntersection;

@@ -166,6 +166,7 @@ void draw(DrawingWindow &window) {
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
+    // CAMERA CONTROLS
 		if (event.key.keysym.sym == SDLK_RIGHT) scene.getCamera()->lookRight(2);
 		if (event.key.keysym.sym == SDLK_LEFT) scene.getCamera()->lookLeft(2);
 		if (event.key.keysym.sym == SDLK_UP) scene.getCamera()->lookUp(2);
@@ -180,18 +181,24 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_n) scene.getCamera()->toggleLookAt();
     if (event.key.keysym.sym == SDLK_z) scene.getCamera()->changeF(0.1);
     if (event.key.keysym.sym == SDLK_x) scene.getCamera()->changeF(-0.1);
-		if (event.key.keysym.sym == SDLK_1) renderMode = 0;
-		if (event.key.keysym.sym == SDLK_2) renderMode = 1;
-		if (event.key.keysym.sym == SDLK_3) renderMode = 2;
+    // MODE CONTROLS
+		if (event.key.keysym.sym == SDLK_KP_1) renderMode = 0;
+		if (event.key.keysym.sym == SDLK_KP_2) renderMode = 1;
+		if (event.key.keysym.sym == SDLK_KP_3) renderMode = 2;
+    if (event.key.keysym.sym == SDLK_KP_4) scene.lightingEnabled = !scene.lightingEnabled;
+    if (event.key.keysym.sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
+    if (event.key.keysym.sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
+
+    // LIGHT CONTROLS
     if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
     if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
     if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(0.2, 0, 0);
     if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(-0.2, 0, 0);
     if (event.key.keysym.sym == SDLK_r) scene.lights[0] += vec3(0, 0, 0.2);
     if (event.key.keysym.sym == SDLK_y) scene.lights[0] += vec3(0, 0, -0.2);
+    // GENERAL CONTROLS
     if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
-    // TODO --- CHANGE BUFFER SIZES ON THESE INPUTS ^
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
       if (event.button.button == SDL_BUTTON_RIGHT) {
         window.savePPM("output.ppm");

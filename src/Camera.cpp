@@ -155,12 +155,12 @@ class Camera {
       vec2 e0 = ts[1] - ts[0];
       vec2 e1 = ts[2] - ts[0];
       vec2 texturePoint = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
-      if (solutionT.material->isTextured) {
+      if (solutionT.material->isTextured && scene.texturesEnabled) {
         uint32_t col = solutionT.material->getTexturePointColour(texturePoint);
         solutionT.colour = Colour((col >> 16) & 0xFF, (col >> 8) & 0xFF, col & 0xFF);
       }
       vec3 normal = solutionT.normal;
-      if (solutionT.material->hasNormalMap) {
+      if (solutionT.material->hasNormalMap && scene.normalMapsEnabled) {
         // https://en.wikipedia.org/wiki/Rotation_matrix
         vec3 tangentSpaceNormal = solutionT.material->getNormalMapVector(texturePoint);
         float angle = glm::acos(glm::dot(vec3(0, 0, 1), (normal)));
@@ -183,6 +183,7 @@ class Camera {
       RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
       // If it intersects nothing, return early
       if (intersection.triangleIndex == -1) return intersection;
+      if (!scene.lightingEnabled) return intersection;
 
       // Everything must be at least 10% brightness
       float colourIntensity = 0.1f;

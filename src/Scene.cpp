@@ -7,8 +7,12 @@ class Camera;
 
 class Scene {
   public:
-      int lightIndex;
-      vector<ObjectFile> objectFiles;
+    int lightIndex;
+    vector<ObjectFile> objectFiles;
+    bool lightingEnabled = false;
+    bool texturesEnabled = false;
+    bool normalMapsEnabled = false;
+    vector<vec3> lights;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();
@@ -34,8 +38,18 @@ class Scene {
     vector<ModelTriangle> *getModelTriangles() {
       return &modelTriangles;
     }
-    vector<vec3> lights;
+
     Camera *getCamera() {return cameras.at(cameraIndex);}
+
+    void nextCamera() {
+      if (cameraIndex == cameras.size() - 1) cameraIndex = 0;
+      else cameraIndex++;
+    }
+
+    void prevCamera() {
+      if (cameraIndex == 0) cameraIndex = cameras.size() - 1;
+      else cameraIndex--;
+    }
 
   private:
     vector<Camera*> cameras;

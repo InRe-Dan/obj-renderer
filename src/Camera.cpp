@@ -36,7 +36,7 @@ class Camera {
       canvasWidth = w;
       imagePlaneWidth = 5.0f;
       focalLength = 3;
-      placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 5, 0, 0, 0, 0);
+      placement = glm::mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 7.4, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
       depthBuffer = vector<vector<float>>();
       for (int i = 0; i < canvasHeight; i++) {
@@ -163,8 +163,8 @@ class Camera {
       if (solutionT.material->hasNormalMap) {
         // https://en.wikipedia.org/wiki/Rotation_matrix
         vec3 tangentSpaceNormal = solutionT.material->getNormalMapVector(texturePoint);
-        float angle = glm::acos(glm::dot(normal, tangentSpaceNormal));
-        vec3 axis = glm::cross(normal, tangentSpaceNormal);
+        float angle = glm::acos(glm::dot(vec3(0, 0, 1), (normal)));
+        vec3 axis = glm::cross(vec3(0, 0, 1), normal);
         float c = cos(angle);
         float s = sin(angle);
         float t = 1 - c;

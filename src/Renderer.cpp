@@ -24,9 +24,9 @@ using std::vector;
 using glm::vec3;
 using glm::vec2;
 
-Camera primaryCamera(64, 36);
+Camera primaryCamera(640, 360);
 Scene scene(&primaryCamera);
-TextureMap cobbles("assets/texture/texture.ppm");
+TextureMap normalStone("assets/normal/stone.ppm");
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -36,7 +36,7 @@ int renderMode = 2;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
-  scene.lights.push_back(vec3(0, 0, 2));
+  scene.lights.push_back(vec3(0, 0, 3));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);
@@ -96,6 +96,7 @@ void draw(DrawingWindow &window) {
   // vector<vector<uint32_t>> vEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelV);
   // hypot(upscaledFrameBuffer, hEdges, vEdges);
   // threshold(upscaledFrameBuffer, vec3(250));
+  
 
 	// Get mouse state
 	int xMouse, yMouse;
@@ -203,10 +204,12 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-  vec3 ray = scene.getCamera()->getRayDirection(520 / (WIDTH / scene.getCamera()->canvasWidth), 644 / (WIDTH / scene.getCamera()->canvasWidth));
+  vec3 ray = scene.getCamera()->getRayDirection(724.0f / (float(WIDTH) / float(scene.getCamera()->canvasWidth)), 250.0f / (float(HEIGHT) / float(scene.getCamera()->canvasHeight)));
  	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
   cout << intersection << "\n";
   cout << intersection.triangleIndex << "\n";
+  cout << intersection.intersectedTriangle.material->materialName << "\n";
+  cout << printVec(intersection.normal) << "\n";
   // cout << printVec(intersection.normal) << "\n";
   RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << lightIntersection;

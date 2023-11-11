@@ -43,9 +43,10 @@ class Material {
 			for (int i = 0; i < bump.height; i++) {
 				bump_vectors.push_back(vector<vec3>());
 				for (int j = 0; j < bump.width; j++) {
-					uint32_t integer = texture.pixels[i * texture.width + j];
+					uint32_t integer =  bump.pixels[i * bump.width + j];
 					vec3 vector = vec3((integer >> 16) & 0xFF, (integer >> 8) & 0xFF, (integer) & 0xFF);
-					bump_vectors[i].push_back(glm::normalize(vector * 2.0f - vector));
+					vec3 adjustedVector = glm::normalize(((vector / 255.0f) -0.5f) * 2.0f);
+					bump_vectors[i].push_back(adjustedVector);
 				}
 			}
 		}
@@ -53,6 +54,11 @@ class Material {
 			return packedDiffuseRGB;
 		}
     uint32_t getTexturePointColour(vec2 uAndV) {
+			// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width << "\n";
+      return texture.pixels[int(uAndV.x * texture.height + 0.5) * texture.width + int(uAndV.y * texture.width + 0.5)];
+			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
+    }
+		uint32_t getNormalMapRGB(vec2 uAndV) {
 			// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width << "\n";
       return texture.pixels[int(uAndV.x * texture.height + 0.5) * texture.width + int(uAndV.y * texture.width + 0.5)];
 			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];

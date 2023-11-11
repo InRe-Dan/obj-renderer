@@ -38,7 +38,6 @@ class ObjectFile {
 			string code = split(line, ' ').at(0);
 			if (code.compare("mtllib") == 0) {
 				materialLib = split(line, ' ').at(1);
-        cout << "passsing" << materialLib << "\n";
 				matLib = new MaterialLib(materialLib);
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));

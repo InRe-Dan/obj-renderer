@@ -55,16 +55,16 @@ class Material {
 		}
     uint32_t getTexturePointColour(vec2 uAndV) {
 			// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width << "\n";
-      return texture.pixels[int(uAndV.x * texture.height + 0.5) * texture.width + int(uAndV.y * texture.width + 0.5)];
+      return texture.pixels[roundI(uAndV.x * (texture.height-1)) * texture.width + roundI(uAndV.y * (texture.width-1))];
 			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
     }
 		uint32_t getNormalMapRGB(vec2 uAndV) {
 			// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width << "\n";
-      return texture.pixels[int(uAndV.x * texture.height + 0.5) * texture.width + int(uAndV.y * texture.width + 0.5)];
+      return texture.pixels[roundI(uAndV.x * (texture.height-1)) * texture.width + roundI(uAndV.y * (texture.width-1))];
 			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
     }
 		vec3 getNormalMapVector(vec2 uAndV) {
-      return bump_vectors.at(roundI(uAndV.x * bump.height)).at(roundI(uAndV.y * bump.width));
+      return bump_vectors.at(roundI((uAndV.x * (bump.height-1)))).at(roundI((uAndV.y * (bump.width-1))));
 			// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
     }
 	string materialName;

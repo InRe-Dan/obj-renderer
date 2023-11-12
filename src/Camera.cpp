@@ -38,7 +38,7 @@ class Camera {
       canvasWidth = resolution.x;
       imagePlaneWidth = 5.0f;
       focalLength = 3;
-      placement = glm::mat4(1, 0, 0, position.x, 0, 1, 0, position.y, 0, 0, 1, position.z, 0, 0, 0, 0);
+      placement = glm::mat4(1, 0, 0, position.x, 0, 1, 0, position.y, 0, 0, -1, position.z, 0, 0, 0, 0);
       frameBuffer = vector<vector<uint32_t>>();
       depthBuffer = vector<vector<float>>();
       for (int i = 0; i < canvasHeight; i++) {
@@ -72,15 +72,15 @@ class Camera {
       }
       if (isOrbiting) {
         vec3 pos = getPosition();
-        vec3 newPos = vec3(getYRotationMatrix(3) * vec4(pos, 1));
+        vec3 newPos = vec3(getYRotationMatrix(-3) * vec4(pos, 1));
         placement = glm::mat4(vec4(0, 0, 0, newPos.x), vec4(0, 0, 0, newPos.y), vec4(0, 0, 0, newPos.z), vec4(0, 0, 0 , 0)) + (placement + getTranslationMatrix(-pos));
       }
       if (isLooking) {
         vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());
         vec3 right = glm::normalize(glm::cross(vec3(forward), vec3(0, 1, 0)));
-        vec3 up = glm::normalize(glm::cross(vec3(forward), vec3(right)));
+        vec3 up = - glm::normalize(glm::cross(vec3(forward), vec3(right)));
         vec3 pos = getPosition();
-        placement = glm::mat4(vec4(right, pos.x), vec4(-up, pos.y), vec4(-forward, pos.z), vec4(0, 0, 0, 1));
+        placement = glm::mat4(vec4(right, pos.x), vec4(up, pos.y), vec4(forward, pos.z), vec4(0, 0, 0, 1));
       }
     }
     glm::mat4 getPlacement() {
@@ -97,14 +97,14 @@ class Camera {
       // All coordinates are relative to the camera!
       vec3 vertexToCamera = (vertexLocation - getPosition()) * getOrientation();
       float u = focalLength * (vertexToCamera.x/vertexToCamera.z) + imagePlaneWidth/2;
-      float v = focalLength * (vertexToCamera.y/vertexToCamera.z) + (canvasHeight * imagePlaneWidth / canvasWidth)/2;
-      return CanvasPoint(glm::floor(canvasWidth * (u / imagePlaneWidth)), glm::floor(canvasHeight * v/ (canvasHeight * imagePlaneWidth / canvasWidth)), -1/vertexToCamera.z);
+      float v = focalLength * (-vertexToCamera.y/vertexToCamera.z) + (canvasHeight * imagePlaneWidth / canvasWidth)/2;
+      return CanvasPoint(glm::floor(canvasWidth * (u / imagePlaneWidth)), glm::floor(canvasHeight * v/ (canvasHeight * imagePlaneWidth / canvasWidth)), 1/vertexToCamera.z);
     }
 
     vec3 getRayDirection(int x, int y) {
       glm::mat3 o = getOrientation();
       vec3 right = glm::normalize(o[0]);
-      vec3 up = - glm::normalize(o[1]);
+      vec3 up = glm::normalize(o[1]);
       vec3 forward = glm::normalize(o[2]);
       float pixelLength = imagePlaneWidth / canvasWidth;
       vec3 imagePlaneTopLeft = forward * focalLength + (up * (canvasHeight * 0.5f * pixelLength)) + (-right * (pixelLength * canvasWidth * 0.5f));
@@ -112,7 +112,7 @@ class Camera {
     }
 
     RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene scene) {
-      vec3 closestSolution = vec3(-1e10, 0, 0);
+      vec3 closestSolution = vec3(1e10, 0, 0);
       vec3 closestPoint;
       vec3 point;
       ModelTriangle solutionT;
@@ -127,7 +127,7 @@ class Camera {
         glm::mat3 DEMatrix(-ray, e0, e1);
         vec3 possibleSolution = glm::inverse(DEMatrix) * SPVector;
         // cout << possibleSolution.x <<"\n";
-        if (abs(possibleSolution.x) < abs(closestSolution.x)) {
+        if (possibleSolution.x < closestSolution.x) {
           // cout << possibleSolution.x << " found, better than " << closestSolution.y << "\n";
           // cout << printVec(possibleSolution) << "\n";
           if (0.0f <= possibleSolution.y 
@@ -135,12 +135,13 @@ class Camera {
               && 0.0f <= possibleSolution.z 
               && possibleSolution.z <= 1.0f 
               && possibleSolution.y + possibleSolution.z <= 1.0f 
-              && possibleSolution.x < -0.001f) {
+              && possibleSolution.x > 0.001f) {
+            point = vec3(triangle.vertices[0])
+                  + e0 * possibleSolution.y
+                  + e1 * possibleSolution.z;
+            // if (glm::dot(ray, (rayOrigin - point)) < 0.0) continue;
             closestSolution = possibleSolution;
             solutionT = triangle;
-            point = vec3(solutionT.vertices[0])
-                  + e0 * closestSolution.y
-                  + e1 * closestSolution.z;
             closestPoint = point;
             solutionIndex = i;
           }
@@ -192,8 +193,8 @@ class Camera {
       // Iterate through every light in the scene
       for (vec3 lightSource : scene.lights) {
         // Determine if the light can see this point
-        vec3 pointToLight = intersection.intersectionPoint - lightSource;
-        RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, pointToLight, scene);
+        vec3 lightToPoint = lightSource - intersection.intersectionPoint;
+        RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, lightToPoint, scene);
         if (lightIntersection.triangleIndex != -1 
         // && (lightIntersection.distanceFromCamera > glm::length(pointToLight)) 
         && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
@@ -201,10 +202,10 @@ class Camera {
           continue;
         }
         // determine brighness based on angle of incidence and distance
-        float dotP = glm::dot(glm::normalize(pointToLight), intersection.normal);
+        float dotP = glm::dot(glm::normalize(lightToPoint), intersection.normal);
         if (dotP < 0.0f) dotP = 0.0f;
         if (dotP > 1.0f) dotP = 1.0f;
-        float f = 5 / (glm::length(pointToLight) * glm::length(pointToLight));
+        float f = 5 / (glm::length(lightToPoint) * glm::length(lightToPoint));
         colourIntensity += f * dotP;
       }
       // cap the factor to 1
@@ -273,7 +274,7 @@ class Camera {
       for (int i = 0; i < canvasHeight; i++) {
         vector<vec3> horizontalLine = interpolate(leftEdge[i], rightEdge[i], canvasWidth);
         for (int j = 0; j < canvasWidth; j++) {
-          frameBuffer[i][j] = vec3ToColour(horizontalLine[j] * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
+          frameBuffer[i][j] = vec3ToColour(-horizontalLine[j] * 128.0f + vec3(128.0f, 128.0f, 128.0f), 255);
         }
       }
     }
@@ -294,7 +295,7 @@ class Camera {
     }
 
     void moveRight(float a) {
-      moveBy(-a * glm::normalize(vec3(placement[0])));
+      moveBy(a * glm::normalize(vec3(placement[0])));
     }
 
     void moveLeft(float a) {
@@ -302,7 +303,7 @@ class Camera {
     }
 
     void moveForward(float a) {
-      moveBy(-a * glm::normalize(vec3(placement[2])));
+      moveBy(a * glm::normalize(vec3(placement[2])));
     }
 
     void moveBack(float a) {
@@ -318,11 +319,11 @@ class Camera {
     }
 
     void lookRight(float degrees) {
-      placement = getYRotationMatrix(-degrees) * placement;
+      placement = getYRotationMatrix(degrees) * placement;
     }
 
     void lookLeft(float degrees) {
-      placement = getYRotationMatrix(degrees) * placement;
+      placement = getYRotationMatrix(-degrees) * placement;
     }
 
     void changeF(float diff) {

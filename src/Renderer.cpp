@@ -151,7 +151,6 @@ void draw(DrawingWindow &window) {
 	}
 
 	// Print orientation matrix
-  /*
 	debugString += '\n';
 	glm::mat4 placement = camera.getPlacement();
 	for (int i = 0; i < 4; i++) {
@@ -160,7 +159,6 @@ void draw(DrawingWindow &window) {
 		}
 		debugString += "\n";
 	}
-  */
 	// Overlay debug string onto frame buffer
   renderDebugString(debugString);
 
@@ -201,8 +199,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     // LIGHT CONTROLS
     if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
     if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
-    if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(-0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(-0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(0.2, 0, 0);
     if (event.key.keysym.sym == SDLK_r) scene.lights[0] += vec3(0, 0, 0.2);
     if (event.key.keysym.sym == SDLK_y) scene.lights[0] += vec3(0, 0, -0.2);
     // GENERAL CONTROLS
@@ -223,10 +221,12 @@ void test() {
   vec3 ray = scene.getCamera()->getRayDirection(724.0f / (float(WIDTH) / float(scene.getCamera()->canvasWidth)), 250.0f / (float(HEIGHT) / float(scene.getCamera()->canvasHeight)));
  	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
   cout << intersection << "\n";
+  cout << printVec(scene.getCamera()->getRayDirection(0, 0)) + "DIRECTION\n";
   // cout << printVec(intersection.normal) << "\n";
   RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
   cout << lightIntersection;
   cout << lightIntersection.intersectedTriangle.colour;
+  cout << scene.getCamera()->getCanvasIntersectionPoint(vec3(0, 0, 0));
 	std::cout.flush();
   // std::exit(0);
 }

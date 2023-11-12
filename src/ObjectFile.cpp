@@ -127,8 +127,7 @@ class ObjectFile {
 
   static vec3 parseVertex(std::string input) {
     vector<std::string> splitStr = split(input, ' ');
-    // TODO what were you thinking with this negative sign? you cost us so much debugging...
-    vec3 result(- stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
+    vec3 result(stof(splitStr.at(1)), stof(splitStr.at(2)), stof(splitStr.at(3)));
     return result;
   }
 

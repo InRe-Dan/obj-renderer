@@ -195,6 +195,7 @@ class Camera {
       float colourIntensity = 0.1f;
       // Iterate through every light in the scene
       for (vec3 lightSource : scene.lights) {
+
         // Determine if the light can see this point
         vec3 lightToPoint = lightSource - intersection.intersectionPoint;
         RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource, -lightToPoint, scene);
@@ -204,13 +205,20 @@ class Camera {
           // if it can't, move on
           continue;
         }
-        // determine brighness based on angle of incidence and distance
-        float dotP = glm::dot(glm::normalize(lightToPoint), intersection.normal);
-        if (dotP < 0.0f) dotP = 0.0f;
-        if (dotP > 1.0f) dotP = 1.0f;
+
+        // determine brightness based on angle of reflection:
+        vec3 reflection = lightToPoint - 2.0f * intersection.normal * (glm::dot(lightToPoint, intersection.normal));
+        float dotReflection = glm::dot(glm::normalize(lightToPoint), intersection.normal);
+        if (dotReflection < 0.0f) dotReflection = 0.0f;
+        if (dotReflection > 1.0f) dotReflection = 1.0f;
+        // determine brighness based on angle of incidence
+        float dotNormal = glm::dot(glm::normalize(lightToPoint), intersection.normal);
+        if (dotNormal < 0.0f) dotNormal = 0.0f;
+        if (dotNormal > 1.0f) dotNormal = 1.0f;
         float f = 5 / (glm::length(lightToPoint) * glm::length(lightToPoint));
-        colourIntensity += f * dotP;
+        colourIntensity += f * dotNormal * glm::pow(dotReflection, 4);
       }
+
       // cap the factor to 1
       if (colourIntensity > 1.0f) colourIntensity = 1.0f;
       Colour c = intersection.intersectedTriangle.colour;

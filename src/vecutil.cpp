@@ -80,7 +80,7 @@ glm::mat4 getZRotationMatrix(float degrees) {
 }
 
 glm::mat4 getTranslationMatrix(vec3 vect) {
-  glm::mat4 matrix;
+  glm::mat4 matrix(0);
   matrix[0][3] = vect.x;
   matrix[1][3] = vect.y;
   matrix[2][3] = vect.z;

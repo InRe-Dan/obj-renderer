@@ -72,8 +72,11 @@ class Camera {
       }
       if (isOrbiting) {
         vec3 pos = getPosition();
-        vec3 newPos = vec3(getYRotationMatrix(-3) * vec4(pos, 1));
-        placement = glm::mat4(vec4(0, 0, 0, newPos.x), vec4(0, 0, 0, newPos.y), vec4(0, 0, 0, newPos.z), vec4(0, 0, 0 , 0)) + (placement + getTranslationMatrix(-pos));
+        vec3 posAboutOrigin = pos - vec3(lookTarget);
+        vec3 rotated = vec3(vec4(posAboutOrigin, 1) * getYRotationMatrix(5));
+        vec3 readjusted = rotated + vec3(lookTarget);
+        vec3 diff = readjusted - pos;
+        placement = placement + getTranslationMatrix(diff);
       }
       if (isLooking) {
         vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());
@@ -139,7 +142,7 @@ class Camera {
             point = vec3(triangle.vertices[0])
                   + e0 * possibleSolution.y
                   + e1 * possibleSolution.z;
-            // if (glm::dot(ray, (rayOrigin - point)) < 0.0) continue;
+            // if (glm::dot(ray, (rayOrigin - point)) > 0.999) continue;
             closestSolution = possibleSolution;
             solutionT = triangle;
             closestPoint = point;
@@ -194,7 +197,7 @@ class Camera {
       for (vec3 lightSource : scene.lights) {
         // Determine if the light can see this point
         vec3 lightToPoint = lightSource - intersection.intersectionPoint;
-        RayTriangleIntersection lightIntersection = getClosestIntersection(intersection.intersectionPoint, lightToPoint, scene);
+        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource, -lightToPoint, scene);
         if (lightIntersection.triangleIndex != -1 
         // && (lightIntersection.distanceFromCamera > glm::length(pointToLight)) 
         && (intersection.triangleIndex != lightIntersection.triangleIndex)) {

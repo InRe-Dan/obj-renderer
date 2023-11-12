@@ -38,7 +38,7 @@ void initialize() {
   scene.addCamera(secondaryCamera);
   scene.lights.push_back(vec3(0, 0, 3));
   // scene.lights.push_back(vec3(-1, 1, 5));
-  ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
+  ObjectFile cornell = (ObjectFile("banana.obj", 1.0f));
   scene.addObjectFile(cornell);
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {

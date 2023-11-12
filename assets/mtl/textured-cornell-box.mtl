@@ -24,9 +24,11 @@ Kd 0.000000 1.000000 1.000000
 
 newmtl LightBlue
 Kd 0.2 0.2 0.8
+Ns 5.0
 
 newmtl LightRed
 Kd 0.8 0.2 0.2
+Ns 5.0
 
 newmtl Brown
 Kd 0.5 0.3 0.0
@@ -46,6 +48,7 @@ map_bump waves.ppm
 
 newmtl Water
 Kd 0.0 0.6 1.0
+Ns 50.0
 map_Kd water.ppm
 map_bump water.ppm
 

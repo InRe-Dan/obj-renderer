@@ -100,7 +100,7 @@ class ObjectFile {
 	}
 
 	Colour getKdOf(Object object) {
-		uint32_t ci = matLib->materials.at(object.material).getDiffuseColour();
+		uint32_t ci = matLib->materials.at(object.material).getDiffuseColourInt();
 		return Colour((ci & 0x00FF0000) >> 16, (ci & 0x0000FF00) >> 8, ci & 0x000000FF);
 	}
 

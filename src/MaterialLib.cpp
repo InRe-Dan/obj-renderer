@@ -45,6 +45,18 @@ class MaterialLib {
 					vector<string> lineSplit = split(line, ' ');
 					vec3 rgb(stof(lineSplit.at(1)), stof(lineSplit.at(2)), stof(lineSplit.at(3)));
 					materials[materialName].setDiffuseColour(rgb);
+				} else if (code.compare("Ka") == 0) {
+					vector<string> lineSplit = split(line, ' ');
+					vec3 rgb(stof(lineSplit.at(1)), stof(lineSplit.at(2)), stof(lineSplit.at(3)));
+					materials[materialName].setAmbientColour(rgb);
+				} else if (code.compare("Ks") == 0) {
+					vector<string> lineSplit = split(line, ' ');
+					vec3 rgb(stof(lineSplit.at(1)), stof(lineSplit.at(2)), stof(lineSplit.at(3)));
+					materials[materialName].setSpecularColour(rgb);
+				} else if (code.compare("Ns") == 0) {
+					vector<string> lineSplit = split(line, ' ');
+					float exponent(stof(lineSplit.at(1)));
+					materials[materialName].setSpecularExponent(exponent);
 				} else if (code.compare("map_Kd") == 0) {
           vector<string> lineSplit = split(line, ' ');
           materials[materialName].setMap_Kd(lineSplit.at(1));
@@ -54,6 +66,9 @@ class MaterialLib {
         }
 			}
 			inputStream.close();
+			for (std::pair<std::string, Material> material : materials) {
+				material.second.finishLoading();
+			}
 		}
 	private:
 		string file;

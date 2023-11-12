@@ -216,7 +216,7 @@ class Camera {
         if (dotNormal < 0.0f) dotNormal = 0.0f;
         if (dotNormal > 1.0f) dotNormal = 1.0f;
         float f = 5 / (glm::length(lightToPoint) * glm::length(lightToPoint));
-        colourIntensity += f * dotNormal * glm::pow(dotReflection, 4);
+        colourIntensity += f * dotNormal * glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent());
       }
 
       // cap the factor to 1

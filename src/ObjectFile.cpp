@@ -34,6 +34,10 @@ class ObjectFile {
 		ifstream inputStream;
 		inputStream.open(file, std::ios::in);
 		string line;
+    // Default object, material library and material in case .obj does not define them
+    objects.push_back(Object("default"));
+    objects.back().setMaterial("default");
+    matLib = new MaterialLib();
 		while (std::getline(inputStream,line)) {
 			string code = split(line, ' ').at(0);
 			if (code.compare("mtllib") == 0) {
@@ -42,6 +46,9 @@ class ObjectFile {
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));
 			} else if (code.compare("usemtl") == 0) {
+        cout << line << std::endl;
+        cout << split(line, ' ').at(1) << std::endl;
+        cout << objects.size();
 				objects.back().setMaterial(split(line, ' ').at(1));
 			} else if (code.compare("v") == 0) {
 				vec3 vertex = parseVertex(line);

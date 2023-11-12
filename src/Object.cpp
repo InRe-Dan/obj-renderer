@@ -20,6 +20,7 @@ class Object {
 		name = id;
 	}
 	void setMaterial(string m) {
+		std::cout << m << std::endl;
 		material = m;
 	}
   void translate(vec4 displacement) {

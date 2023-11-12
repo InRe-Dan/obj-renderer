@@ -27,6 +27,9 @@ using std::cout;
 class MaterialLib {
 	public:
 		std::unordered_map<string, Material> materials;
+		MaterialLib() {
+			materials["default"] = Material();
+		}
 		MaterialLib(string filename) {
 			file = "assets/mtl/" + filename;
 			ifstream inputStream;

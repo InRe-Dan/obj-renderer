@@ -30,7 +30,7 @@ vector<vector<uint32_t>> upscaledFrameBuffer;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
-int renderMode = 2;
+int renderMode = 0;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
@@ -38,7 +38,7 @@ void initialize() {
   scene.addCamera(secondaryCamera);
   scene.lights.push_back(vec3(0, 0, 3));
   // scene.lights.push_back(vec3(-1, 1, 5));
-  ObjectFile cornell = (ObjectFile("banana.obj", 1.0f));
+  ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
@@ -131,7 +131,12 @@ void draw(DrawingWindow &window) {
 			debugString += "Mode         : Raytracing\n";
     	debugString += "  Depth      : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
 			debugString += "  Threads    : " + std::to_string(camera.threadCount) + "\n";
+      debugString += "  Lighting   : " + string((scene.lightingEnabled) ? "ON\n" : "OFF\n");
+      debugString += "  Textures   : " + string((scene.texturesEnabled) ? "ON\n" : "OFF\n");
+      debugString += "  Normals    : " + string((scene.normalMapsEnabled) ? "ON\n" : "OFF\n");
+      debugString += "  Cameras    : " + std::to_string(scene.cameraCount()) + "\n";
       debugString += "  Lights     : " + std::to_string(scene.lights.size()) + "\n";
+      /*
       if (!(scene.lights.size() > 4)) {
         for (int i = 0; i < scene.lights.size(); i++) {
 
@@ -139,12 +144,14 @@ void draw(DrawingWindow &window) {
           debugString += printVec(scene.lights[i]) + "\n";
         }
       }
+      */
 			break;
 		default:
 			debugString += "Mode: Unknown\n";
 	}
 
 	// Print orientation matrix
+  /*
 	debugString += '\n';
 	glm::mat4 placement = camera.getPlacement();
 	for (int i = 0; i < 4; i++) {
@@ -153,6 +160,7 @@ void draw(DrawingWindow &window) {
 		}
 		debugString += "\n";
 	}
+  */
 	// Overlay debug string onto frame buffer
   renderDebugString(debugString);
 
@@ -201,11 +209,11 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-      if (event.button.button == SDL_BUTTON_RIGHT) {
-        window.savePPM("output.ppm");
-        window.saveBMP("output.bmp");
+    if (event.button.button == SDL_BUTTON_RIGHT) {
+      window.savePPM("output.ppm");
+      window.saveBMP("output.bmp");
     } else if (event.button.button == SDL_BUTTON_LEFT) {
-		// Deprecated debug info
+		  // Deprecated debug info
     }
 	}
 }
@@ -234,7 +242,11 @@ int main(int argc, char *argv[]) {
   test();
 	while (true) {
 		debugString = "";
-		debugString += "FPS: " + std::to_string(1 / frameTime.count()) + "\n";
+		debugString += "FPS: " + std::to_string(1 / frameTime.count());
+    if (frameTime.count() > 1.0f) {
+      debugString += " - Seconds per frame... " + std::to_string(frameTime.count()) + ". Good luck :)";
+    }
+    debugString += "\n";
 		auto start = std::chrono::system_clock::now();
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);

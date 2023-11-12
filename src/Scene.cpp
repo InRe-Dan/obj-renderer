@@ -55,6 +55,10 @@ class Scene {
       else cameraIndex--;
     }
 
+    int cameraCount() {
+      return cameras.size();
+    }
+
   private:
     vector<Camera*> cameras;
     vector<ModelTriangle> modelTriangles;

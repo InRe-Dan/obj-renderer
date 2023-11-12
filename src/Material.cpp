@@ -20,7 +20,11 @@ class Material {
 	public:
     bool isTextured = false;
 		bool hasNormalMap = false;
-		Material(string name="UNSET") {
+		Material() {
+			materialName = "default";
+			packedDiffuseRGB = 0xFFFFFFFF;
+		}
+		Material(string name) {
 			materialName = name;
 		}
 		void setDiffuseColour(vec3 colour) {

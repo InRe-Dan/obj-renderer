@@ -111,7 +111,7 @@ class Camera {
       vec3 forward = glm::normalize(o[2]);
       float pixelLength = imagePlaneWidth / canvasWidth;
       vec3 imagePlaneTopLeft = forward * focalLength + (up * (canvasHeight * 0.5f * pixelLength)) + (-right * (pixelLength * canvasWidth * 0.5f));
-      return imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength;
+      return glm::normalize(imagePlaneTopLeft + float(x) * pixelLength * right + float(y) * -up * pixelLength);
     }
 
     RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene scene) {
@@ -151,9 +151,8 @@ class Camera {
         }
         i++;
       }
-      float distance = glm::length(rayOrigin - closestPoint);
       if (solutionIndex == -1) {
-        RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex, solutionT.normal);
+        RayTriangleIntersection intersection(closestPoint, closestSolution.x, solutionT, solutionIndex, solutionT.normal);
         return intersection;
       }
 
@@ -179,7 +178,7 @@ class Camera {
         axis.z * axis.x * t - axis.y * s, axis.z * axis.y * t + axis.x * s, c + axis.z * axis.z * t);
         normal = tangentSpaceNormal * rotation;
       }
-      RayTriangleIntersection intersection(closestPoint, distance, solutionT, solutionIndex, normal);
+      RayTriangleIntersection intersection(closestPoint, closestSolution.x, solutionT, solutionIndex, normal);
       return intersection;
     }
 
@@ -192,7 +191,9 @@ class Camera {
       if (!scene.lightingEnabled) return intersection;
 
       // Everything must be at least 10% brightness
-      float colourIntensity = 0.1f;
+      Colour c = intersection.intersectedTriangle.colour;
+      vec3 originalColour = vec3(c.red, c.green, c.blue);
+      vec3 ambient = 0.1f * originalColour;
       // Iterate through every light in the scene
       for (vec3 lightSource : scene.lights) {
 
@@ -206,23 +207,32 @@ class Camera {
           continue;
         }
 
+        vec3 lightImpact = vec3(0);
+
+        // Using information from https://learnopengl.com/Lighting/Basic-Lighting
         // determine brightness based on angle of reflection:
-        vec3 reflection = lightToPoint - 2.0f * intersection.normal * (glm::dot(lightToPoint, intersection.normal));
-        float dotReflection = glm::dot(glm::normalize(lightToPoint), intersection.normal);
+        vec3 reflection = glm::normalize(lightToPoint - 2.0f * intersection.normal * (glm::dot(lightToPoint, intersection.normal)));
+        float dotReflection = glm::dot(-rayDirection, reflection);
         if (dotReflection < 0.0f) dotReflection = 0.0f;
         if (dotReflection > 1.0f) dotReflection = 1.0f;
+        vec3 specular = glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent()) * 0.4f * originalColour;
+
         // determine brighness based on angle of incidence
-        float dotNormal = glm::dot(glm::normalize(lightToPoint), intersection.normal);
+        float dotNormal = glm::dot(lightToPoint, intersection.normal);
         if (dotNormal < 0.0f) dotNormal = 0.0f;
         if (dotNormal > 1.0f) dotNormal = 1.0f;
-        float f = 5 / (glm::length(lightToPoint) * glm::length(lightToPoint));
-        colourIntensity += f * dotNormal * glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent());
-      }
+        vec3 diffuse = dotNormal * 0.5f * originalColour;
 
-      // cap the factor to 1
-      if (colourIntensity > 1.0f) colourIntensity = 1.0f;
-      Colour c = intersection.intersectedTriangle.colour;
-      intersection.intersectedTriangle.colour = Colour(c.red*colourIntensity, c.green*colourIntensity, c.blue*colourIntensity);
+        // Falloff based on distance from light
+        float falloffFactor = 10.0f / (glm::length(lightToPoint) * glm::length(lightToPoint));
+
+        // Add to ambient light
+        lightImpact += (diffuse * falloffFactor + specular);
+        lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
+        ambient += lightImpact;
+      }
+      ambient = glm::min(ambient, vec3(255 * 1.0f));
+      intersection.intersectedTriangle.colour = Colour(ambient.r, ambient.g, ambient.b);
       return intersection;
     }
 

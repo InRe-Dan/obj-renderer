@@ -48,7 +48,7 @@ map_bump waves.ppm
 
 newmtl Water
 Kd 0.0 0.6 1.0
-Ns 50.0
+Ns 500.0
 map_Kd water.ppm
 map_bump water.ppm
 

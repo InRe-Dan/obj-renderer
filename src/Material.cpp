@@ -129,7 +129,7 @@ class Material {
 		uint32_t packedAmbientRGB = 0xFFFFFFFF;
 		float specularDefined = false;
 		vec3 floatSpecularColour = vec3(0);
-		uint32_t packedSpecularRGB = 0xFFFFFFFFF;
+		uint32_t packedSpecularRGB = 0xFFFFFFFF;
 		float specularExponent = 0.0f;
     std::string map_Kd;
 		std::string map_bump;

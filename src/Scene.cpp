@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "ObjectFile.cpp"
+#include "Light.cpp"
 
 class Camera;
 
@@ -12,11 +13,11 @@ class Scene {
     bool lightingEnabled = false;
     bool texturesEnabled = false;
     bool normalMapsEnabled = false;
-    vector<vec3> lights;
+    vector<Light> lights;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();
-      lights = vector<vec3>();
+      lights = vector<Light>();
       cameras = vector<Camera*>();
       cameras.push_back(camera);
       cameraIndex = 0;

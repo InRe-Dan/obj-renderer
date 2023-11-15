@@ -16,6 +16,7 @@
 #include "drawing.cpp"
 #include <thread>
 #include "Scene.cpp"
+#include "Light.cpp"
 
 using std::vector;
 using glm::vec3;
@@ -195,11 +196,11 @@ class Camera {
       vec3 originalColour = vec3(c.red, c.green, c.blue);
       vec3 ambient = 0.1f * originalColour;
       // Iterate through every light in the scene
-      for (vec3 lightSource : scene.lights) {
+      for (Light lightSource : scene.lights) {
 
         // Determine if the light can see this point
-        vec3 lightToPoint = lightSource - intersection.intersectionPoint;
-        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource, -lightToPoint, scene);
+        vec3 lightToPoint = lightSource.pos - intersection.intersectionPoint;
+        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource.pos, -lightToPoint, scene);
         if (lightIntersection.triangleIndex != -1 
         // && (lightIntersection.distanceFromCamera > glm::length(pointToLight)) 
         && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
@@ -224,10 +225,10 @@ class Camera {
         vec3 diffuse = dotNormal * 0.5f * originalColour;
 
         // Falloff based on distance from light
-        float falloffFactor = 10.0f / (glm::length(lightToPoint) * glm::length(lightToPoint));
+        float falloffFactor = lightSource.str / (glm::length(lightToPoint) * glm::length(lightToPoint));
 
         // Add to ambient light
-        lightImpact += (diffuse * falloffFactor + specular);
+        lightImpact += (diffuse * falloffFactor + specular) * (vec3(lightSource.r, lightSource.g, lightSource.b) / vec3(255));
         lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
         ambient += lightImpact;
       }

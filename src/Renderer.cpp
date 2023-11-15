@@ -36,7 +36,9 @@ int renderMode = 0;
 void initialize() {
   Camera *secondaryCamera = new Camera();
   scene.addCamera(secondaryCamera);
-  scene.lights.push_back(vec3(0, 0, 3));
+  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(255, 127, 127)));
+  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(127, 255, 127)));
+  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(127, 127, 255)));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);
@@ -197,12 +199,12 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
     if (event.key.keysym.sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
     // LIGHT CONTROLS
-    if (event.key.keysym.sym == SDLK_g) scene.lights[0] += vec3(0, -0.2, 0);
-    if (event.key.keysym.sym == SDLK_t) scene.lights[0] += vec3(0, 0.2, 0);
-    if (event.key.keysym.sym == SDLK_f) scene.lights[0] += vec3(-0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_h) scene.lights[0] += vec3(0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_r) scene.lights[0] += vec3(0, 0, 0.2);
-    if (event.key.keysym.sym == SDLK_y) scene.lights[0] += vec3(0, 0, -0.2);
+    if (event.key.keysym.sym == SDLK_g) scene.lights[0].pos += vec3(0, -0.2, 0);
+    if (event.key.keysym.sym == SDLK_t) scene.lights[0].pos += vec3(0, 0.2, 0);
+    if (event.key.keysym.sym == SDLK_f) scene.lights[0].pos += vec3(-0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_h) scene.lights[0].pos += vec3(0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_r) scene.lights[0].pos += vec3(0, 0, 0.2);
+    if (event.key.keysym.sym == SDLK_y) scene.lights[0].pos += vec3(0, 0, -0.2);
     // GENERAL CONTROLS
     if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
@@ -223,7 +225,7 @@ void test() {
   cout << intersection << "\n";
   cout << printVec(scene.getCamera()->getRayDirection(0, 0)) + "DIRECTION\n";
   // cout << printVec(intersection.normal) << "\n";
-  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0] - intersection.intersectionPoint, scene);
+  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0].pos - intersection.intersectionPoint, scene);
   cout << lightIntersection;
   cout << lightIntersection.intersectedTriangle.colour;
   cout << scene.getCamera()->getCanvasIntersectionPoint(vec3(0, 0, 0));

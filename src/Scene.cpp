@@ -8,16 +8,14 @@ class Camera;
 
 class Scene {
   public:
-    int lightIndex;
     vector<ObjectFile> objectFiles;
     bool lightingEnabled = false;
     bool texturesEnabled = false;
     bool normalMapsEnabled = false;
-    vector<Light> lights;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();
-      lights = vector<Light>();
+      lights = vector<Light*>();
       cameras = vector<Camera*>();
       cameras.push_back(camera);
       cameraIndex = 0;
@@ -42,8 +40,18 @@ class Scene {
 
     Camera *getCamera() {return cameras.at(cameraIndex);}
 
+    Light *getControlledLight() {return lights.at(lightIndex);}
+
     void addCamera(Camera *camera) {
       cameras.push_back(camera);
+    }
+
+    void addLight(Light *light) {
+      lights.push_back(light);
+    }
+
+    vector<Light*> getLights() {
+      return lights;
     }
 
     void nextCamera() {
@@ -56,6 +64,16 @@ class Scene {
       else cameraIndex--;
     }
 
+    void nextLight() {
+      if (lightIndex == lights.size() - 1) lightIndex = 0;
+      else lightIndex++;
+    }
+
+    void prevLight() {
+      if (lightIndex == 0) lightIndex = lights.size() - 1;
+      else lightIndex--;
+    }
+
     int cameraCount() {
       return cameras.size();
     }
@@ -64,4 +82,6 @@ class Scene {
     vector<Camera*> cameras;
     vector<ModelTriangle> modelTriangles;
     int cameraIndex;
+    int lightIndex;
+    vector<Light*> lights;
 };

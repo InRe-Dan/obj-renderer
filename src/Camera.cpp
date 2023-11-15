@@ -196,11 +196,12 @@ class Camera {
       vec3 originalColour = vec3(c.red, c.green, c.blue);
       vec3 ambient = 0.1f * originalColour;
       // Iterate through every light in the scene
-      for (Light lightSource : scene.lights) {
+      for (Light *lightSource : scene.getLights()) {
+        if (!lightSource->state) continue;
 
         // Determine if the light can see this point
-        vec3 lightToPoint = lightSource.pos - intersection.intersectionPoint;
-        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource.pos, -lightToPoint, scene);
+        vec3 lightToPoint = lightSource->pos - intersection.intersectionPoint;
+        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene);
         if (lightIntersection.triangleIndex != -1 
         // && (lightIntersection.distanceFromCamera > glm::length(pointToLight)) 
         && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
@@ -225,10 +226,10 @@ class Camera {
         vec3 diffuse = dotNormal * 0.5f * originalColour;
 
         // Falloff based on distance from light
-        float falloffFactor = lightSource.str / (glm::length(lightToPoint) * glm::length(lightToPoint));
+        float falloffFactor = lightSource->str / (glm::length(lightToPoint) * glm::length(lightToPoint));
 
         // Add to ambient light
-        lightImpact += (diffuse * falloffFactor + specular) * (vec3(lightSource.r, lightSource.g, lightSource.b) / vec3(255));
+        lightImpact += (diffuse * falloffFactor + specular) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
         lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
         ambient += lightImpact;
       }

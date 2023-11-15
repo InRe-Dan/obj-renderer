@@ -36,9 +36,10 @@ int renderMode = 0;
 void initialize() {
   Camera *secondaryCamera = new Camera();
   scene.addCamera(secondaryCamera);
-  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(255, 127, 127)));
-  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(127, 255, 127)));
-  scene.lights.push_back(Light(vec3(0, 0, 5), 10, Colour(127, 127, 255)));
+  scene.addLight(new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true));
+  scene.addLight(new Light("Red", vec3(0, 0, 5), 10, Colour(255, 127, 127), false));
+  scene.addLight(new Light("Blue", vec3(0, 0, 5), 10, Colour(127, 255, 127), false));
+  scene.addLight(new Light("Green", vec3(0, 0, 5), 10, Colour(127, 127, 255), false));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);
@@ -137,16 +138,14 @@ void draw(DrawingWindow &window) {
       debugString += "  Textures   : " + string((scene.texturesEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Normals    : " + string((scene.normalMapsEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Cameras    : " + std::to_string(scene.cameraCount()) + "\n";
-      debugString += "  Lights     : " + std::to_string(scene.lights.size()) + "\n";
-      /*
-      if (!(scene.lights.size() > 4)) {
-        for (int i = 0; i < scene.lights.size(); i++) {
-
-          debugString += (i == scene.lightIndex)? "   >" : "    ";
-          debugString += printVec(scene.lights[i]) + "\n";
+      debugString += "  Lights     : " + std::to_string(scene.getLights().size()) + "\n";
+      if ((scene.getLights().size() <= 4)) {
+        for (int i = 0; i < scene.getLights().size(); i++) {
+          Light *l = scene.getLights().at(i);
+          debugString += (l == scene.getControlledLight())? "   >" : "    ";
+          debugString += (l->state? "ON : " : "OFF: ") + l->name + " at " + printVec(l->pos) + "\n";
         }
       }
-      */
 			break;
 		default:
 			debugString += "Mode: Unknown\n";
@@ -199,12 +198,15 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (event.key.keysym.sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
     if (event.key.keysym.sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
     // LIGHT CONTROLS
-    if (event.key.keysym.sym == SDLK_g) scene.lights[0].pos += vec3(0, -0.2, 0);
-    if (event.key.keysym.sym == SDLK_t) scene.lights[0].pos += vec3(0, 0.2, 0);
-    if (event.key.keysym.sym == SDLK_f) scene.lights[0].pos += vec3(-0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_h) scene.lights[0].pos += vec3(0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_r) scene.lights[0].pos += vec3(0, 0, 0.2);
-    if (event.key.keysym.sym == SDLK_y) scene.lights[0].pos += vec3(0, 0, -0.2);
+    if (event.key.keysym.sym == SDLK_g) scene.getControlledLight()->pos += vec3(0, -0.2, 0);
+    if (event.key.keysym.sym == SDLK_t) scene.getControlledLight()->pos += vec3(0, 0.2, 0);
+    if (event.key.keysym.sym == SDLK_f) scene.getControlledLight()->pos += vec3(-0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_h) scene.getControlledLight()->pos += vec3(0.2, 0, 0);
+    if (event.key.keysym.sym == SDLK_r) scene.getControlledLight()->pos += vec3(0, 0, 0.2);
+    if (event.key.keysym.sym == SDLK_y) scene.getControlledLight()->pos += vec3(0, 0, -0.2);
+    if (event.key.keysym.sym == SDLK_KP_PLUS) scene.nextLight();
+    if (event.key.keysym.sym == SDLK_KP_MINUS) scene.prevLight();
+    if (event.key.keysym.sym == SDLK_KP_MULTIPLY) scene.getControlledLight()->state = !scene.getControlledLight()->state;
     // GENERAL CONTROLS
     if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
@@ -220,17 +222,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-  vec3 ray = scene.getCamera()->getRayDirection(724.0f / (float(WIDTH) / float(scene.getCamera()->canvasWidth)), 250.0f / (float(HEIGHT) / float(scene.getCamera()->canvasHeight)));
- 	RayTriangleIntersection intersection = scene.getCamera()->getClosestIntersection(scene.getCamera()->getPosition(), ray, scene);
-  cout << intersection << "\n";
-  cout << printVec(scene.getCamera()->getRayDirection(0, 0)) + "DIRECTION\n";
-  // cout << printVec(intersection.normal) << "\n";
-  RayTriangleIntersection lightIntersection = scene.getCamera()->getClosestIntersection(intersection.intersectionPoint, scene.lights[0].pos - intersection.intersectionPoint, scene);
-  cout << lightIntersection;
-  cout << lightIntersection.intersectedTriangle.colour;
-  cout << scene.getCamera()->getCanvasIntersectionPoint(vec3(0, 0, 0));
-	std::cout.flush();
-  // std::exit(0);
+
 }
 
 

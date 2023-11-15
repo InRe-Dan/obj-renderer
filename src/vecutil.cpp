@@ -194,8 +194,8 @@ class Animation {
       tick = 0;
     }
     void animate() {
-      tick++;
       if (!on) return;
+      tick++;
       vec3 newPos = vec3(x(origin.x, tick), y(origin.y, tick), z(origin.z, tick));
       target->setPosition(newPos);
     }
@@ -209,7 +209,7 @@ class Animation {
     std::function<float(float, int)> y;
     std::function<float(float, int)> z;
     int tick;
-    bool on = true;
+    bool on = false;
 
 
 };

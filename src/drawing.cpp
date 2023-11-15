@@ -91,7 +91,8 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	}
 }
 
-void circle(int x, int y, int rad, float depth, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> depthBuffer ) {
+void circle(int x, int y, float proportionalRad, float depth, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> depthBuffer ) {
+	int rad = roundI(frameBuffer.at(0).size() * proportionalRad);
 	int lowerx = glm::max(0, x - rad);
 	int higherx = glm::min(int(frameBuffer.at(0).size()), x + rad);
 	int lowery = glm::max(0, y - rad);

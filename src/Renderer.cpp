@@ -43,11 +43,16 @@ void initialize() {
   [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick)/ 10);},
   [](float zStart, int tick) {return zStart;}
   ));
+  scene.addAnimation(new Animation(scene.getCamera(), 
+  [](float xStart, int tick) {return xStart + 0.5 * glm::sin(float(tick) / 10);},
+  [](float yStart, int tick) {return yStart;},
+  [](float zStart, int tick) {return zStart;}
+  ));
   scene.getCamera()->lookAt(&(whiteLight->pos));
   scene.addLight(whiteLight);
-  scene.addLight(new Light("Red", vec3(0, 0, 5), 10, Colour(255, 127, 127), false));
-  scene.addLight(new Light("Green", vec3(0, 0, 5), 10, Colour(127, 255, 127), false));
-  scene.addLight(new Light("Blue", vec3(0, 0, 5), 10, Colour(127, 127, 255), false));
+  scene.addLight(new Light("Red", vec3(1, 1, 5), 5, Colour(255, 127, 127), false));
+  scene.addLight(new Light("Green", vec3(0, 0, 5), 5, Colour(127, 255, 127), false));
+  scene.addLight(new Light("Blue", vec3(-1, -1, 5), 5, Colour(127, 127, 255), false));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);
@@ -145,6 +150,7 @@ void draw(DrawingWindow &window) {
       debugString += "  Lighting   : " + string((scene.lightingEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Textures   : " + string((scene.texturesEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Normals    : " + string((scene.normalMapsEnabled) ? "ON\n" : "OFF\n");
+      debugString += "  Light view : " + string((scene.lightPositionPreview) ? "ON\n" : "OFF\n");
       debugString += "  Cameras    : " + std::to_string(scene.cameraCount()) + "\n";
       debugString += "  Lights     : " + std::to_string(scene.getLights().size()) + "\n";
       if ((scene.getLights().size() <= 4)) {
@@ -181,43 +187,46 @@ void draw(DrawingWindow &window) {
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
+    SDL_Keycode sym = event.key.keysym.sym;
     // CAMERA CONTROLS
-		if (event.key.keysym.sym == SDLK_RIGHT) scene.getCamera()->lookRight(2);
-		if (event.key.keysym.sym == SDLK_LEFT) scene.getCamera()->lookLeft(2);
-		if (event.key.keysym.sym == SDLK_UP) scene.getCamera()->lookUp(2);
-		if (event.key.keysym.sym == SDLK_DOWN) scene.getCamera()->lookDown(2);
-		if (event.key.keysym.sym == SDLK_w) scene.getCamera()->moveForward(0.2);
-		if (event.key.keysym.sym == SDLK_s) scene.getCamera()->moveBack(0.2);
-		if (event.key.keysym.sym == SDLK_a) scene.getCamera()->moveLeft(0.2);
-		if (event.key.keysym.sym == SDLK_d) scene.getCamera()->moveRight(0.2);
-    if (event.key.keysym.sym == SDLK_q) scene.getCamera()->moveUp(0.2);
-    if (event.key.keysym.sym == SDLK_e) scene.getCamera()->moveDown(0.2);
-    if (event.key.keysym.sym == SDLK_m) scene.getCamera()->toggleOrbit();
-    if (event.key.keysym.sym == SDLK_n) scene.getCamera()->toggleLookAt();
-    if (event.key.keysym.sym == SDLK_z) scene.getCamera()->changeF(0.1);
-    if (event.key.keysym.sym == SDLK_x) scene.getCamera()->changeF(-0.1);
-    if (event.key.keysym.sym == SDLK_l) scene.nextCamera();
-    if (event.key.keysym.sym == SDLK_k) scene.prevCamera();
+		if (sym == SDLK_RIGHT) scene.getCamera()->lookRight(2);
+		if (sym == SDLK_LEFT) scene.getCamera()->lookLeft(2);
+		if (sym == SDLK_UP) scene.getCamera()->lookUp(2);
+		if (sym == SDLK_DOWN) scene.getCamera()->lookDown(2);
+		if (sym == SDLK_w) scene.getCamera()->moveForward(0.2);
+		if (sym == SDLK_s) scene.getCamera()->moveBack(0.2);
+		if (sym == SDLK_a) scene.getCamera()->moveLeft(0.2);
+		if (sym == SDLK_d) scene.getCamera()->moveRight(0.2);
+    if (sym == SDLK_q) scene.getCamera()->moveUp(0.2);
+    if (sym == SDLK_e) scene.getCamera()->moveDown(0.2);
+    // if (sym == SDLK_m) scene.getCamera()->toggleOrbit();
+    if (sym == SDLK_n) scene.getCamera()->toggleLookAt();
+    if (sym == SDLK_z) scene.getCamera()->changeF(0.1);
+    if (sym == SDLK_x) scene.getCamera()->changeF(-0.1);
+    if (sym == SDLK_l) scene.nextCamera();
+    if (sym == SDLK_k) scene.prevCamera();
     // MODE CONTROLS
-		if (event.key.keysym.sym == SDLK_KP_1) renderMode = 0;
-		if (event.key.keysym.sym == SDLK_KP_2) renderMode = 1;
-		if (event.key.keysym.sym == SDLK_KP_3) renderMode = 2;
-    if (event.key.keysym.sym == SDLK_KP_4) scene.lightingEnabled = !scene.lightingEnabled;
-    if (event.key.keysym.sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
-    if (event.key.keysym.sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
+		if (sym == SDLK_KP_1) renderMode = 0;
+		if (sym == SDLK_KP_2) renderMode = 1;
+		if (sym == SDLK_KP_3) renderMode = 2;
+    if (sym == SDLK_KP_4) scene.lightingEnabled = !scene.lightingEnabled;
+    if (sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
+    if (sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
+    if (sym == SDLK_KP_7) scene.lightPositionPreview = !scene.lightPositionPreview;
+    if (sym == SDLK_KP_8) scene.toggleAnimation();
     // LIGHT CONTROLS
-    if (event.key.keysym.sym == SDLK_g) scene.getControlledLight()->pos += vec3(0, -0.2, 0);
-    if (event.key.keysym.sym == SDLK_t) scene.getControlledLight()->pos += vec3(0, 0.2, 0);
-    if (event.key.keysym.sym == SDLK_f) scene.getControlledLight()->pos += vec3(-0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_h) scene.getControlledLight()->pos += vec3(0.2, 0, 0);
-    if (event.key.keysym.sym == SDLK_r) scene.getControlledLight()->pos += vec3(0, 0, 0.2);
-    if (event.key.keysym.sym == SDLK_y) scene.getControlledLight()->pos += vec3(0, 0, -0.2);
-    if (event.key.keysym.sym == SDLK_KP_PLUS) scene.nextLight();
-    if (event.key.keysym.sym == SDLK_KP_MINUS) scene.prevLight();
-    if (event.key.keysym.sym == SDLK_KP_MULTIPLY) scene.getControlledLight()->state = !scene.getControlledLight()->state;
+    if (sym == SDLK_g) scene.getControlledLight()->pos += vec3(0, -0.2, 0);
+    if (sym == SDLK_t) scene.getControlledLight()->pos += vec3(0, 0.2, 0);
+    if (sym == SDLK_f) scene.getControlledLight()->pos += vec3(-0.2, 0, 0);
+    if (sym == SDLK_h) scene.getControlledLight()->pos += vec3(0.2, 0, 0);
+    if (sym == SDLK_r) scene.getControlledLight()->pos += vec3(0, 0, 0.2);
+    if (sym == SDLK_y) scene.getControlledLight()->pos += vec3(0, 0, -0.2);
+    if (sym == SDLK_KP_PLUS) scene.nextLight();
+    if (sym == SDLK_KP_MINUS) scene.prevLight();
+    if (sym == SDLK_KP_MULTIPLY) scene.getControlledLight()->state = !scene.getControlledLight()->state;
     // GENERAL CONTROLS
-    if (event.key.keysym.sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
-    if (event.key.keysym.sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
+    if (sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
+    if (sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
     if (event.button.button == SDL_BUTTON_RIGHT) {
       window.savePPM("output.ppm");

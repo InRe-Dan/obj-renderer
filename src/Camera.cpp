@@ -51,12 +51,6 @@ class Camera : public Animateable {
         }
       }
     }
-    void setOrbit(bool set) {
-      isOrbiting = set;
-    }
-    void toggleOrbit() {
-      isOrbiting = !isOrbiting;
-    }
     void lookAt(vec3 *target) {
       lookTarget = target;
     }
@@ -70,14 +64,6 @@ class Camera : public Animateable {
           frameBuffer[i][j] = 0;
           depthBuffer[i][j] = 0.0f;
         }
-      }
-      if (isOrbiting) {
-        vec3 pos = getPosition();
-        vec3 posAboutOrigin = pos - *lookTarget;
-        vec3 rotated = vec3(vec4(posAboutOrigin, 1) * getYRotationMatrix(5));
-        vec3 readjusted = rotated + *lookTarget;
-        vec3 diff = readjusted - pos;
-        placement = placement + getTranslationMatrix(diff);
       }
       if (isLooking) {
         vec3 forward = glm::normalize(*lookTarget - getPosition());
@@ -293,11 +279,12 @@ class Camera : public Animateable {
     }
 
     void drawLights(Scene scene) {
+      if (!scene.lightPositionPreview) return;
       for (Light *light : scene.getLights()) {
-        if (0.5 < glm::length(light->pos - getPosition())) {
+        if ((0.5 < glm::length(light->pos - getPosition()) && light->state)) {
           CanvasPoint lightXY = getCanvasIntersectionPoint(light->pos);
           if (0 <= lightXY.x < canvasWidth && 0 <= lightXY.y < canvasHeight) {
-            circle(lightXY.x, lightXY.y, 50 * lightXY.depth, lightXY.depth, light->col, frameBuffer, depthBuffer);
+            circle(lightXY.x, lightXY.y, 0.1 * lightXY.depth, lightXY.depth, light->col, frameBuffer, depthBuffer);
           }
         }
       }
@@ -390,7 +377,6 @@ class Camera : public Animateable {
     }
 
     private:
-      bool isOrbiting;
       bool isLooking;
       vec3 *lookTarget;
       float focalLength;

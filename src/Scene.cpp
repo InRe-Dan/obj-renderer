@@ -12,6 +12,7 @@ class Scene {
     bool lightingEnabled = false;
     bool texturesEnabled = false;
     bool normalMapsEnabled = false;
+    bool lightPositionPreview = true;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();

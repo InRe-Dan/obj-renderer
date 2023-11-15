@@ -91,6 +91,22 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	}
 }
 
+void circle(int x, int y, int rad, float depth, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> depthBuffer ) {
+	int lowerx = glm::max(0, x - rad);
+	int higherx = glm::min(int(frameBuffer.at(0).size()), x + rad);
+	int lowery = glm::max(0, y - rad);
+	int highery = glm::min(int(frameBuffer.size()), y + rad);
+	for (int i = lowery; i < highery; i++) {
+		for (int j = lowerx; j < higherx; j++) {
+			if (glm::length(vec2(x, y) - vec2(j, i)) <= rad) {
+				if (depthBuffer[i][j] < depth) {
+					frameBuffer[i][j] = vec3ToColour(vec3(colour.red, colour.green, colour.blue), 255);
+				}
+			}
+		}
+	}
+}
+
 /*
 void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	// Sort vertices by height

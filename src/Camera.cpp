@@ -284,6 +284,18 @@ class Camera {
       for (int i = 0; i < threadVect.size(); i++) {
         threadVect.at(i).join();
       }
+      drawLights(scene);
+    }
+
+    void drawLights(Scene scene) {
+      for (Light *light : scene.getLights()) {
+        if (0.5 < glm::length(light->pos - getPosition())) {
+          CanvasPoint lightXY = getCanvasIntersectionPoint(light->pos);
+          if (0 <= lightXY.x < canvasWidth && 0 <= lightXY.y < canvasHeight) {
+            circle(lightXY.x, lightXY.y, 50 * lightXY.depth, lightXY.depth, light->col, frameBuffer, depthBuffer);
+          }
+        }
+      }
     }
 
     void drawFancyBackground() {

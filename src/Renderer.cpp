@@ -38,8 +38,8 @@ void initialize() {
   scene.addCamera(secondaryCamera);
   scene.addLight(new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true));
   scene.addLight(new Light("Red", vec3(0, 0, 5), 10, Colour(255, 127, 127), false));
-  scene.addLight(new Light("Blue", vec3(0, 0, 5), 10, Colour(127, 255, 127), false));
-  scene.addLight(new Light("Green", vec3(0, 0, 5), 10, Colour(127, 127, 255), false));
+  scene.addLight(new Light("Green", vec3(0, 0, 5), 10, Colour(127, 255, 127), false));
+  scene.addLight(new Light("Blue", vec3(0, 0, 5), 10, Colour(127, 127, 255), false));
   // scene.lights.push_back(vec3(-1, 1, 5));
   ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
   scene.addObjectFile(cornell);

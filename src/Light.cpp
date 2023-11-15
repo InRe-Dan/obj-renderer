@@ -4,10 +4,11 @@
 
 class Light {
   public:
-    Light(std::string n, vec3 position, float strength, Colour col, bool startState) {
+    Light(std::string n, vec3 position, float strength, Colour colour, bool startState) {
       name = n;
       pos = position;
       str = strength;
+      col = colour;
       r = col.red;
       g = col.green;
       b = col.blue;
@@ -19,5 +20,6 @@ class Light {
     int r;
     int g;
     int b;
+    Colour col;
     bool state;
 };

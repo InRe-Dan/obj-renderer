@@ -78,10 +78,27 @@ class Scene {
       return cameras.size();
     }
 
+    void addAnimation(Animation *a) {
+      animations.push_back(a);
+    }
+
+    void toggleAnimation()  {
+      for (Animation *a : animations) {
+        a->toggle();
+      }
+    }
+
+    void update() {
+      for (Animation *a : animations) {
+        a->animate();
+      }
+    }
+
   private:
     vector<Camera*> cameras;
     vector<ModelTriangle> modelTriangles;
     int cameraIndex;
     int lightIndex;
     vector<Light*> lights;
+    vector<Animation*> animations;
 };

@@ -23,7 +23,7 @@ using glm::vec3;
 using glm::vec2;
 
 // Object to represent a camera in a scene.
-class Camera {
+class Camera : public Animateable {
   public:
     int threadCount;
     int canvasWidth;
@@ -57,7 +57,7 @@ class Camera {
     void toggleOrbit() {
       isOrbiting = !isOrbiting;
     }
-    void lookAt(vec4 target) {
+    void lookAt(vec3 *target) {
       lookTarget = target;
     }
     void toggleLookAt() {
@@ -73,14 +73,14 @@ class Camera {
       }
       if (isOrbiting) {
         vec3 pos = getPosition();
-        vec3 posAboutOrigin = pos - vec3(lookTarget);
+        vec3 posAboutOrigin = pos - *lookTarget;
         vec3 rotated = vec3(vec4(posAboutOrigin, 1) * getYRotationMatrix(5));
-        vec3 readjusted = rotated + vec3(lookTarget);
+        vec3 readjusted = rotated + *lookTarget;
         vec3 diff = readjusted - pos;
         placement = placement + getTranslationMatrix(diff);
       }
       if (isLooking) {
-        vec3 forward = glm::normalize(vec3(lookTarget) - getPosition());
+        vec3 forward = glm::normalize(*lookTarget - getPosition());
         vec3 right = glm::normalize(glm::cross(vec3(forward), vec3(0, 1, 0)));
         vec3 up = - glm::normalize(glm::cross(vec3(forward), vec3(right)));
         vec3 pos = getPosition();
@@ -92,6 +92,11 @@ class Camera {
     }
     vec3 getPosition() {
       return vec3(placement[0][3], placement[1][3], placement[2][3]);
+    }
+    void setPosition(vec3 pos) {
+      placement[0][3] = pos.x;
+      placement[1][3] = pos.y;
+      placement[2][3] = pos.z;
     }
     glm::mat3 getOrientation() {
       return glm::mat3(placement);
@@ -387,7 +392,7 @@ class Camera {
     private:
       bool isOrbiting;
       bool isLooking;
-      vec4 lookTarget;
+      vec3 *lookTarget;
       float focalLength;
       float imagePlaneWidth;
       glm::mat4 placement;

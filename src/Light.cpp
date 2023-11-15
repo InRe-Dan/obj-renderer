@@ -2,7 +2,7 @@
 
 #include "vecutil.cpp"
 
-class Light {
+class Light : public Animateable{
   public:
     Light(std::string n, vec3 position, float strength, Colour colour, bool startState) {
       name = n;
@@ -14,6 +14,15 @@ class Light {
       b = col.blue;
       state = startState;
     }
+
+    vec3 getPosition() {
+      return pos;
+    }
+
+    void setPosition(vec3 position) {
+      pos = position;
+    }
+
     std::string name;
     vec3 pos;
     float str;

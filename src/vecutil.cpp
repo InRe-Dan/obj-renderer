@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <TextureMap.h>
 #include <ModelTriangle.h>
+#include <functional>
 #include <iomanip>   // std::setprecision, std::setw
 
 using std::vector;
@@ -175,3 +176,40 @@ vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
 	}
 	return interpolation;
 }
+
+class Animateable {
+  public:
+    virtual vec3 getPosition() = 0;
+    virtual void setPosition(vec3 pos) = 0;
+};
+
+class Animation {
+  public:
+    Animation(Animateable *object, std::function<float(float, int)> xFunc, std::function<float(float, int)> yFunc, std::function<float(float, int)> zFunc) {
+      target = object;
+      origin = object->getPosition();
+      x = xFunc;
+      y = yFunc;
+      z = zFunc;
+      tick = 0;
+    }
+    void animate() {
+      tick++;
+      if (!on) return;
+      vec3 newPos = vec3(x(origin.x, tick), y(origin.y, tick), z(origin.z, tick));
+      target->setPosition(newPos);
+    }
+    void toggle() {
+      on = !on;
+    }
+  private:
+    Animateable *target;
+    vec3 origin;
+    std::function<float(float, int)> x;
+    std::function<float(float, int)> y;
+    std::function<float(float, int)> z;
+    int tick;
+    bool on = true;
+
+
+};

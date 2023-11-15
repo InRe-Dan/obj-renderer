@@ -16,6 +16,7 @@
 #include <chrono>
 #include <ctime>
 #include "Scene.cpp"
+#include <functional>
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -36,7 +37,14 @@ int renderMode = 0;
 void initialize() {
   Camera *secondaryCamera = new Camera();
   scene.addCamera(secondaryCamera);
-  scene.addLight(new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true));
+  Light *whiteLight = new Light("White", vec3(0, 0, 3), 5, Colour(255, 255, 255), true);
+  scene.addAnimation(new Animation(whiteLight, 
+  [](float xStart, int tick) {return xStart + 2 * glm::sin(float(tick) / 10);},
+  [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick)/ 10);},
+  [](float zStart, int tick) {return zStart;}
+  ));
+  scene.getCamera()->lookAt(&(whiteLight->pos));
+  scene.addLight(whiteLight);
   scene.addLight(new Light("Red", vec3(0, 0, 5), 10, Colour(255, 127, 127), false));
   scene.addLight(new Light("Green", vec3(0, 0, 5), 10, Colour(127, 255, 127), false));
   scene.addLight(new Light("Blue", vec3(0, 0, 5), 10, Colour(127, 127, 255), false));
@@ -232,7 +240,6 @@ int main(int argc, char *argv[]) {
 	SDL_Event event;
   initialize();
   // Debug information
-  scene.getCamera()->lookAt(vec4(0, 0, 0, 1));
   test();
 	while (true) {
 		debugString = "";
@@ -245,6 +252,7 @@ int main(int argc, char *argv[]) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
     scene.getCamera()->update();
+    scene.update();
 		draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();

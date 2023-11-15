@@ -96,11 +96,18 @@ void circle(int x, int y, int rad, float depth, Colour colour, vector<vector<uin
 	int higherx = glm::min(int(frameBuffer.at(0).size()), x + rad);
 	int lowery = glm::max(0, y - rad);
 	int highery = glm::min(int(frameBuffer.size()), y + rad);
+	float distanceFromRadius;
+	float alpha;
+	vec3 resultColour;
 	for (int i = lowery; i < highery; i++) {
 		for (int j = lowerx; j < higherx; j++) {
-			if (glm::length(vec2(x, y) - vec2(j, i)) <= rad) {
+			distanceFromRadius = glm::length(vec2(x, y) - vec2(j, i));
+			if (distanceFromRadius <= rad) {
 				if (depthBuffer[i][j] < depth) {
-					frameBuffer[i][j] = vec3ToColour(vec3(colour.red, colour.green, colour.blue), 255);
+					// https://stackoverflow.com/questions/17283485/apply-an-alpha-to-a-color-mathematically
+					alpha = 1.0f - glm::pow(distanceFromRadius/rad, 4);
+					resultColour = (intColToVec3(frameBuffer[i][j]) * (1 - alpha)) + (vec3(colour.red, colour.green, colour.blue) * alpha);
+					frameBuffer[i][j] = vec3ToColour(resultColour, 255);
 				}
 			}
 		}

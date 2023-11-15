@@ -123,6 +123,10 @@ uint32_t vec3ToColour(vec3 vect, int alpha) {
 	return colour; 
 }
 
+vec3 intColToVec3(uint32_t c) {
+  return vec3((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+}
+
 vector<float> interpolate(float from, float to, int steps) {
 	float diff = to - from;
 	float interval = diff / steps;

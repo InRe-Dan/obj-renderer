@@ -16,6 +16,7 @@
  * //     Public Domain
  *
  * Fetched from: http://dimensionalrift.homelinux.net/combuster/mos3/?p=viewsource&file=/modules/gfx/font8_8.asm
+ * (Actually fetched from a github repository. Thanks, James!)
  **/
 
 // Constant: font8x8_basic

@@ -24,6 +24,7 @@ using std::stof;
 using std::atoi;
 using std::cout;
 
+// Class used to load and encapsulate a .mtl file.
 class MaterialLib {
 	public:
 		std::unordered_map<string, Material> materials;

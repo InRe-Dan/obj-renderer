@@ -91,6 +91,9 @@ void filledTriangle(CanvasTriangle &triangle, Colour colour, vector<vector<uint3
 	}
 }
 
+// Draw a circle to the frame buffer. Takes a "proportional" radius, which is a fraction of the screen size. 
+// Will not draw pixels if the circle depth is higher than what is already in the buffer.
+// Intended to be used for visualizing positions of lights and cameras in post-processing.
 void circle(int x, int y, float proportionalRad, float depth, Colour colour, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> depthBuffer ) {
 	int rad = roundI(frameBuffer.at(0).size() * proportionalRad);
 	int lowerx = glm::max(0, x - rad);
@@ -106,6 +109,7 @@ void circle(int x, int y, float proportionalRad, float depth, Colour colour, vec
 			if (distanceFromRadius <= rad) {
 				if (depthBuffer[i][j] < depth) {
 					// https://stackoverflow.com/questions/17283485/apply-an-alpha-to-a-color-mathematically
+          // Blend with background quadratically at the edges of the circle
 					alpha = 1.0f - glm::pow(distanceFromRadius/rad, 4);
 					resultColour = (intColToVec3(frameBuffer[i][j]) * (1 - alpha)) + (vec3(colour.red, colour.green, colour.blue) * alpha);
 					frameBuffer[i][j] = vec3ToColour(resultColour, 255);
@@ -116,6 +120,8 @@ void circle(int x, int y, float proportionalRad, float depth, Colour colour, vec
 }
 
 /*
+This is old code to create a textured triangle in the raster render. Certainly won't work anymore, but will be useful for debugging a new method.
+
 void texturedTriangle(CanvasTriangle &triangle, TextureMap &map, vector<vector<uint32_t>> &frameBuffer, vector<vector<float>> &depthBuffer) {
 	// Sort vertices by height
 	CanvasPoint top = triangle.v0();

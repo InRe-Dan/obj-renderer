@@ -45,6 +45,7 @@ void initialize() {
   }
 }
 
+// Renders a string to the top left corner of the global frame buffer.
 void renderDebugString(string str) {
   int yOffset = 8;
   int xOffset = 8;
@@ -67,8 +68,9 @@ void renderDebugString(string str) {
 }
 
 
-// Called every frame. Fills frame buffer using camera and object information, and sends to SDL wrapper.
+// Called every frame. Fills frame buffer using scene information, and sends to SDL wrapper.
 void draw(DrawingWindow &window) {
+  // Get camera and clear global frame buffer
   Camera camera = *(scene.getCamera());
 	for (size_t y = 0; y < HEIGHT; y++) {
 		for (size_t x = 0; x < WIDTH; x++) {
@@ -76,15 +78,18 @@ void draw(DrawingWindow &window) {
 		}
 	}
 
+  // Draw background first
   camera.drawFancyBackground();
+  // Render objects
 	switch (scene.renderMode) {
 		case 1: camera.rasterRender(scene); break;
 		case 2: camera.raytraceRender(scene); break;
 		default: camera.wireframeRender(scene); break;
 	}
 
-	// Apply effects
+	// Upscale the camera's frame buffer into the global one
   arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
+  // Apply effects if desired
   // blackAndWhite(upscaledFrameBuffer);
   // upscaledFrameBuffer = applyKernel(upscaledFrameBuffer, sharpenKernel);
   // vector<vector<uint32_t>> hEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelH);
@@ -92,7 +97,7 @@ void draw(DrawingWindow &window) {
   // hypot(upscaledFrameBuffer, hEdges, vEdges);
   // threshold(upscaledFrameBuffer, vec3(250));
   
-
+  // Generate debug information and write into a strings
 	// Get mouse state
 	int xMouse, yMouse;
   SDL_GetMouseState(&xMouse,&yMouse);
@@ -100,7 +105,7 @@ void draw(DrawingWindow &window) {
   int mouseCanvasX = glm::min(camera.canvasWidth - 1, roundI(xMouse / upscaleFactor));
   int mouseCanvasY = glm::min(camera.canvasHeight - 1, roundI(yMouse / upscaleFactor));
 
-	// Print generic information
+	// Add generic information
 	debugString += "Mouse        : " + std::to_string(xMouse) + ", " + std::to_string(yMouse) + "\n";
   debugString += "Resolution   : " + std::to_string(camera.canvasWidth)+ "x" + std::to_string(camera.canvasHeight) + "\n";
 	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
@@ -110,9 +115,8 @@ void draw(DrawingWindow &window) {
 	debugString += ", " + std::to_string((colour >> 24) & 255) + "\n";
   debugString += "FOV          : " + std::to_string(roundI(glm::degrees(2 * glm::atan(camera.getImagePlaneWidth() / (2 * camera.getFocalLength()))))) + "\n";
 
-	// Print mode-specific information
+	// Add mode-specific information
 	debugString += "\n";
-
 	switch (scene.renderMode) {
 		case 0:
 			debugString += "Mode         : Wireframe \n";
@@ -145,7 +149,7 @@ void draw(DrawingWindow &window) {
 			debugString += "Mode: Unknown\n";
 	}
 
-	// Print orientation matrix
+	// Add orientation matrix
 	debugString += '\n';
 	glm::mat4 placement = camera.getPlacement();
 	for (int i = 0; i < 4; i++) {
@@ -223,33 +227,31 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-
+  
 }
 
 
 int main(int argc, char *argv[]) {
-	// srand(time(NULL));
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
   initialize();
-  // Debug information
   test();
 	while (true) {
+    // First clear the debug string and add framerate (more accurate reading here than elsewhere)
 		debugString = "";
 		debugString += "FPS: " + std::to_string(1 / frameTime.count());
+    // Be rude
     if (frameTime.count() > 1.0f) {
       debugString += " - Seconds per frame... " + std::to_string(frameTime.count()) + ". Good luck :)";
     }
     debugString += "\n";
 		auto start = std::chrono::system_clock::now();
-		// We MUST poll for events - otherwise the window will freeze !
-		if (window.pollForInputEvents(event)) handleEvent(event, window);
+		// Poll for all events
+		while (window.pollForInputEvents(event)) handleEvent(event, window);
     scene.getCamera()->update();
     scene.update();
 		draw(window);
-		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
 		frameTime = std::chrono::system_clock::now() - start;
-    // std::exit(0);
 	}
 }

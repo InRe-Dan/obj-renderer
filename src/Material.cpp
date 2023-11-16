@@ -16,6 +16,7 @@ using std::stof;
 using std::atoi;
 using std::cout;
 
+// Class to store information about a material in a MaterialFile. Shouldn't really be used alone.
 class Material {
 	public:
     bool isTextured = false;
@@ -63,6 +64,7 @@ class Material {
     }
 		void setMap_Bump(string name) {
 			map_bump = name;
+      // Load as a "texturemap"
 			bump = TextureMap("assets/normal/" + name);
 			hasNormalMap = true;
 			bump_vectors = vector<vector<vec3>>();

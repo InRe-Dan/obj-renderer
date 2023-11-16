@@ -14,6 +14,7 @@ using std::vector;
 using std::array;
 using glm::vec4;
 
+// Class to store basic attributes about objects in ObjectFiles.
 class Object {
 	public:
 	Object(string id) {

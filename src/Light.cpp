@@ -2,6 +2,7 @@
 
 #include "vecutil.cpp"
 
+// Simple class to store light location and other attributes
 class Light : public Animateable{
   public:
     Light(std::string n, vec3 position, float strength, Colour colour, bool startState) {

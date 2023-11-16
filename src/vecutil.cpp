@@ -19,10 +19,13 @@ using glm::vec3;
 using glm::vec2;
 using std::string;
 
+// Easy, simple, fast and reliable rounding for most cases. Saved me from a lot of issues.
 inline int roundI(float x) {
 	return (x > 0)? int(x + 0.5) : int(x - 0.5);
 }
 
+// Return a string representing this float in a fixed number of characters.
+// First character is reserved for a sign. SPACE if float is positive.
 string formatFloat(float num, int width) {
   string returnString;
   string floatString = std::to_string(num);
@@ -49,6 +52,7 @@ string formatFloat(float num, int width) {
   return returnString;
 }
 
+// Return the string representing a vector.
 string printVec(vec3 v) {
   return "(" + formatFloat(v.x, 5) + ", " + formatFloat(v.y, 5) + ", " + formatFloat(v.z, 5) + ")";
 }
@@ -96,6 +100,7 @@ bool isInBounds(CanvasPoint point, vec4 bounds) {
   return true;
 }
 
+// Print a 4x4 matrix to stdout
 void output(glm::mat4 matrix, std::string title) {
   std::cout << title << ":\n";
   for (int i = 0; i < 4; i++ ) {
@@ -106,6 +111,7 @@ void output(glm::mat4 matrix, std::string title) {
   }
 }
 
+// Clip a vector of canvas points such that all points are within some bounds
 vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight) {
   vector<CanvasPoint> returnVector;
   for (CanvasPoint point : input) {
@@ -118,12 +124,14 @@ vector<CanvasPoint> bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec
   return returnVector;
 }
 
+// Convert vector to uint32_t (assuming vector values range from 0 and 1)
 uint32_t vec3ToColour(vec3 vect, int alpha) {
 	// Convert an RGB value and an alpha value to an int encoding them.
 	uint32_t colour = (alpha << 24) + (uint8_t(vect.x) << 16) + (uint8_t(vect.y) << 8) + uint8_t(vect.z);
 	return colour; 
 }
 
+// Convert RGB uint32_t to vector with values ranging from 0 - 255
 vec3 intColToVec3(uint32_t c) {
   return vec3((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
 }
@@ -177,12 +185,14 @@ vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps) {
 	return interpolation;
 }
 
+// Pure virtual class to be implemented by objects that can be controlled by an Animation
 class Animateable {
   public:
     virtual vec3 getPosition() = 0;
     virtual void setPosition(vec3 pos) = 0;
 };
 
+// Animation controller class.
 class Animation {
   public:
     Animation(Animateable *object, std::function<float(float, int)> xFunc, std::function<float(float, int)> yFunc, std::function<float(float, int)> zFunc) {
@@ -193,12 +203,14 @@ class Animation {
       z = zFunc;
       tick = 0;
     }
+    // If animation is enabled, increase step and move the object.
     void animate() {
       if (!on) return;
       tick++;
       vec3 newPos = vec3(x(origin.x, tick), y(origin.y, tick), z(origin.z, tick));
       target->setPosition(newPos);
     }
+    // Toggle animation between enabled/disabled
     void toggle() {
       on = !on;
     }
@@ -210,6 +222,4 @@ class Animation {
     std::function<float(float, int)> z;
     int tick;
     bool on = false;
-
-
 };

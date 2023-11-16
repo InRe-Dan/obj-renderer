@@ -63,6 +63,7 @@ Kernel edgeDetectionKernelV = Kernel(vector<vector<float>>{
     vector<float>{-1.0f, 8.0f, -1.0f},
     vector<float>{-1.0f, -1.0f, -1.0f}});
 
+// Does not apply to the edges of the target.
 vector<vector<uint32_t>> applyKernel(vector<vector<uint32_t>> &target, Kernel &k) {
   int targetW = target.at(0).size();
   int targetH = target.size();
@@ -111,6 +112,7 @@ void blackAndWhite(vector<vector<uint32_t>> &target) {
   }
 }
 
+// Assumes image to be monochromatic. Applies thresholding to all pixels.
 void threshold(vector<vector<uint32_t>> &target, vec3 thresholds) {
   int targetW = target.at(0).size();
   int targetH = target.size();
@@ -127,6 +129,8 @@ void threshold(vector<vector<uint32_t>> &target, vec3 thresholds) {
   }
 }
 
+// Assumes images are monochromatic. Find the hypotenuse of two images, normalize them to 0-255 and 
+// write them into the target.
 void hypot(vector<vector<uint32_t>> &target, vector<vector<uint32_t>> &one, vector<vector<uint32_t>> &two) {
   int targetW = target.at(0).size();
   int targetH = target.size();
@@ -150,6 +154,7 @@ void hypot(vector<vector<uint32_t>> &target, vector<vector<uint32_t>> &one, vect
   }
 }
 
+// Upscales any frame buffer into an equal or larger one.
 void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
   assert(source.size() <= target.size());
   // float ratio = target.size() / source.size();
@@ -172,7 +177,7 @@ void arbitraryUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>&
   }
 }
 
-// This doesn't work yet.
+// This is a work in progress - nearest neighbour seems sufficient.
 void bilinearUpscale(vector<vector<uint32_t>> source, vector<vector<uint32_t>>& target) {
   assert(source.size() <= target.size());
   int sWidth = source.at(0).size();

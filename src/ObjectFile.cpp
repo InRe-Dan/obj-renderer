@@ -25,6 +25,8 @@ using std::stof;
 using std::atoi;
 using std::cout;
 
+// Class to load and encapsulate .obj files and their .mtl files.
+// Also used for basic manipulation of the geometry inside them.
 class ObjectFile {
 	public:
   MaterialLib *matLib;
@@ -57,7 +59,7 @@ class ObjectFile {
         else smoothingGroup = atoi(option.c_str());
       } else if (code.compare("vn") == 0) {
         vec3 vertexNormal = parseVertex(line);
-        vertexNormals.push_back(vertexNormal);
+        vertexNormals.push_back(glm::normalize(vertexNormal));
       } else if (code.compare("vt") == 0) {
         vec2 vertexTextureRatio = parseTextureRatio(line);
         vertexTextureRatios.push_back(vertexTextureRatio);

@@ -1,10 +1,27 @@
 #include "ModelTriangle.h"
 #include <utility>
 
-ModelTriangle::ModelTriangle() = default;
+ModelTriangle::ModelTriangle() {
+	vertices = {vec4(), vec4(), vec4()};
+	texturePoints = {vec2(), vec2(), vec2()};
+	colour = Colour(0, 0, 0);
+	normal = vec3(0);
+	material = NULL;
+	smoothingGroup = 0;
+	vertexNormals = {vec3(), vec3(), vec3()};
+	hasVertexNormals = false;
+}
 
-ModelTriangle::ModelTriangle(const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2, Colour trigColour) :
-		vertices({{vec4(v0, 1), vec4(v1, 1), vec4(v2, 1)}}), texturePoints(), colour(std::move(trigColour)), normal() {}
+ModelTriangle::ModelTriangle(std::array<glm::vec4, 3> vs, std::array<vec2, 3> ts, Colour c, glm::vec3 n, Material *m, uint32_t sG, std::array<glm::vec3, 3> vNs, bool hasVNs) {
+	vertices = vs;
+	texturePoints = ts;
+	colour = c;
+	normal = n;
+	material = m;
+	smoothingGroup = sG;
+	vertexNormals = vNs;
+	hasVertexNormals = hasVNs;
+}
 
 std::ostream &operator<<(std::ostream &os, const ModelTriangle &triangle) {
 	os << "(" << triangle.vertices[0].x << ", " << triangle.vertices[0].y << ", " << triangle.vertices[0].z << ")\n";

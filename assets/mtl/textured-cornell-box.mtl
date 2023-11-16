@@ -30,6 +30,10 @@ newmtl LightRed
 Kd 0.8 0.2 0.2
 Ns 5.0
 
+newmtl LightMagenta
+Kd 0.8 0.2 0.8
+Ns 10.0
+
 newmtl Brown
 Kd 0.5 0.3 0.0
 

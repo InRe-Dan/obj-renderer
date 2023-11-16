@@ -13,6 +13,9 @@ class Scene {
     bool texturesEnabled = false;
     bool normalMapsEnabled = false;
     bool lightPositionPreview = true;
+    bool smoothingEnabled = true;
+    // if false, assume Phong smoothing is being used
+    bool usingGouraudSmoothing = false;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();

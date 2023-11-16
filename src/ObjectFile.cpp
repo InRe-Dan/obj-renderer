@@ -38,6 +38,7 @@ class ObjectFile {
     objects.push_back(Object("default"));
     objects.back().setMaterial("default");
     matLib = new MaterialLib();
+    uint32_t smoothingGroup = 0;
 		while (std::getline(inputStream,line)) {
 			string code = split(line, ' ').at(0);
 			if (code.compare("mtllib") == 0) {
@@ -46,13 +47,14 @@ class ObjectFile {
 			} else if (code.compare("o") == 0) {
 				objects.push_back(Object(split(line, ' ').at(1)));
 			} else if (code.compare("usemtl") == 0) {
-        cout << line << std::endl;
-        cout << split(line, ' ').at(1) << std::endl;
-        cout << objects.size();
 				objects.back().setMaterial(split(line, ' ').at(1));
 			} else if (code.compare("v") == 0) {
 				vec3 vertex = parseVertex(line);
 				vertices.push_back(vertex * scaleFactor);
+      } else if (code.compare("s") == 0) {
+        string option = split(line, ' ').at(1);
+        if (code.compare("off") == 0) smoothingGroup = 0;
+        else smoothingGroup = atoi(option.c_str());
       } else if (code.compare("vn") == 0) {
         vec3 vertexNormal = parseVertex(line);
         vertexNormals.push_back(vertexNormal);
@@ -65,21 +67,31 @@ class ObjectFile {
 				faceVertices[0] = vec4(vertices.at(face[0][0] - 1), 1);
 				faceVertices[1] = vec4(vertices.at(face[1][0] - 1), 1);
 				faceVertices[2] = vec4(vertices.at(face[2][0] - 1), 1);
-				ModelTriangle faceTriangle; 
-				faceTriangle.vertices = faceVertices;
-				faceTriangle.colour = getKdOf(objects.back());
-        faceTriangle.material = &(matLib->materials.at(objects.back().material));
+				Colour colour = getKdOf(objects.back());
+        Material *material = &(matLib->materials.at(objects.back().material));
+        std::array<vec2, 3> ts = {vec2(0), vec2(0), vec2(0)};
         if (face[0][1] > 0){
-          faceTriangle.texturePoints = std::array<vec2, 3>{
+          ts = std::array<vec2, 3>{
             vertexTextureRatios.at(face[0][1] - 1),
             vertexTextureRatios.at(face[1][1] - 1),
             vertexTextureRatios.at(face[2][1] - 1),
             };
         }
-        vec3 e0 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[1]);
-        vec3 e1 = vec3(faceTriangle.vertices[0] - faceTriangle.vertices[2]);
-        faceTriangle.normal = glm::normalize(glm::cross(e0, e1));
-				objects.back().triangles.push_back(faceTriangle);
+        std::array<vec3, 3> vNs = {vec3(0), vec3(0), vec3(0)};
+        bool hasVNs = false;
+        if (face[0][2] > 0){
+          vNs = std::array<vec3, 3>{
+            vertexNormals.at(face[0][2] - 1),
+            vertexNormals.at(face[1][2] - 1),
+            vertexNormals.at(face[2][2] - 1),
+            };
+          hasVNs = true;
+        }
+        uint32_t sG = smoothingGroup;
+        vec3 e0 = glm::normalize(vec3(faceVertices[0] - faceVertices[1]));
+        vec3 e1 = glm::normalize(vec3(faceVertices[0] - faceVertices[2]));
+        vec3 normal = glm::normalize(glm::cross(e0, e1));
+				objects.back().triangles.push_back(ModelTriangle(faceVertices, ts, colour, normal, material, sG, vNs, hasVNs));
 				faces.push_back(face);
 			}
 		}

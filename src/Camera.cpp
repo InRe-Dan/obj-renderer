@@ -170,6 +170,16 @@ class Camera : public Animateable {
         axis.z * axis.x * t - axis.y * s, axis.z * axis.y * t + axis.x * s, c + axis.z * axis.z * t);
         normal = tangentSpaceNormal * rotation;
       }
+      if (solutionT.smoothingGroup != 0 && solutionT.hasVertexNormals && scene.smoothingEnabled) {
+        if (scene.usingGouraudSmoothing) {
+          // Unimplemented
+        } else {
+          vec3 e0n = solutionT.vertexNormals[1] - solutionT.vertexNormals[0];
+          vec3 e1n = solutionT.vertexNormals[2] - solutionT.vertexNormals[0];
+          vec3 newN = solutionT.vertexNormals[0] + e0n * closestSolution.y + e1n * closestSolution.z;
+          normal = newN;
+        }
+      }
       RayTriangleIntersection intersection(closestPoint, closestSolution.x, solutionT, solutionIndex, normal);
       return intersection;
     }
@@ -179,7 +189,7 @@ class Camera : public Animateable {
       vec3 rayDirection = getRayDirection(xPos, yPos);
       RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
       // If it intersects nothing, return early
-      if (intersection.triangleIndex == -1) return intersection;
+      if (intersection.triangleIndex < 0) return intersection;
       if (!scene.lightingEnabled) return intersection;
 
       // Everything must be at least 10% brightness
@@ -234,7 +244,7 @@ class Camera : public Animateable {
         for (int j = x1; j < x2; j++) {
           RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *scene);
 			    ModelTriangle t = intersection.intersectedTriangle;
-          if (intersection.triangleIndex == -1) continue;
+          if (intersection.triangleIndex < 0) continue;
           depthBuffer[i][j] = 1 / glm::length(getPosition() - intersection.intersectionPoint);
 			    frameBuffer[i][j] = vec3ToColour(vec3(t.colour.red, t.colour.green, t.colour.blue), 255);
         }

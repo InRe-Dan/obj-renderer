@@ -123,16 +123,22 @@ class ObjectFile {
   }
 
   void centerOn(vec4 target) {
-    vec4 sum = vec4(0);
-    float count = 0;
+    float maxX = 100000.0f; float maxY = 100000.0f; float maxZ = 100000.0f;
+    float minX = -100000.0f; float minY = -100000.0f; float minZ = -100000.0f;
     for (Object object : objects) {
       for (ModelTriangle triangle : object.triangles) {
-        count += 3;
-        sum += triangle.vertices[0] + triangle.vertices[1] + triangle.vertices[2];
+        for (vec4 vertex : triangle.vertices) {
+          maxX = glm::min(vertex.x, maxX);
+          maxY = glm::min(vertex.y, maxY);
+          maxZ = glm::min(vertex.z, maxZ);
+          minX = glm::max(vertex.x, minX);
+          minY = glm::max(vertex.y, minY);
+          minZ = glm::max(vertex.z, minZ);
+        }
       }
     }
-    vec4 average = sum / count;
-    translate(target - average);
+    vec4 center = vec4((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2, 1);
+    translate(target - center);
   }
 
 	private:

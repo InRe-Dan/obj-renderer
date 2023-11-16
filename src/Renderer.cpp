@@ -25,7 +25,7 @@ using std::vector;
 using glm::vec3;
 using glm::vec2;
 
-Camera primaryCamera;
+Camera primaryCamera(vec2(480, 270), vec3(0.1, 0.1, 5));
 Scene scene(&primaryCamera);
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -37,10 +37,10 @@ int renderMode = 0;
 void initialize() {
   Camera *secondaryCamera = new Camera();
   scene.addCamera(secondaryCamera);
-  Light *whiteLight = new Light("White", vec3(0, 0, 3), 5, Colour(255, 255, 255), true);
+  Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true);
   scene.addAnimation(new Animation(whiteLight, 
-  [](float xStart, int tick) {return xStart + 2 * glm::sin(float(tick) / 10);},
-  [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick)/ 10);},
+  [](float xStart, int tick) {return xStart + 1 * glm::sin(float(tick) / 10);},
+  [](float yStart, int tick) {return yStart + 1 * glm::cos(float(tick) / 10);},
   [](float zStart, int tick) {return zStart;}
   ));
   /* 

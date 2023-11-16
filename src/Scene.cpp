@@ -16,6 +16,7 @@ class Scene {
     bool smoothingEnabled = true;
     // if false, assume Phong smoothing is being used
     bool usingGouraudSmoothing = false;
+    int renderMode = 0;
 
     Scene(Camera *camera) {
       objectFiles = vector<ObjectFile>();

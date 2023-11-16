@@ -17,6 +17,7 @@
 #include <ctime>
 #include "Scene.cpp"
 #include <functional>
+#include "SceneCollection.cpp"
 
 #define WIDTH 1280
 #define HEIGHT 720
@@ -25,40 +26,16 @@ using std::vector;
 using glm::vec3;
 using glm::vec2;
 
-Camera primaryCamera(vec2(480, 270), vec3(0.1, 0.1, 5));
-Scene scene(&primaryCamera);
+SceneCollection scenes = SceneCollection();
+Scene scene = *(scenes.getCurrent());
+
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
 string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
-int renderMode = 0;
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
-  Camera *secondaryCamera = new Camera();
-  scene.addCamera(secondaryCamera);
-  Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true);
-  scene.addAnimation(new Animation(whiteLight, 
-  [](float xStart, int tick) {return xStart + 1 * glm::sin(float(tick) / 10);},
-  [](float yStart, int tick) {return yStart + 1 * glm::cos(float(tick) / 10);},
-  [](float zStart, int tick) {return zStart;}
-  ));
-  /* 
-  scene.addAnimation(new Animation(scene.getCamera(), 
-  [](float xStart, int tick) {return xStart + 0.5 * glm::sin(float(tick) / 10);},
-  [](float yStart, int tick) {return yStart;},
-  [](float zStart, int tick) {return zStart;}
-  ));
-  */
-  scene.getCamera()->lookAt(&(whiteLight->pos));
-  scene.addLight(whiteLight);
-  scene.addLight(new Light("Red", vec3(1, 1, 5), 5, Colour(255, 127, 127), false));
-  scene.addLight(new Light("Green", vec3(0, 0, 5), 5, Colour(127, 255, 127), false));
-  scene.addLight(new Light("Blue", vec3(-1, -1, 5), 5, Colour(127, 127, 255), false));
-  // scene.lights.push_back(vec3(-1, 1, 5));
-  ObjectFile sphere = (ObjectFile("sphere.obj", 1.0f));
-  sphere.centerOn(vec4(0));
-  scene.addObjectFile(sphere);
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
     upscaledFrameBuffer.push_back(vector<uint32_t>());
@@ -100,8 +77,7 @@ void draw(DrawingWindow &window) {
 	}
 
   camera.drawFancyBackground();
-	switch (renderMode) {
-		cout << renderMode;
+	switch (scene.renderMode) {
 		case 1: camera.rasterRender(scene); break;
 		case 2: camera.raytraceRender(scene); break;
 		default: camera.wireframeRender(scene); break;
@@ -137,7 +113,7 @@ void draw(DrawingWindow &window) {
 	// Print mode-specific information
 	debugString += "\n";
 
-	switch (renderMode) {
+	switch (scene.renderMode) {
 		case 0:
 			debugString += "Mode         : Wireframe \n";
 			debugString += "  Depth      : " + std::to_string(1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) + "\n";
@@ -210,9 +186,9 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (sym == SDLK_l) scene.nextCamera();
     if (sym == SDLK_k) scene.prevCamera();
     // MODE CONTROLS
-		if (sym == SDLK_KP_1) renderMode = 0;
-		if (sym == SDLK_KP_2) renderMode = 1;
-		if (sym == SDLK_KP_3) renderMode = 2;
+		if (sym == SDLK_KP_1) scene.renderMode = 0;
+		if (sym == SDLK_KP_2) scene.renderMode = 1;
+		if (sym == SDLK_KP_3) scene.renderMode = 2;
     if (sym == SDLK_KP_4) scene.lightingEnabled = !scene.lightingEnabled;
     if (sym == SDLK_KP_5) scene.texturesEnabled = !scene.texturesEnabled;
     if (sym == SDLK_KP_6) scene.normalMapsEnabled = !scene.normalMapsEnabled;
@@ -233,6 +209,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     // GENERAL CONTROLS
     if (sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
+    if (sym == SDLK_1) {scenes.next(); scene = *scenes.getCurrent();}
+    if (sym == SDLK_2) {scenes.prev(); scene = *scenes.getCurrent();}
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
     if (event.button.button == SDL_BUTTON_RIGHT) {
       window.savePPM("output.ppm");

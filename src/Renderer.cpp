@@ -209,8 +209,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     // GENERAL CONTROLS
     if (sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
     if (sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
-    if (sym == SDLK_1) {scenes.next(); scene = *scenes.getCurrent();}
-    if (sym == SDLK_2) {scenes.prev(); scene = *scenes.getCurrent();}
+    if (sym == SDLK_c) {scenes.next(); scene = *scenes.getCurrent();}
+    if (sym == SDLK_v) {scenes.prev(); scene = *scenes.getCurrent();}
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
     if (event.button.button == SDL_BUTTON_RIGHT) {
       window.savePPM("output.ppm");

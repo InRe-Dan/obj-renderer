@@ -37,6 +37,7 @@ class Camera : public Animateable {
       threadCount = 6;
       canvasHeight = resolution.y;
       canvasWidth = resolution.x;
+      isLooking = false;
       imagePlaneWidth = 5.0f;
       focalLength = 3;
       placement = glm::mat4(1, 0, 0, position.x, 0, 1, 0, position.y, 0, 0, -1, position.z, 0, 0, 0, 0);

@@ -79,7 +79,7 @@ void draw(DrawingWindow &window) {
 	}
 
   // Draw background first
-  camera.drawFancyBackground();
+  // camera.drawFancyBackground();
   // Render objects
 	switch (scene.renderMode) {
 		case 1: camera.rasterRender(scene); break;
@@ -89,13 +89,16 @@ void draw(DrawingWindow &window) {
 
 	// Upscale the camera's frame buffer into the global one
   arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
+  vector<vector<uint32_t>> bufferCopy(upscaledFrameBuffer);
   // Apply effects if desired
-  // blackAndWhite(upscaledFrameBuffer);
-  // upscaledFrameBuffer = applyKernel(upscaledFrameBuffer, sharpenKernel);
-  // vector<vector<uint32_t>> hEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelH);
-  // vector<vector<uint32_t>> vEdges = applyKernel(upscaledFrameBuffer, edgeDetectionKernelV);
-  // hypot(upscaledFrameBuffer, hEdges, vEdges);
-  // threshold(upscaledFrameBuffer, vec3(250));
+  blackAndWhite(bufferCopy);
+  bufferCopy = applyKernel(bufferCopy, boxBlurKernel);
+  vector<vector<uint32_t>> hEdges = applyKernel(bufferCopy, edgeDetectionKernelH);
+  vector<vector<uint32_t>> vEdges = applyKernel(bufferCopy, edgeDetectionKernelV);
+  hypot(bufferCopy, hEdges, vEdges);
+  threshold(bufferCopy, vec3(230));
+  composite(upscaledFrameBuffer, bufferCopy);
+
   
   // Generate debug information and write into a strings
 	// Get mouse state

@@ -81,13 +81,13 @@ vector<vector<uint32_t>> applyKernel(vector<vector<uint32_t>> &target, Kernel &k
           blue += ((p & 0x000000FF)) * k.vect[y][x];
         }
       }
-      int r = int(red / k.nFactor);
-      int g = int(green / k.nFactor);
-      int b = int(blue / k.nFactor);
+      unsigned int r = roundI(red / k.nFactor);
+      unsigned int g = roundI(green / k.nFactor);
+      unsigned int b = roundI(blue / k.nFactor);
       r = (r > 255)? 255 : r;
       g = (g > 255)? 255 : g;
       b = (b > 255)? 255 : b;
-      uint32_t col = (r << 16) + (g << 8) + b;
+      uint32_t col = (255 << 24) + (r << 16) + (g << 8) + b;
       result[i][j] = col;
 
     }
@@ -139,19 +139,26 @@ void hypot(vector<vector<uint32_t>> &target, vector<vector<uint32_t>> &one, vect
       uint32_t col1 = one[i][j];
       uint32_t col2 = two[i][j];
       uint32_t r1 = ((col1 >> 16) & 0x000000FF);
-      uint32_t g1 = ((col1 >> 8) & 0x000000FF);
-      uint32_t b1 = (col1 & 0x000000FF);
       uint32_t r2 = ((col2 >> 16) & 0x000000FF);
-      uint32_t g2 = ((col2 >> 8) & 0x000000FF);
-      uint32_t b2 = (col2 & 0x000000FF);
       float maxLength = glm::length(vec2(255, 255));
-      uint8_t r = glm::min(255, int(255 * glm::length(vec2(r1, r2)) / maxLength));
-      uint8_t g = glm::min(255, int(255 * glm::length(vec2(g1, g2)) / maxLength));
-      uint8_t b = glm::min(255, int(255 * glm::length(vec2(b1, b2)) / maxLength));
-      uint32_t repacked = (r << 16) + (g << 8) + b;
+      uint8_t r = glm::min(255, roundI(255.0f * glm::length(vec2(r1, r2)) / maxLength));
+      uint32_t repacked = (255 << 24) + (r << 16) + (r << 8) + r;
       target[i][j] = repacked;
     }
   }
+}
+
+void composite(vector<vector<uint32_t>> &target, vector<vector<uint32_t>> &image) {
+  int targetW = target.at(0).size();
+  int targetH = target.size();
+  for (int i = 0; i < targetH; i++) {
+    for (int j = 0; j < targetW; j++){
+      if (image[i][j] & 0xFF) {
+        target[i][j] = 0xFF000000;
+      }
+    }
+  }
+
 }
 
 // Upscales any frame buffer into an equal or larger one.

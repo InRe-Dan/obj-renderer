@@ -52,6 +52,11 @@ string formatFloat(float num, int width) {
   return returnString;
 }
 
+
+inline float quantize(float value, float level) {
+  return roundI(value * level) / level;
+}
+
 // Return the string representing a vector.
 string printVec(vec3 v) {
   return "(" + formatFloat(v.x, 5) + ", " + formatFloat(v.y, 5) + ", " + formatFloat(v.z, 5) + ")";

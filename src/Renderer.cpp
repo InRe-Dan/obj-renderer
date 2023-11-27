@@ -89,15 +89,15 @@ void draw(DrawingWindow &window) {
 
 	// Upscale the camera's frame buffer into the global one
   arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
-  vector<vector<uint32_t>> bufferCopy(upscaledFrameBuffer);
+  //vector<vector<uint32_t>> bufferCopy(upscaledFrameBuffer);
   // Apply effects if desired
-  blackAndWhite(bufferCopy);
-  bufferCopy = applyKernel(bufferCopy, boxBlurKernel);
-  vector<vector<uint32_t>> hEdges = applyKernel(bufferCopy, edgeDetectionKernelH);
-  vector<vector<uint32_t>> vEdges = applyKernel(bufferCopy, edgeDetectionKernelV);
-  hypot(bufferCopy, hEdges, vEdges);
-  threshold(bufferCopy, vec3(230));
-  composite(upscaledFrameBuffer, bufferCopy);
+  // blackAndWhite(bufferCopy);
+  // bufferCopy = applyKernel(bufferCopy, boxBlurKernel);
+  // vector<vector<uint32_t>> hEdges = applyKernel(bufferCopy, edgeDetectionKernelH);
+  // vector<vector<uint32_t>> vEdges = applyKernel(bufferCopy, edgeDetectionKernelV);
+  // hypot(bufferCopy, hEdges, vEdges);
+  // threshold(bufferCopy, vec3(230));
+  // composite(upscaledFrameBuffer, bufferCopy);
 
   
   // Generate debug information and write into a strings
@@ -230,7 +230,6 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 
 // Test function for hand-checking outputs of simple functions.
 void test() {
-  
 }
 
 
@@ -250,7 +249,7 @@ int main(int argc, char *argv[]) {
     debugString += "\n";
 		auto start = std::chrono::system_clock::now();
 		// Poll for all events
-		while (window.pollForInputEvents(event)) handleEvent(event, window);
+		if (window.pollForInputEvents(event)) handleEvent(event, window);
     scene.getCamera()->update();
     scene.update();
 		draw(window);

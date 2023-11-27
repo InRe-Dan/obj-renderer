@@ -67,7 +67,7 @@ bool DrawingWindow::pollForInputEvents(SDL_Event &event) {
 		SDL_Event dummy;
 		// Clear the event queue by getting all available events
 		// This seems like bad practice (because it will skip some events) however preventing backlog is paramount !
-		if (SDL_PollEvent(&dummy));
+		while (SDL_PollEvent(&dummy));
 		return true;
 	}
 	return false;

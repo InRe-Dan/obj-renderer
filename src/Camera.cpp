@@ -252,19 +252,19 @@ class Camera : public Animateable {
         float dotReflection = glm::dot(-rayDirection, reflection);
         if (dotReflection < 0.0f) dotReflection = 0.0f;
         if (dotReflection > 1.0f) dotReflection = 1.0f;
-        vec3 specular = glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent()) * 0.4f * originalColour;
+        float specular = glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent()) * 0.4f;
 
         // determine brighness based on angle of incidence
         float dotNormal = glm::dot(lightToPoint, intersection.normal);
         if (dotNormal < 0.0f) dotNormal = 0.0f;
         if (dotNormal > 1.0f) dotNormal = 1.0f;
-        vec3 diffuse = dotNormal * 0.5f * originalColour;
+        float diffuse = dotNormal * 0.5f;
 
         // Falloff based on distance from light
         float falloffFactor = lightSource->str / (glm::length(lightToPoint) * glm::length(lightToPoint));
 
         // Add to ambient light
-        lightImpact += (diffuse * falloffFactor + specular) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
+        lightImpact += originalColour * quantize(diffuse * falloffFactor + specular, 2) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
         lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
         ambient += lightImpact;
       }

@@ -86,14 +86,14 @@ void draw(DrawingWindow &window) {
 	}
 
   // Draw background first
-  // camera.drawFancyBackground();
+  camera.drawFancyBackground();
   // Render objects
 	switch (scene.renderMode) {
 		case 1: camera.rasterRender(scene); break;
 		case 2: camera.raytraceRender(scene); break;
 		default: camera.wireframeRender(scene); break;
 	}
-
+  camera.drawLights(scene);
 	// Upscale the camera's frame buffer into the global one
   arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
   //vector<vector<uint32_t>> bufferCopy(upscaledFrameBuffer);

@@ -30,10 +30,6 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(640, 480), vec3(0, 0, 0));
       Scene *scene = new Scene(camera);
       Light *light = new Light("White", vec3(0, 0.4, 0), 0.8, Colour(255, 255, 255), true, true, 0.03);
-      scene->addAnimation(new Translation(camera, 
-        [](float xStart, int tick) {return xStart + 4 * glm::sin(float(tick) / 10);},
-        [](float yStart, int tick) {return yStart;},
-        [](float zStart, int tick) {return zStart + 4 * glm::cos(float(tick) / 10);}));
       camera->setPosition(vec3(0, 0, 4));
       camera->changeF(-1.0f);
       vec3 *lookTarget = new vec3(0);
@@ -48,12 +44,6 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(640, 480));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true, true);
-      scene->addAnimation(new Translation(whiteLight, 
-        [](float xStart, int tick) {return xStart + 2 * glm::sin(float(tick) / 10);},
-        [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick) / 10);},
-        [](float zStart, int tick) {return zStart;}
-      ));
-
       scene->getCamera()->lookAt(&(whiteLight->pos));
       scene->addLight(whiteLight);
       scene->addLight(new Light("Red", vec3(1, 1, 5), 5, Colour(255, 127, 127), false));
@@ -72,11 +62,6 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(640, 480), vec3(0.05, 0.05, 3));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0.4, 0.4, 1.5), 5, Colour(255, 255, 255), true);
-      scene->addAnimation(new Translation(whiteLight, 
-       [](float xStart, int tick) {return xStart + 1 * glm::sin(float(tick) / 10);},
-       [](float yStart, int tick) {return yStart + 1 * glm::cos(float(tick) / 10);},
-       [](float zStart, int tick) {return zStart;}
-      ));
       scene->addLight(whiteLight);
       ObjectFile sphere = (ObjectFile("sphere.obj", 1.0f));
       sphere.centerOn(vec4(0));
@@ -86,25 +71,63 @@ class SceneCollection {
     }
 
     Scene *makeLogoScene() {
-      Camera *camera = new Camera(vec2(640, 480), vec3(0.0, 0.0, 5));
+      std::function<vec3(int)> cameraRotationFunction = [](int tick) {
+        // For the first 5 seconds, pan camera backwards from scene as two lights race by
+        if (0 <= tick && tick < 24 * 5) {
+          return vec3(0, 0, 90.0 - (90.0 * ((float)tick / (24.0f * 5))));
+        } else {
+          return vec3(0, 0, 0);
+        }
+      };
+      std::function<vec3(vec3, int)> cameraPositionFunction = [](vec3 origin, int tick) {
+        // For the first 5 seconds, pan camera backwards
+        if (0 <= tick && tick < 24 * 5) {
+          return vec3(0, 0, 3 + tick * 0.04);
+        }
+        return vec3(0, 0, 5);
+      };
+      std::function<vec3(vec3, int)> whiteLightFunction = [](vec3 origin, int tick) {
+        return vec3(0, 0, 4);
+      };
+      std::function<vec3(vec3, int)> redLightFunction = [](vec3 origin, int tick) {
+        // In second 1, race light by
+        if (24 * 1 <= tick && tick < 24 * 2) {
+          return vec3(10 - (tick - (24 * 1)), -0.5, 2);
+        }
+        return vec3(0, 0, 500);
+      };
+      std::function<vec3(vec3, int)> blueLightFunction = [](vec3 origin, int tick) {
+        // In second 1.5, race light by
+        if (24 * 1.5f <= tick && tick < 24 * 2.5f) {
+          return vec3(10 - (tick - (24 * 1.5f)), 0.5, 2);
+        }
+        return vec3(0, 0, 500);
+      };
+      Camera *camera = new Camera(vec2(64, 48), vec3(0.0, 0.0, 5));
       Scene *scene = new Scene(camera);
-      scene->addAnimation(new Rotation(camera, vec3(0, 0, 5)));
       Light *whiteLight = new Light("White", vec3(-1.5, 0, 0.9), 5, Colour(255, 255, 255), true, true);
-      Light *purpleLight = new Light("Purple", vec3(0, 0, 2), 5, Colour(255, 100, 255), false);
+      Light *red = new Light("Red", vec3(1, 0, 2), 3, Colour(255, 0, 0), true, false);
+      Light *blue = new Light("Blue", vec3(-1, 0, 2), 3, Colour(0, 0, 255), true, false);
       scene->addLight(whiteLight);
-      scene->addLight(purpleLight);
+      scene->addLight(red);
+      scene->addLight(blue);
       ObjectFile logo = ObjectFile("logo.obj", 0.01f);
-      ObjectFile cornellBox = ObjectFile("submission-box.obj", 1.0f);
       logo.centerOn(vec4(0));
+      ObjectFile cornellBox = ObjectFile("submission-box.obj", 1.0f);
+      scene->addAnimation(new AdjustableRotation(camera, cameraRotationFunction));
+      scene->addAnimation(new Translation(camera, cameraPositionFunction));
+      scene->addAnimation(new Translation(whiteLight, whiteLightFunction));
+      scene->addAnimation(new Translation(red, redLightFunction));
+      scene->addAnimation(new Translation(blue, blueLightFunction));
       scene->addObjectFile(logo);
       scene->addObjectFile(cornellBox);
       scene->lightingEnabled = true;
       scene->texturesEnabled = true;
-      scene->lightPositionPreview = false;
+      scene->lightPositionPreview = true;
       scene->toggleAnimation();
       scene->normalMapsEnabled = true;
       scene->recording = false;
-      scene->renderMode = 1;
+      scene->renderMode = 2;
       return scene;
     }
 

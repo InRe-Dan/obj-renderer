@@ -36,6 +36,13 @@ std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
 
 // Ran when starting program. Initializes buffers.
 void initialize() {
+  cout << 
+  "====================================================\n"
+  "Wavefront .obj Model Renderer (C++)\n"
+  "University of Bristol COMS30020: Computer Graphics\n"
+  "Author: Mihai Daniel Dodoc\n"
+  "Find controls and specifications in readme.md!\n"
+  "====================================================\n";
   upscaledFrameBuffer = vector<vector<uint32_t>>();
   for (int i = 0; i < HEIGHT; i++) {
     upscaledFrameBuffer.push_back(vector<uint32_t>());

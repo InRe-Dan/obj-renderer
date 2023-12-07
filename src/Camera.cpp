@@ -468,6 +468,11 @@ class Camera : public Animateable, public Rotateable {
       if (canvasWidth <= -w && canvasHeight <= -h) return;
       canvasWidth += w;
       canvasHeight += h;
+      if (canvasWidth > 640 || canvasHeight > 480) {
+        canvasWidth = 640;
+        canvasHeight = 480;
+      };
+
       frameBuffer = vector<vector<uint32_t>>(canvasHeight);
       depthBuffer = vector<vector<float>>(canvasHeight);
       for (int i = 0; i < canvasHeight; i++) {

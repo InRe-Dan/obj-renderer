@@ -22,7 +22,6 @@ using std::string;
 using std::ifstream;
 using std::stof;
 using std::atoi;
-using std::cout;
 
 // Class used to load and encapsulate a .mtl file.
 class MaterialLib {

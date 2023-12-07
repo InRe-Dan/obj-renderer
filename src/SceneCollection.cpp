@@ -6,6 +6,7 @@
 class SceneCollection {
   public:
     SceneCollection() {
+      sceneVect.push_back(makeLogoScene());
       sceneVect.push_back(makeCornellScene());
       sceneVect.push_back(makeTexturedCornellScene());
       sceneVect.push_back(makeSphereScene());
@@ -79,6 +80,17 @@ class SceneCollection {
       scene->addObjectFile(sphere);
       return scene;
 
+    }
+
+    Scene *makeLogoScene() {
+      Camera *camera = new Camera(vec2(320, 180), vec3(0.0, 0.0, 5));
+      Scene *scene = new Scene(camera);
+      Light *whiteLight = new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true);
+      scene->addLight(whiteLight);
+      ObjectFile logo = ObjectFile("logo.obj", 0.002f);
+      logo.centerOn(vec4(0));
+      scene->addObjectFile(logo);
+      return scene;
     }
 
     vector<Scene*> sceneVect;

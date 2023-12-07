@@ -264,7 +264,8 @@ class Camera : public Animateable {
         float falloffFactor = lightSource->str / (glm::length(lightToPoint) * glm::length(lightToPoint));
 
         // Add to ambient light
-        lightImpact += originalColour * quantize(diffuse * falloffFactor + specular, 2) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
+        // lightImpact += originalColour * quantize(diffuse * falloffFactor + specular, 2) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
+        lightImpact += originalColour * (diffuse * falloffFactor + specular) * vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255);
         lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
         ambient += lightImpact;
       }

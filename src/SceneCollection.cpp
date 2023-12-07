@@ -27,9 +27,9 @@ class SceneCollection {
     }
   private:
     Scene *makeCornellScene() {
-      Camera *camera = new Camera(vec2(1280, 720), vec3(0, 0, 0));
+      Camera *camera = new Camera(vec2(640, 480), vec3(0, 0, 0));
       Scene *scene = new Scene(camera);
-      Light *light = new Light("White", vec3(0, 0.4, 0), 0.8, Colour(255, 255, 255), true);
+      Light *light = new Light("White", vec3(0, 0.4, 0), 0.8, Colour(255, 255, 255), true, true, 0.03);
       scene->addAnimation(new Translation(camera, 
         [](float xStart, int tick) {return xStart + 4 * glm::sin(float(tick) / 10);},
         [](float yStart, int tick) {return yStart;},
@@ -45,7 +45,7 @@ class SceneCollection {
     }
 
     Scene *makeTexturedCornellScene() {
-      Camera *camera = new Camera();
+      Camera *camera = new Camera(vec2(640, 480));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true);
       scene->addAnimation(new Translation(whiteLight, 
@@ -66,7 +66,7 @@ class SceneCollection {
     }
 
     Scene *makeSphereScene() {
-      Camera *camera = new Camera(vec2(320, 180), vec3(0.05, 0.05, 3));
+      Camera *camera = new Camera(vec2(640, 480), vec3(0.05, 0.05, 3));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0.4, 0.4, 1.5), 5, Colour(255, 255, 255), true);
       scene->addAnimation(new Translation(whiteLight, 
@@ -86,8 +86,8 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(640, 480), vec3(0.0, 0.0, 5));
       Scene *scene = new Scene(camera);
       scene->addAnimation(new Rotation(camera, vec3(0, 0, 5)));
-      Light *whiteLight = new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true);
-      Light *purpleLight = new Light("Purple", vec3(0, 0, 2), 5, Colour(255, 100, 255), true);
+      Light *whiteLight = new Light("White", vec3(-1.5, 0, 0.9), 5, Colour(255, 255, 255), true, true);
+      Light *purpleLight = new Light("Purple", vec3(0, 0, 2), 5, Colour(255, 100, 255), false);
       scene->addLight(whiteLight);
       scene->addLight(purpleLight);
       ObjectFile logo = ObjectFile("logo.obj", 0.01f);

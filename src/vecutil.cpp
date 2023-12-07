@@ -97,6 +97,20 @@ glm::mat4 getTranslationMatrix(vec3 vect) {
   return matrix;
 }
 
+vector<vec3> generateLightOffsets(int amount) {
+  vector<vec3> result;
+  for (int i = 0; i < amount; i++) {
+    float randx = (float)(rand()) / (float)(RAND_MAX);
+    float randy = (float)(rand()) / (float)(RAND_MAX);
+    float randz = (float)(rand()) / (float)(RAND_MAX);
+    result.push_back(vec3(randx, randy, randz));
+  }
+  return result;
+}
+
+vector<vec3> lightOffsets = generateLightOffsets(20);
+
+
 bool isInBounds(CanvasPoint point, vec4 bounds) {
   if (point.x < bounds.x) return false;
   if (point.x > bounds.z) return false;

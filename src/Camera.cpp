@@ -136,7 +136,7 @@ class Camera : public Animateable, public Rotateable {
     }
 
     // Find closest intersection in the direction of ray from rayOrigin.
-    RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene scene) {
+    RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene *scene) {
       vec3 closestSolution = vec3(1e10, 0, 0);
       vec3 closestPoint;
       vec3 point;
@@ -145,7 +145,7 @@ class Camera : public Animateable, public Rotateable {
       solutionT.colour = Colour(0, 0, 0);
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
-      for (ModelTriangle triangle : *scene.getModelTriangles()) {
+      for (ModelTriangle triangle : *scene->getModelTriangles()) {
         vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
         vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
         vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
@@ -188,13 +188,13 @@ class Camera : public Animateable, public Rotateable {
       vec2 e0 = ts[1] - ts[0];
       vec2 e1 = ts[2] - ts[0];
       vec2 texturePoint = ts[0] + e0 * closestSolution.y + e1 * closestSolution.z;
-      if (solutionT.material->isTextured && scene.texturesEnabled) {
+      if (solutionT.material->isTextured && scene->texturesEnabled) {
         uint32_t col = solutionT.material->getTexturePointColour(texturePoint);
         solutionT.colour = Colour((col >> 16) & 0xFF, (col >> 8) & 0xFF, col & 0xFF);
       }
       // Apply normal map if there is one available
       vec3 normal = solutionT.normal;
-      if (solutionT.material->hasNormalMap && scene.normalMapsEnabled) {
+      if (solutionT.material->hasNormalMap && scene->normalMapsEnabled) {
         // Generating a matrix to rotate from tangent space to world space
         // Matrix represents rotation from "blue" in tangent space to the base triangle normal
         // https://en.wikipedia.org/wiki/Rotation_matrix
@@ -214,8 +214,8 @@ class Camera : public Animateable, public Rotateable {
         normal = tangentSpaceNormal * rotation;
       }
       // Apply smoothing logic if enabled and supported by obj
-      if (solutionT.smoothingGroup != 0 && solutionT.hasVertexNormals && scene.smoothingEnabled) {
-        if (scene.usingGouraudSmoothing) {
+      if (solutionT.smoothingGroup != 0 && solutionT.hasVertexNormals && scene->smoothingEnabled) {
+        if (scene->usingGouraudSmoothing) {
           // Unimplemented
         } else {
           vec3 e0n = solutionT.vertexNormals[1] - solutionT.vertexNormals[0];
@@ -229,30 +229,40 @@ class Camera : public Animateable, public Rotateable {
     }
 
     // Return the intersection information for a given pixel on the internal frame buffer. 
-    RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene scene) {
+    RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene *scene) {
       // Cast a ray
       vec3 rayDirection = getRayDirection(xPos, yPos);
       RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
       // If it intersects nothing, return early
       if (intersection.triangleIndex < 0) return intersection;
-      if (!scene.lightingEnabled) return intersection;
+      if (!scene->lightingEnabled) return intersection;
 
       // Everything must be at least 10% brightness
       Colour c = intersection.intersectedTriangle.colour;
       vec3 originalColour = vec3(c.red, c.green, c.blue);
       vec3 ambient = 0.1f * originalColour;
       // Iterate through every light in the scene
-      for (Light *lightSource : scene.getLights()) {
+      for (Light *lightSource : scene->getLights()) {
         // If light isn't on, skip
         if (!lightSource->state) continue;
 
+        float sum = 1.0f;
         // Determine if the light can see this point
         vec3 lightToPoint = lightSource->pos - intersection.intersectionPoint;
-        RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene);
-        if (lightIntersection.triangleIndex != -1 
-        && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
-          // if it can't, skip
-          continue;
+        if (!lightSource->soft) {
+          RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene);
+          if (lightIntersection.triangleIndex != -1 && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
+            // if it can't, skip
+            continue;
+          }
+        } else {
+          //shoot 6 additional rays around the light to determine brightness
+          for (vec3 lightOffset : lightOffsets) {
+            vec3 newLightPoint = lightSource->pos + lightOffset * lightSource->radius;
+            RayTriangleIntersection softIntersection = getClosestIntersection(newLightPoint, - (newLightPoint - intersection.intersectionPoint), scene);
+            if (softIntersection.triangleIndex != -1 && (intersection.triangleIndex != softIntersection.triangleIndex)) sum -= 1.0 / (float)lightOffsets.size();
+          }
+          if (sum < 0.001) continue;
         }
 
         // How much this light will affect brighness (values range from 0 - 255)
@@ -279,7 +289,7 @@ class Camera : public Animateable, public Rotateable {
         // lightImpact += originalColour * quantize(diffuse * falloffFactor + specular, 2) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
         lightImpact += originalColour * (diffuse * falloffFactor + specular) * vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255);
         lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
-        ambient += lightImpact;
+        ambient += lightImpact * sum;
       }
       // Cap light at 255
       ambient = glm::min(ambient, vec3(255 * 1.0f));
@@ -292,7 +302,7 @@ class Camera : public Animateable, public Rotateable {
     void raytraceSection(int x1, int x2, int y1, int y2, Scene *scene) {
       for (int i = y1; i < y2; i++) {
         for (int j = x1; j < x2; j++) {
-          RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, *scene);
+          RayTriangleIntersection intersection = getRaytracedPixelIntersection(j, i, scene);
 			    ModelTriangle t = intersection.intersectedTriangle;
           if (intersection.triangleIndex < 0) continue;
           depthBuffer[i][j] = 1 / glm::length(getPosition() - intersection.intersectionPoint);

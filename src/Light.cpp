@@ -5,7 +5,8 @@
 // Simple class to store light location and other attributes
 class Light : public Animateable{
   public:
-    Light(std::string n, vec3 position, float strength, Colour colour, bool startState) {
+    Light(std::string n, vec3 position, float strength, Colour colour, bool startState, bool isSoft=false, float radius=0.05) {
+      soft = isSoft;
       name = n;
       pos = position;
       str = strength;
@@ -14,6 +15,7 @@ class Light : public Animateable{
       g = col.green;
       b = col.blue;
       state = startState;
+      this->radius = radius;
     }
 
     vec3 getPosition() {
@@ -32,4 +34,6 @@ class Light : public Animateable{
     int b;
     Colour col;
     bool state;
+    bool soft;
+    float radius;
 };

@@ -28,8 +28,6 @@ using glm::vec2;
 
 SceneCollection scenes = SceneCollection();
 Scene scene = *(scenes.getCurrent());
-bool recording = true;
-unsigned int frame = 1000;
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -164,7 +162,7 @@ void draw(DrawingWindow &window) {
 		debugString += "\n";
 	}
 	// Overlay debug string onto frame buffer
-  renderDebugString(debugString);
+  if (!scene.recording) renderDebugString(debugString);
 
 	// Send frame buffer to SDL
   for (size_t y = 0; y < HEIGHT; y++) {
@@ -216,8 +214,8 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
     if (sym == SDLK_KP_MINUS) scene.prevLight();
     if (sym == SDLK_KP_MULTIPLY) scene.getControlledLight()->state = !scene.getControlledLight()->state;
     // GENERAL CONTROLS
-    if (sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -18);
-    if (sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 18);
+    if (sym == SDLK_o) scene.getCamera()->changeResolutionBy(-32, -24);
+    if (sym == SDLK_p) scene.getCamera()->changeResolutionBy(32, 24);
     if (sym == SDLK_c) {scenes.next(); scene = *scenes.getCurrent();}
     if (sym == SDLK_v) {scenes.prev(); scene = *scenes.getCurrent();}
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -259,20 +257,18 @@ int main(int argc, char *argv[]) {
 		frameTime = std::chrono::system_clock::now() - start;
     double frameTime24fps = 1.0f / 24.0f;
     double difference = frameTime24fps - frameTime.count();
-    cout << frameTime.count() << "\n";
     if (difference > 0) {
-      cout << (Uint32) difference << " " << difference << "\n";
       SDL_Delay((Uint32)(difference * 1000));
     }
     frameTime = std::chrono::system_clock::now() - start;
-    if (recording) {
-      cout << "Recording frame " << formatFloat((((frame - 1000) + 24.0f * 15.0f) * 100), 4) << "\n";
+    if (scene.recording) {
+      cout << "Recording:" << formatFloat((((scene.recordFrame - 1000) / (24.0f * 15.0f)) * 100.0f), 6) << "%\n";
       // To piece together frames:
       // ffmpeg -framerate 24 -pattern_type glob -i 'videoframes/*.ppm' -c:v libx264 -pix_fmt yuv420p output.mp4
-      window.savePPM("videoframes/" + std::to_string(frame) + ".ppm");
-      frame++;
-      if (frame > 1000 + 24 * 15) {
-        recording = false;
+      window.savePPM("videoframes/" + std::to_string(scene.recordFrame) + ".ppm");
+      scene.recordFrame++;
+      if (scene.recordFrame > 1000 + 24 * 15) {
+        scene.recording = false;
       }
     }
 	}

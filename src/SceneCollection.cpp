@@ -83,13 +83,18 @@ class SceneCollection {
     }
 
     Scene *makeLogoScene() {
-      Camera *camera = new Camera(vec2(320, 180), vec3(0.0, 0.0, 5));
+      Camera *camera = new Camera(vec2(640, 480), vec3(0.0, 0.0, 5));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true);
       scene->addLight(whiteLight);
       ObjectFile logo = ObjectFile("logo.obj", 0.002f);
       logo.centerOn(vec4(0));
       scene->addObjectFile(logo);
+      scene->lightingEnabled = true;
+      scene->texturesEnabled = true;
+      scene->toggleAnimation();
+      scene->normalMapsEnabled = true;
+      scene->recording = true;
       return scene;
     }
 

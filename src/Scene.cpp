@@ -16,6 +16,8 @@ class Scene {
     bool smoothingEnabled = true;
     // if false, assume Phong smoothing is being used
     bool usingGouraudSmoothing = false;
+    bool recording = false;
+    int recordFrame = 1000;
     int renderMode = 0;
 
     Scene(Camera *camera) {

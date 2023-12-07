@@ -197,10 +197,22 @@ class Animateable {
     virtual void setPosition(vec3 pos) = 0;
 };
 
-// Animation controller class.
+class Rotateable {
+  public:
+    virtual glm::mat3 getOrientation() = 0;
+    virtual void setOrientation(glm::mat3 o) = 0;
+};
+
 class Animation {
   public:
-    Animation(Animateable *object, std::function<float(float, int)> xFunc, std::function<float(float, int)> yFunc, std::function<float(float, int)> zFunc) {
+    virtual void animate() = 0;
+    virtual void toggle() = 0;
+};
+
+// Animation controller class.
+class Translation : public Animation {
+  public:
+    Translation(Animateable *object, std::function<float(float, int)> xFunc, std::function<float(float, int)> yFunc, std::function<float(float, int)> zFunc) {
       target = object;
       origin = object->getPosition();
       x = xFunc;
@@ -211,9 +223,10 @@ class Animation {
     // If animation is enabled, increase step and move the object.
     void animate() {
       if (!on) return;
-      tick++;
       vec3 newPos = vec3(x(origin.x, tick), y(origin.y, tick), z(origin.z, tick));
       target->setPosition(newPos);
+      tick++;
+
     }
     // Toggle animation between enabled/disabled
     void toggle() {
@@ -225,6 +238,37 @@ class Animation {
     std::function<float(float, int)> x;
     std::function<float(float, int)> y;
     std::function<float(float, int)> z;
+    int tick;
+    bool on = false;
+};
+
+class Rotation : public Animation {
+  public:
+    Rotation(Rotateable *object, vec3 degreesPerTick) {
+      target = object;
+      startOrientation = object->getOrientation();
+      dpt = degreesPerTick;
+      tick = 0;
+    }
+    void animate() {
+      if (!on) return;
+      vec3 degrees = (float)tick * dpt;
+      glm::mat3 newOrientation = 
+        glm::mat3(getZRotationMatrix(degrees.z))
+        * glm::mat3(getYRotationMatrix(degrees.y))
+        * glm::mat3(getXRotationMatrix(degrees.x)) 
+        * startOrientation;
+      target->setOrientation(newOrientation);
+      tick++;
+    }
+    // Toggle animation between enabled/disabled
+    void toggle() {
+      on = !on;
+    }
+  private:
+    vec3 dpt;
+    Rotateable *target;
+    glm::mat3 startOrientation;
     int tick;
     bool on = false;
 };

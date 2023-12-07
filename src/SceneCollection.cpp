@@ -30,7 +30,7 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(1280, 720), vec3(0, 0, 0));
       Scene *scene = new Scene(camera);
       Light *light = new Light("White", vec3(0, 0.4, 0), 0.8, Colour(255, 255, 255), true);
-      scene->addAnimation(new Animation(camera, 
+      scene->addAnimation(new Translation(camera, 
         [](float xStart, int tick) {return xStart + 4 * glm::sin(float(tick) / 10);},
         [](float yStart, int tick) {return yStart;},
         [](float zStart, int tick) {return zStart + 4 * glm::cos(float(tick) / 10);}));
@@ -48,7 +48,7 @@ class SceneCollection {
       Camera *camera = new Camera();
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true);
-      scene->addAnimation(new Animation(whiteLight, 
+      scene->addAnimation(new Translation(whiteLight, 
         [](float xStart, int tick) {return xStart + 2 * glm::sin(float(tick) / 10);},
         [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick) / 10);},
         [](float zStart, int tick) {return zStart;}
@@ -69,7 +69,7 @@ class SceneCollection {
       Camera *camera = new Camera(vec2(320, 180), vec3(0.05, 0.05, 3));
       Scene *scene = new Scene(camera);
       Light *whiteLight = new Light("White", vec3(0.4, 0.4, 1.5), 5, Colour(255, 255, 255), true);
-      scene->addAnimation(new Animation(whiteLight, 
+      scene->addAnimation(new Translation(whiteLight, 
        [](float xStart, int tick) {return xStart + 1 * glm::sin(float(tick) / 10);},
        [](float yStart, int tick) {return yStart + 1 * glm::cos(float(tick) / 10);},
        [](float zStart, int tick) {return zStart;}
@@ -83,18 +83,28 @@ class SceneCollection {
     }
 
     Scene *makeLogoScene() {
+
+
+
       Camera *camera = new Camera(vec2(640, 480), vec3(0.0, 0.0, 5));
       Scene *scene = new Scene(camera);
+      scene->addAnimation(new Rotation(camera, vec3(0, 0, 5)));
       Light *whiteLight = new Light("White", vec3(0, 0, 5), 5, Colour(255, 255, 255), true);
+      Light *purpleLight = new Light("Purple", vec3(0, 0, 2), 5, Colour(255, 100, 255), true);
       scene->addLight(whiteLight);
-      ObjectFile logo = ObjectFile("logo.obj", 0.002f);
+      scene->addLight(purpleLight);
+      ObjectFile logo = ObjectFile("logo.obj", 0.01f);
+      ObjectFile cornellBox = ObjectFile("submission-box.obj", 1.0f);
       logo.centerOn(vec4(0));
       scene->addObjectFile(logo);
+      scene->addObjectFile(cornellBox);
       scene->lightingEnabled = true;
       scene->texturesEnabled = true;
+      scene->lightPositionPreview = false;
       scene->toggleAnimation();
       scene->normalMapsEnabled = true;
-      scene->recording = true;
+      scene->recording = false;
+      scene->renderMode = 1;
       return scene;
     }
 

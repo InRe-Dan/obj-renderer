@@ -23,7 +23,7 @@ using glm::vec3;
 using glm::vec2;
 
 // Object to represent a camera in a scene.
-class Camera : public Animateable {
+class Camera : public Animateable, public Rotateable {
   public:
     // How many threads to use for raytracing
     int threadCount;
@@ -106,6 +106,12 @@ class Camera : public Animateable {
     // Get an orientation matrix from placement
     glm::mat3 getOrientation() {
       return glm::mat3(placement);
+    }
+
+    void setOrientation(glm::mat3 o) {
+      vec3 pos = getPosition();
+      placement = glm::mat4(o);
+      setPosition(pos);
     }
 
     // Project a point onto a CanvasPoint

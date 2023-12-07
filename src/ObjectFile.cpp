@@ -27,10 +27,14 @@ using std::cout;
 
 // Class to load and encapsulate .obj files and their .mtl files.
 // Also used for basic manipulation of the geometry inside them.
-class ObjectFile {
+class ObjectFile : public Animateable, public Rotateable {
 	public:
+  vec3 position;
+  glm::mat3 orientation;
   MaterialLib *matLib;
 	ObjectFile(std::string filename, float scale) {
+    position = vec3(0);
+    orientation = glm::mat3();
 		file = "assets/obj/" + filename;
 		scaleFactor = scale;
 		ifstream inputStream;
@@ -141,6 +145,22 @@ class ObjectFile {
     }
     vec4 center = vec4((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2, 1);
     translate(target - center);
+  }
+
+  void setPosition(vec3 pos) {
+    position = pos;
+  }
+
+  vec3 getPosition() {
+    return position;
+  }
+
+  glm::mat3 getOrientation() {
+    return orientation;
+  }
+
+  void setOrientation(glm::mat3 o) {
+    orientation = o;
   }
 
 	private:

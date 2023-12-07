@@ -19,8 +19,8 @@
 #include <functional>
 #include "SceneCollection.cpp"
 
-#define WIDTH 1280
-#define HEIGHT 720
+#define WIDTH 640
+#define HEIGHT 480
 
 using std::vector;
 using glm::vec3;
@@ -28,6 +28,8 @@ using glm::vec2;
 
 SceneCollection scenes = SceneCollection();
 Scene scene = *(scenes.getCurrent());
+bool recording = true;
+unsigned int frame = 1000;
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -263,5 +265,15 @@ int main(int argc, char *argv[]) {
       SDL_Delay((Uint32)(difference * 1000));
     }
     frameTime = std::chrono::system_clock::now() - start;
+    if (recording) {
+      cout << "Recording frame " << formatFloat((((frame - 1000) + 24.0f * 15.0f) * 100), 4) << "\n";
+      // To piece together frames:
+      // ffmpeg -framerate 24 -pattern_type glob -i 'videoframes/*.ppm' -c:v libx264 -pix_fmt yuv420p output.mp4
+      window.savePPM("videoframes/" + std::to_string(frame) + ".ppm");
+      frame++;
+      if (frame > 1000 + 24 * 15) {
+        recording = false;
+      }
+    }
 	}
 }

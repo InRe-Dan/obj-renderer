@@ -7,3 +7,4 @@ perf.data
 out.perf
 out.folded
 perf.svg
+videoframes/*

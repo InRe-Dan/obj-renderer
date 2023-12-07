@@ -249,6 +249,7 @@ class Camera : public Animateable, public Rotateable {
         float sum = 1.0f;
         // Determine if the light can see this point
         vec3 lightToPoint = lightSource->pos - intersection.intersectionPoint;
+        if (glm::length(lightToPoint) > 100) continue;
         if (!lightSource->soft) {
           RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene);
           if (lightIntersection.triangleIndex != -1 && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
@@ -274,25 +275,26 @@ class Camera : public Animateable, public Rotateable {
         float dotReflection = glm::dot(-rayDirection, reflection);
         if (dotReflection < 0.0f) dotReflection = 0.0f;
         if (dotReflection > 1.0f) dotReflection = 1.0f;
-        float specular = glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent()) * 0.4f;
+        float specular = glm::pow(dotReflection, intersection.intersectedTriangle.material->getSpecularExponent()) * 0.3f;
 
         // determine brighness based on angle of incidence
         float dotNormal = glm::dot(lightToPoint, intersection.normal);
         if (dotNormal < 0.0f) dotNormal = 0.0f;
         if (dotNormal > 1.0f) dotNormal = 1.0f;
-        float diffuse = dotNormal * 0.5f;
+        float diffuse = dotNormal * 0.6f;
 
         // Falloff based on distance from light
         float falloffFactor = lightSource->str / (glm::length(lightToPoint) * glm::length(lightToPoint));
 
         // Add to ambient light
         // lightImpact += originalColour * quantize(diffuse * falloffFactor + specular, 2) * (vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255));
-        lightImpact += originalColour * (diffuse * falloffFactor + specular) * vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255);
-        lightImpact = glm::min(lightImpact, vec3(255 * 0.9f));
+        lightImpact += originalColour * (diffuse * falloffFactor + specular * falloffFactor) * vec3(lightSource->r, lightSource->g, lightSource->b) / vec3(255);
+
+        lightImpact = vecMin(lightImpact, vec3(255 * 0.9f));
         ambient += lightImpact * sum;
       }
       // Cap light at 255
-      ambient = glm::min(ambient, vec3(255 * 1.0f));
+      ambient = vecMin(ambient, vec3(255 * 1.0f));
       intersection.intersectedTriangle.colour = Colour(ambient.r, ambient.g, ambient.b);
       return intersection;
     }
@@ -350,7 +352,6 @@ class Camera : public Animateable, public Rotateable {
       for (int i = 0; i < threadVect.size(); i++) {
         threadVect.at(i).join();
       }
-      drawLights(scene);
     }
 
     // Post-processing - render an approximation of where the light sources are in the scene

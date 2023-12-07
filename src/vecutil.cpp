@@ -165,6 +165,10 @@ vector<float> interpolate(float from, float to, int steps) {
 	return interpolation;
 }
 
+vec3 vecMin(vec3 one, vec3 two) {
+  return vec3(one.x > two.x? two.x : one.x, one.y > two.y? two.y : one.y, one.z > two.z? two.z : one.z);
+}
+
 vector<vec2> interpolate(vec2 from, vec2 to, int steps) {
 	vector<vec2> interpolation;
   if (steps < 3) {

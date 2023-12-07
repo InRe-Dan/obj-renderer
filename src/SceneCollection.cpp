@@ -47,7 +47,7 @@ class SceneCollection {
     Scene *makeTexturedCornellScene() {
       Camera *camera = new Camera(vec2(640, 480));
       Scene *scene = new Scene(camera);
-      Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true);
+      Light *whiteLight = new Light("White", vec3(0, 0, 1.5), 5, Colour(255, 255, 255), true, true);
       scene->addAnimation(new Translation(whiteLight, 
         [](float xStart, int tick) {return xStart + 2 * glm::sin(float(tick) / 10);},
         [](float yStart, int tick) {return yStart + 2 * glm::cos(float(tick) / 10);},
@@ -56,12 +56,15 @@ class SceneCollection {
 
       scene->getCamera()->lookAt(&(whiteLight->pos));
       scene->addLight(whiteLight);
-      scene->addLight(new Light("Red", vec3(1, 1, 5), 5, Colour(255, 127, 127), true));
-      scene->addLight(new Light("Green", vec3(0, 0, 5), 5, Colour(127, 255, 127), true));
-      scene->addLight(new Light("Blue", vec3(-1, -1, 5), 5, Colour(127, 127, 255), true));
+      scene->addLight(new Light("Red", vec3(1, 1, 5), 5, Colour(255, 127, 127), false));
+      scene->addLight(new Light("Green", vec3(0, 0, 5), 5, Colour(127, 255, 127), false));
+      scene->addLight(new Light("Blue", vec3(-1, -1, 5), 5, Colour(127, 127, 255), false));
       ObjectFile cornell = (ObjectFile("textured-cornell-box.obj", 1.0f));
+      ObjectFile mirrorsphere = ObjectFile("mirrorsphere.obj", 1.0f);
+      mirrorsphere.centerOn(vec4(1, 1, 1, 1));
       cornell.centerOn(vec4(0));
       scene->addObjectFile(cornell);
+      scene->addObjectFile(mirrorsphere);
       return scene;
     }
 

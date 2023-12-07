@@ -286,3 +286,38 @@ class Rotation : public Animation {
     int tick;
     bool on = false;
 };
+
+class AdjustableRotation : public Animation {
+  public:
+    AdjustableRotation(Rotateable *object, std::function<float(int)> xFunc, std::function<float(int)> yFunc, std::function<float(int)> zFunc) {
+      target = object;
+      originalOrientation = object->getOrientation();
+      x = xFunc;
+      y = yFunc;
+      z = zFunc;
+      tick = 0;
+    }
+    void animate() {
+      if (!on) return;
+      vec3 degrees = vec3(x(tick), y(tick), z(tick));
+      glm::mat3 newOrientation = 
+        glm::mat3(getZRotationMatrix(degrees.z))
+        * glm::mat3(getYRotationMatrix(degrees.y))
+        * glm::mat3(getXRotationMatrix(degrees.x)) 
+        * originalOrientation;
+      target->setOrientation(newOrientation);
+      tick++;
+    }
+    // Toggle animation between enabled/disabled
+    void toggle() {
+      on = !on;
+    }
+  private:
+    Rotateable *target;
+    glm::mat3 originalOrientation;
+    std::function<float(int)> x;
+    std::function<float(int)> y;
+    std::function<float(int)> z;
+    int tick;
+    bool on = false;
+};

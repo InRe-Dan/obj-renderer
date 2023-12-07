@@ -177,6 +177,12 @@ class Camera : public Animateable, public Rotateable {
         return intersection;
       }
 
+      if (solutionT.material->isReflective) {
+        vec3 reflection = glm::normalize((closestPoint - rayOrigin) - 2.0f * solutionT.normal * (glm::dot(closestPoint - rayOrigin, solutionT.normal)));
+        // vec3 reflection = glm::normalize(lightToPoint - 2.0f * intersection.normal * (glm::dot(lightToPoint, intersection.normal)))
+        return getClosestIntersection(closestPoint, reflection, scene);
+      }
+
       // Calulate where the point lies in the texture space
       std::array<vec2, 3> ts = solutionT.texturePoints;
       vec2 e0 = ts[1] - ts[0];

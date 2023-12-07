@@ -83,9 +83,6 @@ class SceneCollection {
     }
 
     Scene *makeLogoScene() {
-
-
-
       Camera *camera = new Camera(vec2(640, 480), vec3(0.0, 0.0, 5));
       Scene *scene = new Scene(camera);
       scene->addAnimation(new Rotation(camera, vec3(0, 0, 5)));

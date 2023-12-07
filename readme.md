@@ -52,11 +52,11 @@ Compilation and execution can be done with `make speedy`. Upon execution, the pr
 **For a mark in the 60s you must _convincingly_ implement ALL above features, as well as SOME of the following**:
 - [ ]Gouraud shading
 - [ ]Rough attempt at soft shadows (using multi-point light sources)
-- [ ]Reflective materials (e.g. mirrors, metal etc.)
+- [X]Reflective materials (e.g. mirrors, metal etc.)
 - [X] Specular lighting (must be a clearly visible specular "spot")
 
 **For a mark in the low 70s you must _convincingly_ implement ALL above features, as well as SOME of the following**:
-- [ ] Phong Shading
+- [X] Phong Shading
 - [ ] Smooth and elegant soft shadows
 - [ ] Refractive materials (e.g. glass, water etc.)
 - [ ] Complex animation (e.g. complex camera movement, rigging and articulation of model elements etc.)

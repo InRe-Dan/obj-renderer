@@ -64,6 +64,9 @@ class MaterialLib {
         } else if (code.compare("map_bump") == 0) {
           vector<string> lineSplit = split(line, ' ');
           materials[materialName].setMap_Bump(lineSplit.at(1));
+        } else if (code.compare("illum") == 0) {
+          vector<string> lineSplit = split(line, ' ');
+          if (lineSplit.at(1).compare("2") == 0) materials[materialName].isReflective = true;
         }
 			}
 			inputStream.close();

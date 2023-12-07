@@ -21,6 +21,7 @@ class Material {
 	public:
     bool isTextured = false;
 		bool hasNormalMap = false;
+    bool isReflective = false;
 		Material() {
 			materialName = "default";
 		}

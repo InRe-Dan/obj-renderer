@@ -255,5 +255,13 @@ int main(int argc, char *argv[]) {
 		draw(window);
 		window.renderFrame();
 		frameTime = std::chrono::system_clock::now() - start;
+    double frameTime24fps = 1.0f / 24.0f;
+    double difference = frameTime24fps - frameTime.count();
+    cout << frameTime.count() << "\n";
+    if (difference > 0) {
+      cout << (Uint32) difference << " " << difference << "\n";
+      SDL_Delay((Uint32)(difference * 1000));
+    }
+    frameTime = std::chrono::system_clock::now() - start;
 	}
 }

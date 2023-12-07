@@ -226,18 +226,16 @@ class Animation {
 // Animation controller class.
 class Translation : public Animation {
   public:
-    Translation(Animateable *object, std::function<float(float, int)> xFunc, std::function<float(float, int)> yFunc, std::function<float(float, int)> zFunc) {
+    Translation(Animateable *object, std::function<vec3(vec3, int)> posFunc) {
       target = object;
       origin = object->getPosition();
-      x = xFunc;
-      y = yFunc;
-      z = zFunc;
+      f = posFunc;
       tick = 0;
     }
     // If animation is enabled, increase step and move the object.
     void animate() {
       if (!on) return;
-      vec3 newPos = vec3(x(origin.x, tick), y(origin.y, tick), z(origin.z, tick));
+      vec3 newPos = vec3(f(origin, tick));
       target->setPosition(newPos);
       tick++;
 
@@ -249,9 +247,7 @@ class Translation : public Animation {
   private:
     Animateable *target;
     vec3 origin;
-    std::function<float(float, int)> x;
-    std::function<float(float, int)> y;
-    std::function<float(float, int)> z;
+    std::function<vec3(vec3, int)> f;
     int tick;
     bool on = false;
 };
@@ -289,17 +285,15 @@ class Rotation : public Animation {
 
 class AdjustableRotation : public Animation {
   public:
-    AdjustableRotation(Rotateable *object, std::function<float(int)> xFunc, std::function<float(int)> yFunc, std::function<float(int)> zFunc) {
+    AdjustableRotation(Rotateable *object, std::function<vec3(int)> degfunc) {
       target = object;
       originalOrientation = object->getOrientation();
-      x = xFunc;
-      y = yFunc;
-      z = zFunc;
+      f = degfunc;
       tick = 0;
     }
     void animate() {
       if (!on) return;
-      vec3 degrees = vec3(x(tick), y(tick), z(tick));
+      vec3 degrees = f(tick);
       glm::mat3 newOrientation = 
         glm::mat3(getZRotationMatrix(degrees.z))
         * glm::mat3(getYRotationMatrix(degrees.y))
@@ -315,9 +309,7 @@ class AdjustableRotation : public Animation {
   private:
     Rotateable *target;
     glm::mat3 originalOrientation;
-    std::function<float(int)> x;
-    std::function<float(int)> y;
-    std::function<float(int)> z;
+    std::function<vec3(int)> f;
     int tick;
     bool on = false;
 };

@@ -136,7 +136,7 @@ class Camera : public Animateable, public Rotateable {
     }
 
     // Find closest intersection in the direction of ray from rayOrigin.
-    RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene *scene) {
+    RayTriangleIntersection getClosestIntersection(vec3 rayOrigin, vec3 ray, Scene *scene, int recursionDepth) {
       vec3 closestSolution = vec3(1e10, 0, 0);
       vec3 closestPoint;
       vec3 point;
@@ -145,6 +145,10 @@ class Camera : public Animateable, public Rotateable {
       solutionT.colour = Colour(0, 0, 0);
       int solutionIndex = -1; // Represents No Solution
       int i = 0;
+      if (recursionDepth > 6) {
+        return RayTriangleIntersection(closestPoint, 0, solutionT, -1, solutionT.normal);
+      }
+      recursionDepth++;
       for (ModelTriangle triangle : *scene->getModelTriangles()) {
         vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
         vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
@@ -180,7 +184,7 @@ class Camera : public Animateable, public Rotateable {
       if (solutionT.material->isReflective) {
         vec3 reflection = glm::normalize((closestPoint - rayOrigin) - 2.0f * solutionT.normal * (glm::dot(closestPoint - rayOrigin, solutionT.normal)));
         // vec3 reflection = glm::normalize(lightToPoint - 2.0f * intersection.normal * (glm::dot(lightToPoint, intersection.normal)))
-        return getClosestIntersection(closestPoint, reflection, scene);
+        return getClosestIntersection(closestPoint, reflection, scene, recursionDepth);
       }
 
       // Calulate where the point lies in the texture space
@@ -232,7 +236,7 @@ class Camera : public Animateable, public Rotateable {
     RayTriangleIntersection getRaytracedPixelIntersection(int xPos, int yPos, Scene *scene) {
       // Cast a ray
       vec3 rayDirection = getRayDirection(xPos, yPos);
-      RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene);
+      RayTriangleIntersection intersection = getClosestIntersection(getPosition(), rayDirection, scene, 0);
       // If it intersects nothing, return early
       if (intersection.triangleIndex < 0) return intersection;
       if (!scene->lightingEnabled) return intersection;
@@ -240,7 +244,7 @@ class Camera : public Animateable, public Rotateable {
       // Everything must be at least 10% brightness
       Colour c = intersection.intersectedTriangle.colour;
       vec3 originalColour = vec3(c.red, c.green, c.blue);
-      vec3 ambient = 0.1f * originalColour;
+      vec3 ambient = 0.05f * originalColour;
       // Iterate through every light in the scene
       for (Light *lightSource : scene->getLights()) {
         // If light isn't on, skip
@@ -251,7 +255,7 @@ class Camera : public Animateable, public Rotateable {
         vec3 lightToPoint = lightSource->pos - intersection.intersectionPoint;
         if (glm::length(lightToPoint) > 100) continue;
         if (!lightSource->soft) {
-          RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene);
+          RayTriangleIntersection lightIntersection = getClosestIntersection(lightSource->pos, -lightToPoint, scene, 0);
           if (lightIntersection.triangleIndex != -1 && (intersection.triangleIndex != lightIntersection.triangleIndex)) {
             // if it can't, skip
             continue;
@@ -260,7 +264,7 @@ class Camera : public Animateable, public Rotateable {
           //shoot 6 additional rays around the light to determine brightness
           for (vec3 lightOffset : lightOffsets) {
             vec3 newLightPoint = lightSource->pos + lightOffset * lightSource->radius;
-            RayTriangleIntersection softIntersection = getClosestIntersection(newLightPoint, - (newLightPoint - intersection.intersectionPoint), scene);
+            RayTriangleIntersection softIntersection = getClosestIntersection(newLightPoint, - (newLightPoint - intersection.intersectionPoint), scene, 0);
             if (softIntersection.triangleIndex != -1 && (intersection.triangleIndex != softIntersection.triangleIndex)) sum -= 1.0 / (float)lightOffsets.size();
           }
           if (sum < 0.001) continue;
@@ -281,7 +285,7 @@ class Camera : public Animateable, public Rotateable {
         float dotNormal = glm::dot(lightToPoint, intersection.normal);
         if (dotNormal < 0.0f) dotNormal = 0.0f;
         if (dotNormal > 1.0f) dotNormal = 1.0f;
-        float diffuse = dotNormal * 0.6f;
+        float diffuse = dotNormal * 0.65f;
 
         // Falloff based on distance from light
         float falloffFactor = lightSource->str / (glm::length(lightToPoint) * glm::length(lightToPoint));

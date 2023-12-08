@@ -144,7 +144,7 @@ void draw(DrawingWindow &window) {
       debugString += "  Textures   : " + string((scene.texturesEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Normals    : " + string((scene.normalMapsEnabled) ? "ON\n" : "OFF\n");
       debugString += "  Light view : " + string((scene.lightPositionPreview) ? "ON\n" : "OFF\n");
-      debugString += "  Smoothing  : " + string(scene.smoothingEnabled? "ON / " : "OFF / ") + string(scene.usingGouraudSmoothing? "Gouraud\n" : "Phong\n");
+      debugString += "  Smoothing  : " + string(scene.smoothingEnabled? "ON / " : "OFF / ") + string(scene.usingGouraudSmoothing? "Gouraud (Unimplemented!)\n" : "Phong\n");
       debugString += "  Cameras    : " + std::to_string(scene.cameraCount()) + "\n";
       debugString += "  Lights     : " + std::to_string(scene.getLights().size()) + "\n";
       if ((scene.getLights().size() <= 4)) {

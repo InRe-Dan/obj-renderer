@@ -60,9 +60,9 @@ This is the scene used to render the final ident video to showcase the project. 
 - [X] Simple animation (e.g. orbit, lookAt, fly-through, tracking/panning, simple transformation of model elements etc.)
 
 **For a mark in the 60s you must _convincingly_ implement ALL above features, as well as SOME of the following**:
-- [ ]Gouraud shading
-- [X]Rough attempt at soft shadows (using multi-point light sources)
-- [X]Reflective materials (e.g. mirrors, metal etc.)
+- [ ] Gouraud shading
+- [X] Rough attempt at soft shadows (using multi-point light sources)
+- [X] Reflective materials (e.g. mirrors, metal etc.)
 - [X] Specular lighting (must be a clearly visible specular "spot")
 
 **For a mark in the low 70s you must _convincingly_ implement ALL above features, as well as SOME of the following**:

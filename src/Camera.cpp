@@ -149,7 +149,7 @@ class Camera : public Animateable, public Rotateable {
         return RayTriangleIntersection(closestPoint, 0, solutionT, -1, solutionT.normal);
       }
       recursionDepth++;
-      for (ModelTriangle triangle : *scene->getModelTriangles()) {
+      for (ModelTriangle &triangle : *scene->getModelTriangles()) {
         vec3 e0 = vec3(triangle.vertices[1] - triangle.vertices[0]);
         vec3 e1 = vec3(triangle.vertices[2] - triangle.vertices[0]);
         vec3 SPVector = rayOrigin - vec3(triangle.vertices[0]);
@@ -262,7 +262,7 @@ class Camera : public Animateable, public Rotateable {
           }
         } else {
           //shoot 6 additional rays around the light to determine brightness
-          for (vec3 lightOffset : lightOffsets) {
+          for (vec3 &lightOffset : lightOffsets) {
             vec3 newLightPoint = lightSource->pos + lightOffset * lightSource->radius;
             RayTriangleIntersection softIntersection = getClosestIntersection(newLightPoint, - (newLightPoint - intersection.intersectionPoint), scene, 0);
             if (softIntersection.triangleIndex != -1 && (intersection.triangleIndex != softIntersection.triangleIndex)) sum -= 1.0 / (float)lightOffsets.size();
@@ -319,7 +319,7 @@ class Camera : public Animateable, public Rotateable {
 
     // Raster render on the internal frame buffer
     void rasterRender(Scene scene) {
-      for (ModelTriangle triangle : *scene.getModelTriangles()) {
+      for (ModelTriangle &triangle : *scene.getModelTriangles()) {
         CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
         CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
         CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));
@@ -333,7 +333,7 @@ class Camera : public Animateable, public Rotateable {
 
     // Wireframe render on the internal frame buffer
     void wireframeRender(Scene scene) {
-      for (ModelTriangle triangle : *scene.getModelTriangles()) {
+      for (ModelTriangle &triangle : *scene.getModelTriangles()) {
         CanvasPoint a = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[0]));
         CanvasPoint b = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[1]));
         CanvasPoint c = getCanvasIntersectionPoint(glm::vec3(triangle.vertices[2]));

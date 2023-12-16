@@ -83,7 +83,7 @@ These are features that are not listed in the project specification, and only so
   - Convolution application: Blurring, sharpening, Sobel filters
   - Black and White filters with correction for human vision
   - Compositing, to be used in conjunction with edge detection to create outlines
-  - Arbitrary linear upscaling (Downscaling not included.)
+  - Arbitrary nearest-neighbour upscaling (Downscaling not included.)
     - Consequently, a fairly flexible resolution system
 - Light quantization for less realistic renders in `vecutil.cpp:quantize`
 - Light location approximations, which are toggleable in release

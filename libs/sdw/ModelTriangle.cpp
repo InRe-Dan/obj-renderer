@@ -1,6 +1,8 @@
 #include "ModelTriangle.h"
 #include <utility>
 
+using namespace glm;
+
 ModelTriangle::ModelTriangle() {
 	vertices = {vec4(), vec4(), vec4()};
 	texturePoints = {vec2(), vec2(), vec2()};

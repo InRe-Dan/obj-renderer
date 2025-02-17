@@ -1,111 +1,122 @@
-#pragma once
+#include "Scene.h"
+
+#include "ObjectFile.h"
+#include "Light.h"
+#include "Camera.h"
 
 #include <vector>
-#include "ObjectFile.cpp"
-#include "Light.cpp"
 
-class Camera;
+using std::vector;
 
-class Scene {
-  public:
-    vector<ObjectFile> objectFiles;
-    bool lightingEnabled = false;
-    bool texturesEnabled = false;
-    bool normalMapsEnabled = false;
-    bool lightPositionPreview = true;
-    bool smoothingEnabled = true;
-    // if false, assume Phong smoothing is being used
-    bool usingGouraudSmoothing = false;
-    bool recording = false;
-    int recordFrame = 1000;
-    int renderMode = 0;
+Scene::Scene(Camera* camera)
+{
+	objectFiles = vector<ObjectFile>();
+	lights = vector<Light*>();
+	cameras = vector<Camera*>();
+	cameras.push_back(camera);
+	cameraIndex = 0;
+	lightIndex = 0;
+	modelTriangles = vector<ModelTriangle>();
+}
 
-    Scene(Camera *camera) {
-      objectFiles = vector<ObjectFile>();
-      lights = vector<Light*>();
-      cameras = vector<Camera*>();
-      cameras.push_back(camera);
-      cameraIndex = 0;
-      lightIndex = 0;
-      modelTriangles = vector<ModelTriangle>();
-    }
+void Scene::addObjectFile(ObjectFile file)
+{
+	objectFiles.push_back(file);
+	for (ObjectFile objectFile : objectFiles)
+	{
+		for (Object object : objectFile.getObjects())
+		{
+			for (ModelTriangle t : object.triangles)
+			{
+				modelTriangles.push_back(t);
+			}
+		}
+	}
+}
+vector<ModelTriangle>* Scene::getModelTriangles()
+{
+	return &modelTriangles;
+}
 
-    void addObjectFile(ObjectFile file) {
-      objectFiles.push_back(file);
-      for (ObjectFile objectFile : objectFiles) {
-        for (Object object : objectFile.getObjects()) {
-          for (ModelTriangle t : object.triangles) {
-            modelTriangles.push_back(t);
-          }
-        }
-      }
+Camera* Scene::getCamera()
+{
+	return cameras.at(cameraIndex);
+}
 
-    }
-    vector<ModelTriangle> *getModelTriangles() {
-      return &modelTriangles;
-    }
+Light* Scene::getControlledLight()
+{
+	return lights.at(lightIndex);
+}
 
-    Camera *getCamera() {return cameras.at(cameraIndex);}
+void Scene::addCamera(Camera* camera)
+{
+	cameras.push_back(camera);
+}
 
-    Light *getControlledLight() {return lights.at(lightIndex);}
+void Scene::addLight(Light* light)
+{
+	lights.push_back(light);
+}
 
-    void addCamera(Camera *camera) {
-      cameras.push_back(camera);
-    }
+vector<Light*> Scene::getLights()
+{
+	return lights;
+}
 
-    void addLight(Light *light) {
-      lights.push_back(light);
-    }
+void Scene::nextCamera()
+{
+	if (cameraIndex == cameras.size() - 1)
+		cameraIndex = 0;
+	else
+		cameraIndex++;
+}
 
-    vector<Light*> getLights() {
-      return lights;
-    }
+void Scene::prevCamera()
+{
+	if (cameraIndex == 0)
+		cameraIndex = cameras.size() - 1;
+	else
+		cameraIndex--;
+}
 
-    void nextCamera() {
-      if (cameraIndex == cameras.size() - 1) cameraIndex = 0;
-      else cameraIndex++;
-    }
+void Scene::nextLight()
+{
+	if (lightIndex == lights.size() - 1)
+		lightIndex = 0;
+	else
+		lightIndex++;
+}
 
-    void prevCamera() {
-      if (cameraIndex == 0) cameraIndex = cameras.size() - 1;
-      else cameraIndex--;
-    }
+void Scene::prevLight()
+{
+	if (lightIndex == 0)
+		lightIndex = lights.size() - 1;
+	else
+		lightIndex--;
+}
 
-    void nextLight() {
-      if (lightIndex == lights.size() - 1) lightIndex = 0;
-      else lightIndex++;
-    }
+int Scene::cameraCount()
+{
+	return cameras.size();
+}
 
-    void prevLight() {
-      if (lightIndex == 0) lightIndex = lights.size() - 1;
-      else lightIndex--;
-    }
+void Scene::addAnimation(Animation* a)
+{
+	animations.push_back(a);
+}
 
-    int cameraCount() {
-      return cameras.size();
-    }
+void Scene::toggleAnimation()
+{
+	for (Animation* a : animations)
+	{
+		a->toggle();
+	}
+}
 
-    void addAnimation(Animation *a) {
-      animations.push_back(a);
-    }
-
-    void toggleAnimation()  {
-      for (Animation *a : animations) {
-        a->toggle();
-      }
-    }
-
-    void update() {
-      for (Animation *a : animations) {
-        a->animate();
-      }
-    }
-
-  private:
-    vector<Camera*> cameras;
-    vector<ModelTriangle> modelTriangles;
-    int cameraIndex;
-    int lightIndex;
-    vector<Light*> lights;
-    vector<Animation*> animations;
-};
+void Scene::update()
+{
+	for (Animation* a : animations)
+	{
+		a->animate();
+	}
+}

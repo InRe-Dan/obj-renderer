@@ -1,4 +1,4 @@
-#pragma once
+#include "Object.h"
 
 #include <CanvasTriangle.h>
 #include <DrawingWindow.h>
@@ -9,29 +9,25 @@
 #include <glm/glm.hpp>
 #include <ModelTriangle.h>
 
+using glm::vec4;
+using std::array;
 using std::string;
 using std::vector;
-using std::array;
-using glm::vec4;
 
-// Class to store basic attributes about objects in ObjectFiles.
-class Object {
-	public:
-	Object(string id) {
-		name = id;
+Object::Object(string id)
+{
+	name = id;
+}
+void Object::setMaterial(string m)
+{
+	material = m;
+}
+void Object::translate(vec4 displacement)
+{
+	for (int i = 0; i < triangles.size(); i++)
+	{
+		triangles[i].vertices[0] += displacement;
+		triangles[i].vertices[1] += displacement;
+		triangles[i].vertices[2] += displacement;
 	}
-	void setMaterial(string m) {
-		material = m;
-	}
-  void translate(vec4 displacement) {
-    for (int i = 0; i < triangles.size(); i++) {
-      triangles[i].vertices[0] += displacement;
-      triangles[i].vertices[1] += displacement;
-      triangles[i].vertices[2] += displacement;
-
-    }
-  }
-	vector<ModelTriangle> triangles;
-	string material;
-	string name;
-};
+}

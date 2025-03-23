@@ -1,0 +1,14 @@
+.DS_Store
+**/build/
+output.ppm
+output.bmp
+perf.data.old
+perf.data
+out.perf
+out.folded
+perf.svg
+videoframes/*
+output.mp4
+.vscode
+.vs
+x64

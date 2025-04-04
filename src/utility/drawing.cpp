@@ -35,14 +35,12 @@ void line(
 		interpolate(to, from, steps),
 		vec2(1, 1),
 		vec2(frameBuffer.at(0).size() - 1, frameBuffer.size() - 1));
-	vec3 colVect(colour.red, colour.green, colour.blue);
 	for (CanvasPoint point : interpolation)
 	{
 		if (depthBuffer.at(roundI(point.y)).at(roundI(point.x)) < point.depth)
 		{
 			depthBuffer.at(roundI(point.y)).at(roundI(point.x)) = point.depth;
-			frameBuffer.at(roundI(point.y)).at(roundI(point.x)) =
-				vec3ToColour(colVect, 255);
+			frameBuffer.at(roundI(point.y)).at(roundI(point.x)) = colour.pack();
 		}
 	}
 }
@@ -182,8 +180,8 @@ void circle(
 					alpha = 1.0f - glm::pow(distanceFromRadius / rad, 4);
 					resultColour =
 						(intColToVec3(frameBuffer[i][j]) * (1 - alpha)) +
-						(vec3(colour.red, colour.green, colour.blue) * alpha);
-					frameBuffer[i][j] = vec3ToColour(resultColour, 255);
+						(vec3(colour.r(), colour.g(), colour.b()) * alpha);
+					frameBuffer[i][j] = colour.pack();
 				}
 			}
 		}

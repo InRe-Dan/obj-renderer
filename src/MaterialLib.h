@@ -16,17 +16,26 @@
 #include <vector>
 #include <iostream>
 #include <unordered_map>
-#include <glm/glm.hpp>
+#include <GLM/glm.hpp>
 
 // Class used to load and encapsulate a .mtl file.
 class MaterialLib
 {
   public:
-	std::unordered_map<std::string, Material> materials;
 	MaterialLib();
 
-	MaterialLib(std::string filename);
+	MaterialLib(const std::filesystem::path& file);
+
+	std::shared_ptr<const Material> get(std::string_view name) const
+	{
+		return materials.at(std::string(name));
+	}
+
+	std::shared_ptr<const Material> getDefault() const
+	{
+		return get("default");
+	}
 
   private:
-	std::string file;
+	std::unordered_map<std::string, std::shared_ptr<Material>> materials;
 };

@@ -71,11 +71,11 @@ applyKernel(vector<vector<uint32_t>>& target, const Kernel& k)
 
 void blackAndWhite(vector<vector<uint32_t>>& target)
 {
-	int targetW = target.at(0).size();
-	int targetH = target.size();
-	for (int i = 0; i < targetH; i++)
+	size_t targetW = target.at(0).size();
+	size_t targetH = target.size();
+	for (size_t i = 0; i < targetH; i++)
 	{
-		for (int j = 0; j < targetW; j++)
+		for (size_t j = 0; j < targetW; j++)
 		{
 			uint32_t col = target[i][j];
 			// These weights are based on approximations of how the eye
@@ -192,13 +192,13 @@ void bilinearUpscale(
 	vector<vector<uint32_t>>& target)
 {
 	assert(source.size() <= target.size());
-	int sWidth = source.at(0).size();
-	int sHeight = source.size();
-	int tWidth = target.at(0).size();
-	int tHeight = target.size();
-	for (int i = 0; i < target.size(); i++)
+	size_t sWidth = source.at(0).size();
+	size_t sHeight = source.size();
+	size_t tWidth = target.at(0).size();
+	size_t tHeight = target.size();
+	for (size_t i = 0; i < target.size(); i++)
 	{
-		for (int j = 0; j < target.at(0).size(); j++)
+		for (size_t j = 0; j < target.at(0).size(); j++)
 		{
 			int lowerx = glm::floor((float(j) / tWidth) * sWidth);
 			int lowery = glm::floor((float(i) / tHeight) * sHeight);

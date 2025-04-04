@@ -20,15 +20,15 @@
 #include <functional>
 #include "SceneCollection.h"
 
-#define WIDTH  640
-#define HEIGHT 480
+constexpr auto WIDTH = 640;
+constexpr auto HEIGHT = 480;
+static int framelimit = 0;
 
 using glm::vec2;
 using glm::vec3;
 using std::vector;
 
 SceneCollection scenes = SceneCollection();
-Scene scene = *(scenes.getCurrent());
 
 vector<vector<uint32_t>> upscaledFrameBuffer;
 
@@ -36,7 +36,7 @@ std::string debugString;
 std::chrono::duration<double> frameTime = std::chrono::duration<double>(1);
 
 // Ran when starting program. Initializes buffers.
-void initialize()
+static void initialize()
 {
 	std::cout << "====================================================\n"
 			"Wavefront .obj Model Renderer (C++)\n"
@@ -56,10 +56,10 @@ void initialize()
 }
 
 // Renders a string to the top left corner of the global frame buffer.
-void renderDebugString(std::string str)
+static void renderDebugString(std::string str)
 {
-	int yOffset = 8;
-	int xOffset = 8;
+	size_t yOffset = 8;
+	size_t xOffset = 8;
 	for (unsigned char character : str)
 	{
 		if (character > 127)
@@ -70,14 +70,13 @@ void renderDebugString(std::string str)
 			xOffset = 8;
 			continue;
 		}
-		for (int i = 0; i < 8; i++)
+		for (uint8_t i = 0; i < 8; i++)
 		{
-			for (int j = 0; j < 8; j++)
+			for (uint8_t j = 0; j < 8; j++)
 			{
 				if ((font8x8_basic[character][i] >> j) & 1)
 				{
-					upscaledFrameBuffer[yOffset + i][xOffset + j] =
-						vec3ToColour(vec3(255, 255, 255), 255);
+					upscaledFrameBuffer[yOffset + i][xOffset + j] = 0xffffffff;
 				}
 			}
 		}
@@ -87,10 +86,10 @@ void renderDebugString(std::string str)
 
 // Called every frame. Fills frame buffer using scene information, and sends to
 // SDL wrapper.
-void draw(DrawingWindow& window)
+void draw(DrawingWindow& window, Scene& scene)
 {
-	// Get camera and clear global frame buffer
-	Camera camera = *(scene.getCamera());
+	Camera& camera = scene.getCamera();
+	const Camera::RenderSettings settings = camera.getSettings();
 	for (size_t y = 0; y < HEIGHT; y++)
 	{
 		for (size_t x = 0; x < WIDTH; x++)
@@ -99,43 +98,32 @@ void draw(DrawingWindow& window)
 		}
 	}
 
-	// Draw background first
-	camera.drawFancyBackground();
-	// Render objects
-	switch (scene.renderMode)
-	{
-		case 1: camera.rasterRender(scene); break;
-		case 2: camera.raytraceRender(scene); break;
-		default: camera.wireframeRender(scene); break;
-	}
-	camera.drawLights(scene);
+	// Update camera frame buffer
+	auto& result = camera.render(scene);
+
 	// Upscale the camera's frame buffer into the global one
-	arbitraryUpscale(camera.frameBuffer, upscaledFrameBuffer);
-	// vector<vector<uint32_t>> bufferCopy(upscaledFrameBuffer);
-	//  Apply effects if desired
-	//  blackAndWhite(bufferCopy);
-	//  bufferCopy = applyKernel(bufferCopy, boxBlurKernel);
-	//  vector<vector<uint32_t>> hEdges = applyKernel(bufferCopy,
-	//  edgeDetectionKernelH); vector<vector<uint32_t>> vEdges =
-	//  applyKernel(bufferCopy, edgeDetectionKernelV); hypot(bufferCopy, hEdges,
-	//  vEdges); threshold(bufferCopy, vec3(230));
-	//  composite(upscaledFrameBuffer, bufferCopy);
+	arbitraryUpscale(result, upscaledFrameBuffer);
+
+	int resx = static_cast<int>(camera.getSettings().resolution.x);
+	int resy = static_cast<int>(camera.getSettings().resolution.y);
 
 	// Generate debug information and write into a strings
 	// Get mouse state
 	float xMouse, yMouse;
 	SDL_GetMouseState(&xMouse, &yMouse);
-	float upscaleFactor = WIDTH / camera.canvasWidth;
+	float upscaleFactor = WIDTH / static_cast<float>(resx);
 	int mouseCanvasX =
-		glm::min(camera.canvasWidth - 1, roundI(xMouse / upscaleFactor));
+		glm::min(resx - 1, roundI(xMouse / upscaleFactor));
 	int mouseCanvasY =
-		glm::min(camera.canvasHeight - 1, roundI(yMouse / upscaleFactor));
+		glm::min(resy - 1, roundI(yMouse / upscaleFactor));
+
+	/// TODO rewrite debugstring
 
 	// Add generic information
 	debugString += "Mouse        : " + std::to_string(xMouse) + ", " +
 				   std::to_string(yMouse) + "\n";
-	debugString += "Resolution   : " + std::to_string(camera.canvasWidth) +
-				   "x" + std::to_string(camera.canvasHeight) + "\n";
+	debugString += "Resolution   : " + std::to_string(resx) +
+				   "x" + std::to_string(resy) + "\n";
 	uint32_t colour = upscaledFrameBuffer.at(yMouse).at(xMouse);
 	debugString += "RGBA         : " + std::to_string((colour >> 16) & 255);
 	debugString += ", " + std::to_string((colour >> 8) & 255);
@@ -150,64 +138,47 @@ void draw(DrawingWindow& window)
 
 	// Add mode-specific information
 	debugString += "\n";
-	switch (scene.renderMode)
+	switch (scene.getCamera().getSettings().mode)
 	{
-		case 0:
+	case Camera::RenderSettings::Mode::Wireframe:
 			debugString += "Mode         : Wireframe \n";
 			debugString +=
 				"  Depth      : " +
 				std::to_string(
-					1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) +
+					1 / camera.getDepth()[mouseCanvasY][mouseCanvasX]) +
 				"\n";
 			break;
-		case 1:
-			debugString += "Mode         : Rasterization \n";
+	case Camera::RenderSettings::Mode::Raster:
+		debugString += "Mode         : Rasterization \n";
 			debugString +=
 				"  Depth      : " +
 				std::to_string(
-					1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) +
+					1 / camera.getDepth()[mouseCanvasY][mouseCanvasX]) +
 				"\n";
 			break;
-		case 2:
-			debugString += "Mode         : Raytracing\n";
+	case Camera::RenderSettings::Mode::Raytracing:
+		debugString += "Mode         : Raytracing\n";
 			debugString +=
 				"  Depth      : " +
 				std::to_string(
-					1 / camera.depthBuffer[mouseCanvasY][mouseCanvasX]) +
+					1 / camera.getDepth()[mouseCanvasY][mouseCanvasX]) +
 				"\n";
 			debugString +=
-				"  Threads    : " + std::to_string(camera.threadCount) + "\n";
+				"  Threads    : " + std::to_string(settings.threadCount) + "\n";
 			debugString += "  Lighting   : " +
-						   std::string((scene.lightingEnabled) ? "ON\n" : "OFF\n");
+						   std::string((settings.lightingEnabled) ? "ON\n" : "OFF\n");
 			debugString += "  Textures   : " +
-						   std::string((scene.texturesEnabled) ? "ON\n" : "OFF\n");
+						   std::string((settings.texturesEnabled) ? "ON\n" : "OFF\n");
 			debugString += "  Normals    : " +
-						   std::string((scene.normalMapsEnabled) ? "ON\n" : "OFF\n");
+						   std::string((settings.normalMapsEnabled) ? "ON\n" : "OFF\n");
 			debugString +=
 				"  Light view : " +
-				std::string((scene.lightPositionPreview) ? "ON\n" : "OFF\n");
-			debugString +=
-				"  Smoothing  : " +
-				std::string(scene.smoothingEnabled ? "ON / " : "OFF / ") +
-				std::string(
-					scene.usingGouraudSmoothing ? "Gouraud (Unimplemented!)\n"
-												: "Phong\n");
+				std::string((settings.lightPositionPreview) ? "ON\n" : "OFF\n");
 			debugString +=
 				"  Cameras    : " + std::to_string(scene.cameraCount()) + "\n";
 			debugString +=
 				"  Lights     : " + std::to_string(scene.getLights().size()) +
 				"\n";
-			if ((scene.getLights().size() <= 4))
-			{
-				for (int i = 0; i < scene.getLights().size(); i++)
-				{
-					Light* l = scene.getLights().at(i);
-					debugString +=
-						(l == scene.getControlledLight()) ? "   >" : "    ";
-					debugString += (l->state ? "ON : " : "OFF: ") + l->name +
-								   " at " + printVec(l->pos) + "\n";
-				}
-			}
 			break;
 		default: debugString += "Mode: Unknown\n";
 	}
@@ -223,9 +194,8 @@ void draw(DrawingWindow& window)
 		}
 		debugString += "\n";
 	}
-	// Overlay debug string onto frame buffer
-	if (!scene.recording)
-		renderDebugString(debugString);
+
+	renderDebugString(debugString);
 
 	// Send frame buffer to SDL
 	for (size_t y = 0; y < HEIGHT; y++)
@@ -237,99 +207,97 @@ void draw(DrawingWindow& window)
 	}
 }
 
-void handleEvent(SDL_Event event, DrawingWindow& window)
+static void handleEvent(SDL_Event event, DrawingWindow& window)
 {
+	// TODO input event handling on the classes themselves, and mouse inputs for looking
+	Scene& scene = scenes.getCurrent();
+	Camera& camera = scene.getCamera();
+	Camera::RenderSettings settings = camera.getSettings();
+
 	if (event.type == SDL_EVENT_KEY_DOWN)
 	{
 		SDL_Keycode sym = event.key.key;
 		// CAMERA CONTROLS
 		if (sym == SDLK_RIGHT)
-			scene.getCamera()->lookRight(2);
+			scene.getCamera().lookRight(2);
 		if (sym == SDLK_LEFT)
-			scene.getCamera()->lookLeft(2);
+			scene.getCamera().lookLeft(2);
 		if (sym == SDLK_UP)
-			scene.getCamera()->lookUp(2);
+			scene.getCamera().lookUp(2);
 		if (sym == SDLK_DOWN)
-			scene.getCamera()->lookDown(2);
+			scene.getCamera().lookDown(2);
 		if (sym == SDLK_W)
-			scene.getCamera()->moveForward(0.2);
+			scene.getCamera().moveForward(0.2);
 		if (sym == SDLK_S)
-			scene.getCamera()->moveBack(0.2);
+			scene.getCamera().moveBack(0.2);
 		if (sym == SDLK_A)
-			scene.getCamera()->moveLeft(0.2);
+			scene.getCamera().moveLeft(0.2);
 		if (sym == SDLK_D)
-			scene.getCamera()->moveRight(0.2);
+			scene.getCamera().moveRight(0.2);
 		if (sym == SDLK_Q)
-			scene.getCamera()->moveUp(0.2);
+			scene.getCamera().moveUp(0.2);
 		if (sym == SDLK_E)
-			scene.getCamera()->moveDown(0.2);
-		// if (sym == SDLK_m) scene.getCamera()->toggleOrbit();
+			scene.getCamera().moveDown(0.2);
 		if (sym == SDLK_N)
-			scene.getCamera()->toggleLookAt();
+			scene.getCamera().lookAt(nullptr);
 		if (sym == SDLK_Z)
-			scene.getCamera()->changeF(0.1);
+			scene.getCamera().changeF(0.1);
 		if (sym == SDLK_X)
-			scene.getCamera()->changeF(-0.1);
+			scene.getCamera().changeF(-0.1);
 		if (sym == SDLK_L)
 			scene.nextCamera();
 		if (sym == SDLK_K)
 			scene.prevCamera();
+
 		// MODE CONTROLS
 		if (sym == SDLK_KP_1)
-			scene.renderMode = 0;
+			settings.mode = Camera::RenderSettings::Mode::Wireframe;
 		if (sym == SDLK_KP_2)
-			scene.renderMode = 1;
+			settings.mode = Camera::RenderSettings::Mode::Raster;
 		if (sym == SDLK_KP_3)
-			scene.renderMode = 2;
+			settings.mode = Camera::RenderSettings::Mode::Raytracing;
 		if (sym == SDLK_KP_4)
-			scene.lightingEnabled = !scene.lightingEnabled;
+			settings.lightingEnabled = !settings.lightingEnabled;
 		if (sym == SDLK_KP_5)
-			scene.texturesEnabled = !scene.texturesEnabled;
+			settings.texturesEnabled = !settings.texturesEnabled;
 		if (sym == SDLK_KP_6)
-			scene.normalMapsEnabled = !scene.normalMapsEnabled;
+			settings.normalMapsEnabled = !settings.normalMapsEnabled;
 		if (sym == SDLK_KP_7)
-			scene.lightPositionPreview = !scene.lightPositionPreview;
+			settings.lightPositionPreview = !settings.lightPositionPreview;
 		if (sym == SDLK_KP_8)
 			scene.toggleAnimation();
 		if (sym == SDLK_KP_9)
-			scene.smoothingEnabled = !scene.smoothingEnabled;
+			// TODO settings.smoothing = !settings.smoothingEnabled;
 		if (sym == SDLK_KP_DIVIDE)
-			scene.usingGouraudSmoothing = !scene.usingGouraudSmoothing;
+			// TODO settings.usingGouraudSmoothing = !settings.usingGouraudSmoothing;
+
 		// LIGHT CONTROLS
 		if (sym == SDLK_G)
-			scene.getControlledLight()->pos += vec3(0, -0.2, 0);
+			scene.getLight().pos += vec3(0, -0.2, 0);
 		if (sym == SDLK_T)
-			scene.getControlledLight()->pos += vec3(0, 0.2, 0);
+			scene.getLight().pos += vec3(0, 0.2, 0);
 		if (sym == SDLK_F)
-			scene.getControlledLight()->pos += vec3(-0.2, 0, 0);
+			scene.getLight().pos += vec3(-0.2, 0, 0);
 		if (sym == SDLK_H)
-			scene.getControlledLight()->pos += vec3(0.2, 0, 0);
+			scene.getLight().pos += vec3(0.2, 0, 0);
 		if (sym == SDLK_R)
-			scene.getControlledLight()->pos += vec3(0, 0, 0.2);
+			scene.getLight().pos += vec3(0, 0, 0.2);
 		if (sym == SDLK_Y)
-			scene.getControlledLight()->pos += vec3(0, 0, -0.2);
+			scene.getLight().pos += vec3(0, 0, -0.2);
 		if (sym == SDLK_KP_PLUS)
 			scene.nextLight();
 		if (sym == SDLK_KP_MINUS)
 			scene.prevLight();
 		if (sym == SDLK_KP_MULTIPLY)
-			scene.getControlledLight()->state =
-				!scene.getControlledLight()->state;
+			scene.getLight().on =
+				!scene.getLight().on;
 		// GENERAL CONTROLS
 		if (sym == SDLK_O)
-			scene.getCamera()->changeResolutionBy(-32, -24);
+			camera.changeResolutionBy(-32, -24);
 		if (sym == SDLK_P)
-			scene.getCamera()->changeResolutionBy(32, 24);
-		if (sym == SDLK_C)
-		{
-			scenes.next();
-			scene = *scenes.getCurrent();
-		}
-		if (sym == SDLK_V)
-		{
-			scenes.prev();
-			scene = *scenes.getCurrent();
-		}
+			camera.changeResolutionBy(32, 24);
+		if (sym == SDLK_C) scenes.next();
+		if (sym == SDLK_V) scenes.prev();
 	}
 	else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
 	{
@@ -338,16 +306,10 @@ void handleEvent(SDL_Event event, DrawingWindow& window)
 			window.savePPM("output.ppm");
 			window.saveBMP("output.bmp");
 		}
-		else if (event.button.button == SDL_BUTTON_LEFT)
-		{
-			// Deprecated debug info
-		}
 	}
-}
 
-// Test function for hand-checking outputs of simple functions.
-void test()
-{
+	camera.updateSettings(settings);
+
 }
 
 int main(int argc, char* argv[])
@@ -355,9 +317,9 @@ int main(int argc, char* argv[])
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT);
 	SDL_Event event;
 	initialize();
-	test();
 	while (true)
 	{
+		Scene& scene = scenes.getCurrent();
 		// First clear the debug string and add framerate (more accurate reading
 		// here than elsewhere)
 		debugString = "";
@@ -373,36 +335,20 @@ int main(int argc, char* argv[])
 		// Poll for all events
 		if (window.pollForInputEvents(event))
 			handleEvent(event, window);
-		scene.getCamera()->update();
+		scene.getCamera().update();
 		scene.update();
-		draw(window);
+		draw(window, scene);
 		window.renderFrame();
 		frameTime = std::chrono::system_clock::now() - start;
-		double frameTime24fps = 1.0f / 24.0f;
-		double difference = frameTime24fps - frameTime.count();
-		if (difference > 0)
+		if (framelimit > 0)
 		{
-			SDL_Delay((Uint32) (difference * 1000));
-		}
-		frameTime = std::chrono::system_clock::now() - start;
-		if (scene.recording)
-		{
-			std::cout << "Recording:"
-				 << formatFloat(
-						(((scene.recordFrame - 1000) / (24.0f * 15.0f)) *
-						 100.0f),
-						6)
-				 << "%\n";
-			// To piece together frames:
-			// ffmpeg -framerate 24 -pattern_type glob -i 'videoframes/*.ppm'
-			// -c:v libx264 -pix_fmt yuv420p output.mp4
-			window.savePPM(
-				"videoframes/" + std::to_string(scene.recordFrame) + ".ppm");
-			scene.recordFrame++;
-			if (scene.recordFrame > 1000 + 24 * 15)
+			double desiredFrametime = 1.0f / framelimit;
+			double difference = desiredFrametime - frameTime.count();
+			if (difference > 0)
 			{
-				scene.recording = false;
+				SDL_Delay((Uint32) (difference * 1000));
 			}
 		}
+		frameTime = std::chrono::system_clock::now() - start;
 	}
 }

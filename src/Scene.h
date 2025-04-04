@@ -1,40 +1,35 @@
 #pragma once
 
-#include <vector>
 #include "ObjectFile.h"
 #include "Light.h"
+
+#include <vector>
+#include <memory>
 
 class Camera;
 
 class Scene
 {
   public:
-	std::vector<ObjectFile> objectFiles;
-	bool lightingEnabled = false;
-	bool texturesEnabled = false;
-	bool normalMapsEnabled = false;
-	bool lightPositionPreview = true;
-	bool smoothingEnabled = true;
-	// if false, assume Phong smoothing is being used
-	bool usingGouraudSmoothing = false;
-	bool recording = false;
-	int recordFrame = 1000;
-	int renderMode = 0;
 
-	Scene(Camera* camera);
+	explicit Scene(const Camera& camera);
 
-	void addObjectFile(ObjectFile file);
-	std::vector<ModelTriangle>* getModelTriangles();
+	void addObjectFile(std::unique_ptr<ObjectFile>&& file);
 
-	Camera* getCamera();
+	const std::vector<ModelTriangle>& getModelTriangles() const;
 
-	Light* getControlledLight();
+	const Camera& getCamera() const;
+	Camera& getCamera();
 
-	void addCamera(Camera* camera);
+	Light& getLight();
 
-	void addLight(Light* light);
+	void addCamera(const Camera& camera);
 
-	std::vector<Light*> getLights();
+	void addLight(const Light& light);
+
+	std::vector<Light>& getLights();
+	const std::vector<Light>& getLights() const;
+
 	void nextCamera();
 
 	void prevCamera();
@@ -43,19 +38,20 @@ class Scene
 
 	void prevLight();
 
-	int cameraCount();
+	int cameraCount() const;
 
-	void addAnimation(Animation* a);
+	void addAnimation(std::unique_ptr<Animation>&& a);
 
 	void toggleAnimation();
 
 	void update();
 
   private:
-	std::vector<Camera*> cameras;
+	std::vector<std::unique_ptr<ObjectFile>> objectFiles;
+	std::vector<Camera> cameras;
 	std::vector<ModelTriangle> modelTriangles;
-	std::vector<Light*> lights;
-	std::vector<Animation*> animations;
-	int cameraIndex;
-	int lightIndex;
+	std::vector<Light> lights;
+	std::vector<std::unique_ptr<Animation>> animations;
+	size_t cameraIndex = 0;
+	size_t lightIndex = 0;
 };

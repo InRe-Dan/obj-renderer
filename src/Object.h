@@ -14,10 +14,36 @@
 class Object
 {
   public:
-	Object(std::string id);
-	void setMaterial(std::string m);
-	void translate(glm::vec4 displacement);
-	std::vector<ModelTriangle> triangles;
-	std::string material;
+	Object(std::string_view id, std::shared_ptr<const Material> material);
+
+	Object(const Object&) = delete;
+	Object(Object&&) = delete;
+	Object& operator=(const Object&) = delete;
+	Object& operator=(Object&&) = delete;
+
+	std::vector<ModelTriangle>& getTris()
+	{
+		return triangles;
+	}
+
+	const std::vector<ModelTriangle>& getTris() const
+	{
+		return triangles;
+	}
+
+	const Material& getMaterial() const
+	{
+		return *material;
+	}
+
+	void setMaterial(std::shared_ptr<const Material> material)
+	{
+		this->material = material;
+	}
+
+private:
 	std::string name;
+	std::vector<ModelTriangle> triangles;
+	/// non-null
+	std::shared_ptr<const Material> material;
 };

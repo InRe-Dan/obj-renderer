@@ -21,68 +21,44 @@ using std::vector;
 // Class to store information about a material in a MaterialFile. Shouldn't
 // really be used alone.
 
-Material::Material()
+Material::Material(std::string_view name)
+	:name(name) {}
+
+void Material::setDiffuseColour(Colour colour)
 {
-	materialName = "default";
+	diffuse = colour;
 }
-Material::Material(string name)
+void Material::setAmbientColour(Colour colour)
 {
-	materialName = name;
+	ambient = colour;
 }
-void Material::setDiffuseColour(vec3 colour)
+void Material::setSpecularColour(Colour colour)
 {
-	diffuseDefined = true;
-	floatDiffuseColour = colour;
-	packedDiffuseRGB = 0;
-	packedDiffuseRGB = 255 << 24;
-	packedDiffuseRGB += int(colour.x * 255) << 16;
-	packedDiffuseRGB += int(colour.y * 255) << 8;
-	packedDiffuseRGB += int(colour.z * 255);
-}
-void Material::setAmbientColour(vec3 colour)
-{
-	ambientDefined = true;
-	floatAmbientColour = colour;
-	packedAmbientRGB = 0;
-	packedAmbientRGB = 255 << 24;
-	packedAmbientRGB += int(colour.x * 255) << 16;
-	packedAmbientRGB += int(colour.y * 255) << 8;
-	packedAmbientRGB += int(colour.z * 255);
-}
-void Material::setSpecularColour(vec3 colour)
-{
-	specularDefined = true;
-	floatSpecularColour = colour;
-	packedSpecularRGB = 0;
-	packedSpecularRGB = 255 << 24;
-	packedSpecularRGB += int(colour.x * 255) << 16;
-	packedSpecularRGB += int(colour.y * 255) << 8;
-	packedSpecularRGB += int(colour.z * 255);
+	specular = colour;
 }
 void Material::setSpecularExponent(float value)
 {
 	specularExponent = value;
 }
-void Material::setMap_Kd(string name)
+void Material::setDiffuseMap(const Surface& map)
 {
-	map_Kd = name;
-	texture = TextureMap("assets/texture/" + name);
-	isTextured = true;
+	diffuseTexture = map;
 }
-void Material::setMap_Bump(string name)
+
+void Material::setBumpMap(const Surface& map)
 {
-	map_bump = name;
+	normalTexture = map;
+	Surface& mine = normalTexture.value();
 	// Load as a "texturemap"
-	bump = TextureMap("assets/normal/" + name);
-	hasNormalMap = true;
 	bump_vectors = vector<vector<vec3>>();
-	for (int i = 0; i < bump.height; i++)
+	for (int i = 0; i < mine.getHeight(); i++)
 	{
 		bump_vectors.push_back(vector<vec3>());
-		for (int j = 0; j < bump.width; j++)
+		for (int j = 0; j < mine.getWidth(); j++)
 		{
-			uint32_t integer = bump.pixels[i * bump.width + j];
-			vec3 vector = vec3(
+			Colour col = mine.getData()[i * mine.getWidth() + j];
+			uint32_t integer = col.pack();
+			glm::vec3 vector = vec3(
 				(integer >> 16) & 0xFF,
 				(integer >> 8) & 0xFF,
 				(integer) & 0xFF);
@@ -92,66 +68,32 @@ void Material::setMap_Bump(string name)
 		}
 	}
 }
-vec3 Material::getDiffuseColour()
+std::optional<Colour> Material::getDiffuseColour() const
 {
-	return floatDiffuseColour;
+	return diffuse;
 }
-uint32_t Material::getDiffuseColourInt()
+
+std::optional<Colour> Material::getAmbientColour() const
 {
-	return packedDiffuseRGB;
+	return ambient;
 }
-vec3 Material::getAmbientColour()
+
+std::optional<Colour> Material::getSpecularColour() const
 {
-	return floatAmbientColour;
+	return specular;
 }
-vec3 Material::getSpecularColour()
-{
-	return floatSpecularColour;
-}
-float Material::getSpecularExponent()
+
+float Material::getSpecularExponent() const
 {
 	return specularExponent;
 }
-uint32_t Material::getTexturePointColour(vec2 uAndV)
+
+const std::optional<Surface>& Material::getDiffuseTexture() const
 {
-	// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width <<
-	// "\n";
-	return texture.pixels
-		[roundI(uAndV.x * (texture.height - 1)) * texture.width +
-		 roundI(uAndV.y * (texture.width - 1))];
-	// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
+	return diffuseTexture;
 }
-uint32_t Material::getNormalMapRGB(vec2 uAndV)
+
+const std::optional<Surface>& Material::getNormalTexture() const
 {
-	// cout << uAndV.x * texture.height << " " << uAndV.y * texture.width <<
-	// "\n";
-	return texture.pixels
-		[roundI(uAndV.x * (texture.height - 1)) * texture.width +
-		 roundI(uAndV.y * (texture.width - 1))];
-	// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
-}
-vec3 Material::getNormalMapVector(vec2 uAndV)
-{
-	return bump_vectors.at(roundI((uAndV.x * (bump.height - 1))))
-		.at(roundI((uAndV.y * (bump.width - 1))));
-	// upscaledFrameBuffer[i][j] = cobbles.pixels[i * cobbles.width + j];
-}
-void Material::finishLoading()
-{
-	if (!diffuseDefined)
-	{
-		cout << "\nERROR!! A material was defined without a diffuse colour!"
-			 << std::endl;
-		exit(1);
-	}
-	if (!ambientDefined)
-	{
-		floatAmbientColour = floatDiffuseColour;
-		packedAmbientRGB = packedDiffuseRGB;
-	}
-	if (!specularDefined)
-	{
-		floatSpecularColour = floatDiffuseColour;
-		packedSpecularRGB = packedDiffuseRGB;
-	}
+	return normalTexture;
 }

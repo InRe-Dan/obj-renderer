@@ -1,32 +1,19 @@
 #pragma once
 
 #include "utility/vectors.h"
+#include "Colour.h"
 
 // Simple class to store light location and other attributes
-class Light : public Animateable
+class Light
 {
   public:
-	Light(
-		std::string n,
-		glm::vec3 position,
-		float strength,
-		Colour colour,
-		bool startState,
-		bool isSoft = false,
-		float radius = 0.05);
+	glm::vec3 pos = {0, 0, 0};
+	Colour colour = {1.0, 1.0, 1.0, 1.0};
+	float strength = 1.0;
+	/// Radius of soft lighting - zero for nonsoft.
+	float radius = 0.0;
+	bool on = true;
 
-	glm::vec3 getPosition();
+	friend auto operator<=>(const Light& a, const Light& b) = default;
 
-	void setPosition(glm::vec3 position);
-
-	std::string name;
-	glm::vec3 pos;
-	float str;
-	int r;
-	int g;
-	int b;
-	Colour col;
-	bool state;
-	bool soft;
-	float radius;
 };

@@ -2,12 +2,14 @@
 
 #include "utility/vectors.h"
 
-#include <vector>
-#include <map>
 
 #include "CanvasTriangle.h"
 #include "TextureMap.h"
 
+#include <vector>
+#include <map>
+#include <string_view>
+#include <optional>
 #include <GLM/glm.hpp>
 
 
@@ -16,58 +18,54 @@
 class Material
 {
   public:
-	bool isTextured = false;
-	bool hasNormalMap = false;
-	bool isReflective = false;
 
-	Material();
+	Material(std::string_view name = "default");
 
-	Material(std::string name);
+	void setDiffuseColour(Colour colour);
 
-	void setDiffuseColour(glm::vec3 colour);
+	void setAmbientColour(Colour colour);
 
-	void setAmbientColour(glm::vec3 colour);
-
-	void setSpecularColour(glm::vec3 colour);
+	void setSpecularColour(Colour colour);
 
 	void setSpecularExponent(float value);
 
-	void setMap_Kd(std::string name);
+	void setDiffuseMap(const Surface& map);
 
-	void setMap_Bump(std::string name);
+	void setBumpMap(const Surface& map);
 
-	glm::vec3 getDiffuseColour();
+	void setReflectivity(float refl)
+	{
+		reflectivity = refl;
+	}
 
-	uint32_t getDiffuseColourInt();
+	std::optional<Colour> getDiffuseColour() const;
 
-	glm::vec3 getAmbientColour();
+	std::optional<Colour> getAmbientColour() const;
 
-	glm::vec3 getSpecularColour();
+	std::optional<Colour> getSpecularColour() const;
 
-	float getSpecularExponent();
+	float getSpecularExponent() const;
 
-	uint32_t getTexturePointColour(glm::vec2 uAndV);
+	const std::optional<Surface>& getDiffuseTexture() const;
 
-	uint32_t getNormalMapRGB(glm::vec2 uAndV);
-	glm::vec3 getNormalMapVector(glm::vec2 uAndV);
-	void finishLoading();
+	const std::optional<Surface>& getNormalTexture() const;
 
-	std::string materialName;
+	bool getReflectivity () const
+	{
+		return reflectivity;
+	}
 
   private:
-	bool diffuseDefined = false;
-	glm::vec3 floatDiffuseColour = glm::vec3(1);
-	uint32_t packedDiffuseRGB = 0xFFFFFFFF;
+	std::string name = "default";
+	/// Normalized value - 1.0 means light is reflected and this material is a mirror.
+	float reflectivity = 0.0;
+	std::optional<Colour> diffuse;
 	bool ambientDefined = false;
-	glm::vec3 floatAmbientColour = glm::vec3(1);
-	uint32_t packedAmbientRGB = 0xFFFFFFFF;
-	float specularDefined = false;
-	glm::vec3 floatSpecularColour = glm::vec3(0);
-	uint32_t packedSpecularRGB = 0xFFFFFFFF;
-	float specularExponent = 0.0f;
-	std::string map_Kd;
-	std::string map_bump;
-	TextureMap texture;
-	TextureMap bump;
+	std::optional<Colour> ambient;
+	std::optional<Colour> specular;
+	float specularExponent = 0;
+	std::optional<Surface> diffuseTexture;
+	std::optional<Surface> normalTexture;
+	/// Postprocessed bumpmap
 	std::vector<std::vector<glm::vec3>> bump_vectors;
 };

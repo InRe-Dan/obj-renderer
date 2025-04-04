@@ -9,8 +9,8 @@ class DrawingWindow
 {
 
 public:
-  size_t width;
-  size_t height;
+  int width;
+  int height;
 
 private:
   SDL_Window* window;

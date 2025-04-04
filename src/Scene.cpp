@@ -8,57 +8,58 @@
 
 using std::vector;
 
-Scene::Scene(Camera* camera)
+Scene::Scene(const Camera& camera)
 {
-	objectFiles = vector<ObjectFile>();
-	lights = vector<Light*>();
-	cameras = vector<Camera*>();
 	cameras.push_back(camera);
-	cameraIndex = 0;
-	lightIndex = 0;
-	modelTriangles = vector<ModelTriangle>();
 }
 
-void Scene::addObjectFile(ObjectFile file)
+void Scene::addObjectFile(std::unique_ptr<ObjectFile>&& file)
 {
-	objectFiles.push_back(file);
-	for (ObjectFile objectFile : objectFiles)
+	objectFiles.push_back(std::move(file));
+	for (const std::unique_ptr<Object>& object : objectFiles.back()->getObjects())
 	{
-		for (Object object : objectFile.getObjects())
-		{
-			for (ModelTriangle t : object.triangles)
-			{
-				modelTriangles.push_back(t);
-			}
-		}
+		const std::vector<ModelTriangle>& tris = object->getTris();
+		modelTriangles.insert(modelTriangles.end(), tris.begin(), tris.end());
 	}
 }
-vector<ModelTriangle>* Scene::getModelTriangles()
+
+const vector<ModelTriangle>& Scene::getModelTriangles() const
 {
-	return &modelTriangles;
+	return modelTriangles;
 }
 
-Camera* Scene::getCamera()
+const Camera& Scene::getCamera() const
 {
 	return cameras.at(cameraIndex);
 }
 
-Light* Scene::getControlledLight()
+Camera& Scene::getCamera()
+{
+	return cameras.at(cameraIndex);
+}
+
+
+Light& Scene::getLight()
 {
 	return lights.at(lightIndex);
 }
 
-void Scene::addCamera(Camera* camera)
+void Scene::addCamera(const Camera& camera)
 {
 	cameras.push_back(camera);
 }
 
-void Scene::addLight(Light* light)
+void Scene::addLight(const Light& light)
 {
 	lights.push_back(light);
 }
 
-vector<Light*> Scene::getLights()
+const vector<Light>& Scene::getLights() const
+{
+	return lights;
+}
+
+vector<Light>& Scene::getLights()
 {
 	return lights;
 }
@@ -95,19 +96,19 @@ void Scene::prevLight()
 		lightIndex--;
 }
 
-int Scene::cameraCount()
+int Scene::cameraCount() const
 {
 	return cameras.size();
 }
 
-void Scene::addAnimation(Animation* a)
+void Scene::addAnimation(std::unique_ptr<Animation>&& a)
 {
-	animations.push_back(a);
+	animations.push_back(std::move(a));
 }
 
 void Scene::toggleAnimation()
 {
-	for (Animation* a : animations)
+	for (auto& a : animations)
 	{
 		a->toggle();
 	}
@@ -115,7 +116,7 @@ void Scene::toggleAnimation()
 
 void Scene::update()
 {
-	for (Animation* a : animations)
+	for (auto& a : animations)
 	{
 		a->animate();
 	}

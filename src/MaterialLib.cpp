@@ -16,6 +16,9 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <unordered_map>
+#include <charconv>
+#include <string_view>
+#include <filesystem>
 
 using glm::vec2;
 using glm::vec3;
@@ -27,76 +30,68 @@ using std::vector;
 
 MaterialLib::MaterialLib()
 {
-	materials["default"] = Material();
+	materials.emplace("default", std::make_shared<Material>());
 }
-MaterialLib::MaterialLib(string filename)
+
+MaterialLib::MaterialLib(const std::filesystem::path& filename)
 {
-	file = "assets/mtl/" + filename;
+	materials.emplace("default", std::make_shared<Material>());
 	ifstream inputStream;
-	inputStream.open(file, std::ios::in);
+	inputStream.open(filename, std::ios::in);
+	std::stringstream buffer;
+	buffer << inputStream.rdbuf();
+	inputStream.close();
 	string line, code, materialName;
-	while (std::getline(inputStream, line))
+	while (std::getline(buffer, line))
 	{
-		string code = split(line, ' ').at(0);
+		if (line.empty())
+		{
+			continue;
+		}
+		std::string_view code = split(line, ' ').at(0);
 		if (code.compare("newmtl") == 0)
 		{
 			materialName = split(line, ' ').at(1);
-			Material newMatObject(materialName);
-			materials[materialName] = newMatObject;
+			materials.emplace(materialName, std::make_shared<Material>(materialName));
 		}
 		else if (code.compare("Kd") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			vec3 rgb(
-				stof(lineSplit.at(1)),
-				stof(lineSplit.at(2)),
-				stof(lineSplit.at(3)));
-			materials[materialName].setDiffuseColour(rgb);
+			materials[materialName]->setDiffuseColour(Colour(parseTriplet(line)));
 		}
 		else if (code.compare("Ka") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			vec3 rgb(
-				stof(lineSplit.at(1)),
-				stof(lineSplit.at(2)),
-				stof(lineSplit.at(3)));
-			materials[materialName].setAmbientColour(rgb);
+			materials[materialName]->setAmbientColour(Colour(parseTriplet(line)));
 		}
 		else if (code.compare("Ks") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			vec3 rgb(
-				stof(lineSplit.at(1)),
-				stof(lineSplit.at(2)),
-				stof(lineSplit.at(3)));
-			materials[materialName].setSpecularColour(rgb);
+			materials[materialName]->setSpecularColour(Colour(parseTriplet(line)));
 		}
 		else if (code.compare("Ns") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			float exponent(stof(lineSplit.at(1)));
-			materials[materialName].setSpecularExponent(exponent);
+			vector<std::string_view> lineSplit = split(line, ' ');
+			float exponent(stof(std::string(lineSplit.at(1)).data()));
+			materials[materialName]->setSpecularExponent(exponent);
 		}
 		else if (code.compare("map_Kd") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			materials[materialName].setMap_Kd(lineSplit.at(1));
+			vector<std::string_view> lineSplit = split(line, ' ');
+			materials[materialName]->setDiffuseMap(
+				Surface::fromFile(std::filesystem::path("assets/texture").append(lineSplit[1]))
+			);
 		}
 		else if (code.compare("map_bump") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
-			materials[materialName].setMap_Bump(lineSplit.at(1));
+			vector<std::string_view> lineSplit = split(line, ' ');
+			materials[materialName]->setBumpMap(
+				Surface::fromFile(std::filesystem::path("assets/normal").append(lineSplit[1]))
+			);
 		}
 		else if (code.compare("illum") == 0)
 		{
-			vector<string> lineSplit = split(line, ' ');
+			vector<std::string_view> lineSplit = split(line, ' ');
 			if (lineSplit.at(1).compare("2") == 0)
-				materials[materialName].isReflective = true;
+				materials[materialName]->setReflectivity(1.0);
 		}
 	}
-	inputStream.close();
-	for (std::pair<std::string, Material> material : materials)
-	{
-		material.second.finishLoading();
-	}
+
 }

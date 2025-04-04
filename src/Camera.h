@@ -5,9 +5,6 @@
 #include "Scene.h"
 #include "Light.h"
 
-#include <vector>
-#include <thread>
-#include <fstream>
 
 #include "CanvasPoint.h"
 #include "CanvasTriangle.h"
@@ -18,85 +15,99 @@
 #include "ModelTriangle.h"
 #include "RayTriangleIntersection.h"
 
-#include <glm/glm.hpp>
+#include <GLM/glm.hpp>
+#include <vector>
+#include <thread>
+#include <fstream>
+#include <optional>
+
 
 // Object to represent a camera in a scene.
 class Camera
 	: public Animateable
 	, public Rotateable
 {
-  public:
-	// How many threads to use for raytracing
-	int threadCount;
-	// Internal frame buffer width
-	int canvasWidth;
-	// Internal frame buffer height
-	int canvasHeight;
-	// Internal frame buffer
-	std::vector<std::vector<uint32_t>> frameBuffer;
-	// Internal depth buffer
-	std::vector<std::vector<float>> depthBuffer;
+public:
+
+	/// Camera rendering configuration.
+	struct RenderSettings
+	{
+		enum class Mode
+		{
+			Wireframe,
+			Raster,
+			Raytracing
+		};
+
+		enum class Smoothing
+		{
+			None,
+			Gouraud,
+			Phong
+		};
+
+		Mode mode = Mode::Wireframe;
+
+		size_t threadCount = 10;
+		glm::vec<2, size_t, glm::qualifier::defaultp> resolution = { 640, 480 };
+
+		bool lightingEnabled = false;
+		bool texturesEnabled = false;
+		bool normalMapsEnabled = false;
+		bool lightPositionPreview = true;
+		size_t raycastIterations = 6;
+		Smoothing smoothing = Smoothing::None;
+	};
+
 
 	// Takes initializes a camera looking into -z
-	Camera(glm::vec2 resolution = glm::vec2(640, 360), glm::vec3 position = glm::vec3(0, 0, 10));
+	Camera(RenderSettings settings, glm::vec3 position = glm::vec3(0, 0, 10));
+
+	RenderSettings getSettings() const;
+	void updateSettings(RenderSettings settings);
 
 	// Look at the position of this vector. Will function if this value changes.
-	void lookAt(glm::vec3* target);
-
-	// Toggle looking
-	void toggleLookAt();
+	void lookAt(glm::vec3* target = nullptr);
 
 	// Clears frame buffers and looks towards the target if looking is on.
 	void update();
 
 	// Get placement matrix. Right side represents postiion.
-	glm::mat4 getPlacement();
+	glm::mat4 getPlacement() const;
 
 	// Get position of camera from placement matrix.
-	glm::vec3 getPosition();
+	glm::vec3 getPosition() const override;
 
 	// Set the position values in placement matrix.
 	void setPosition(glm::vec3 pos) override;
 
 	// Get an orientation matrix from placement
-	glm::mat3 getOrientation();
+	glm::mat3 getOrientation() const override;
 
-	void setOrientation(glm::mat3 o);
+	void setOrientation(glm::mat3 o) override;
 
 	// Project a point onto a CanvasPoint
-	CanvasPoint getCanvasIntersectionPoint(glm::vec3 vertexLocation);
+	CanvasPoint getCanvasIntersectionPoint(glm::vec3 vertexLocation) const;
 
 	// Get ray direction for a given pixel on the internal frame buffer
-	glm::vec3 getRayDirection(int x, int y);
+	glm::vec3 getRayDirection(int x, int y) const;
 
 	// Find closest intersection in the direction of ray from rayOrigin.
 	RayTriangleIntersection getClosestIntersection(
 		glm::vec3 rayOrigin,
 		glm::vec3 ray,
-		Scene* scene,
-		int recursionDepth);
+		const Scene& scene
+	) const;
 
 	// Return the intersection information for a given pixel on the internal
 	// frame buffer.
-	RayTriangleIntersection
-	getRaytracedPixelIntersection(int xPos, int yPos, Scene* scene);
+	Colour getRtPixelColour(int xPos, int yPos, const Scene& scene);
 
-	// Raytrace on a particular section of the internal frame buffer
-	// Intended to be passed into threads
-	void raytraceSection(int x1, int x2, int y1, int y2, Scene* scene);
-
-	// Raster render on the internal frame buffer
-	void rasterRender(Scene scene);
-
-	// Wireframe render on the internal frame buffer
-	void wireframeRender(Scene scene);
-
-	// Raytraced render on the internal frame buffer. Uses threadCount threads.
-	void raytraceRender(Scene scene);
+	const std::vector<std::vector<uint32_t>>& render(const Scene& scene);
 
 	// Post-processing - render an approximation of where the light sources are
 	// in the scene
-	void drawLights(Scene scene);
+	void drawLights(const Scene& scene);
 
 	// Draw a backdrop to the frame buffer that visualizes each axis as the
 	// presence or absence of a colour channel.
@@ -146,11 +157,33 @@ class Camera
 	// Add w, h to resolution. Recreates frame and depth buffers.
 	void changeResolutionBy(int w, int h);
 
-  private:
-	// Is the camera locked on to a target?
-	bool isLooking;
+	const std::vector<std::vector<float>>& getDepth() const;
+
+private:
+
+	glm::vec3 getNormalOf(const RayTriangleIntersection & intersection) const;
+
+	// Raytrace on a particular section of the internal frame buffer
+	// Intended to be passed into threads
+	void raytraceSection(int x1, int x2, int y1, int y2, const Scene& scene);
+
+	// Raster render on the internal frame buffer
+	void rasterRender(const Scene& scene);
+
+	// Wireframe render on the internal frame buffer
+	void wireframeRender(const Scene& scene);
+
+	// Raytraced render on the internal frame buffer. Uses threadCount threads.
+	void raytraceRender(const Scene& scene);
+
+
+	RenderSettings settings{};
+	// Internal frame buffer
+	std::vector<std::vector<uint32_t>> frameBuffer;
+	// Internal depth buffer
+	std::vector<std::vector<float>> depthBuffer;
 	// Address of the position of the target
-	glm::vec3* lookTarget;
+	glm::vec3* lookTarget = nullptr;
 	// Distance to image plane. Should be positive!
 	float focalLength;
 	// Unit length of image place. Height to be derived from aspect ratio.

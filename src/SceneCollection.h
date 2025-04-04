@@ -7,7 +7,7 @@ class SceneCollection
   public:
 	SceneCollection();
 
-	Scene* getCurrent();
+	Scene& getCurrent();
 
 	void next();
 
@@ -15,15 +15,15 @@ class SceneCollection
 
   private:
 
-	std::vector<Scene*> sceneVect;
+	std::vector<Scene> sceneVect;
 	int index = 0;
 
-	Scene* makeCornellScene();
+	Scene makeCornellScene();
 
-	Scene* makeTexturedCornellScene();
+	Scene makeTexturedCornellScene();
 
-	Scene* makeSphereScene();
+	Scene makeSphereScene();
 
-	Scene* makeLogoScene();
+	Scene makeLogoScene();
 
 };

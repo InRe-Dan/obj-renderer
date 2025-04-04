@@ -1,16 +1,27 @@
-#include <algorithm>
-#include <sstream>
 #include "Utils.h"
 
-std::vector<std::string> split(const std::string &line, char delimiter) {
-	auto haystack = line;
-	std::vector<std::string> tokens;
-	size_t pos;
-	while ((pos = haystack.find(delimiter)) != std::string::npos) {
-		tokens.push_back(haystack.substr(0, pos));
-		haystack.erase(0, pos + 1);
+#include <algorithm>
+#include <sstream>
+#include <charconv>
+#include <ranges>
+
+std::vector<std::string_view> split(std::string_view str, char delimiter) {
+
+	std::vector<std::string_view> tokens;
+	for (const auto& v : std::ranges::split_view(str, delimiter))
+	{
+		tokens.emplace_back(v.begin(), v.end());
 	}
-	// Push the remaining chars onto the vector
-	tokens.push_back(haystack);
 	return tokens;
+}
+
+std::array<float, 3> parseTriplet(std::string_view str)
+{
+	std::vector<std::string_view> views = split(str, ' ');
+	std::array<float, 3> arr;
+	std::from_chars(views[1].data(), views[1].data() + views[1].size(), arr[0]);
+	std::from_chars(views[2].data(), views[2].data() + views[2].size(), arr[1]);
+	std::from_chars(views[3].data(), views[3].data() + views[3].size(), arr[2]);
+	return arr;
+
 }

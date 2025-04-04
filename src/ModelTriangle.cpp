@@ -1,33 +1,49 @@
 #include "ModelTriangle.h"
 #include <utility>
 
+#include "Object.h"
+#include "TextureMap.h"
+#include "Material.h"
+
 using namespace glm;
 
-ModelTriangle::ModelTriangle() {
-	vertices = {vec4(), vec4(), vec4()};
-	texturePoints = {vec2(), vec2(), vec2()};
-	colour = Colour(0, 0, 0);
-	normal = vec3(0);
-	material = NULL;
-	smoothingGroup = 0;
-	vertexNormals = {vec3(), vec3(), vec3()};
-	hasVertexNormals = false;
+ModelTriangle::ModelTriangle(
+	std::array<glm::vec3, 3> vertices
+	, std::array<glm::vec2, 3> texturePoints
+	, const Object& parent)
+	: vertices(vertices)
+	, texturePoints(texturePoints)
+	, parent(&parent)
+{}
+
+void ModelTriangle::setSmoothing(uint32_t smoothingGroup, std::array<glm::vec3, 3> vertexNormals)
+{
+	this->smoothingGroup = smoothingGroup;
+	this->vertexNormals = vertexNormals;
 }
 
-ModelTriangle::ModelTriangle(std::array<glm::vec4, 3> vs, std::array<vec2, 3> ts, Colour c, glm::vec3 n, Material *m, uint32_t sG, std::array<glm::vec3, 3> vNs, bool hasVNs) {
-	vertices = vs;
-	texturePoints = ts;
-	colour = c;
-	normal = n;
-	material = m;
-	smoothingGroup = sG;
-	vertexNormals = vNs;
-	hasVertexNormals = hasVNs;
+glm::vec3 ModelTriangle::getNormal() const
+{
+	vec3 e0 = glm::normalize(vec3(vertices[0] - vertices[1]));
+	vec3 e1 = glm::normalize(vec3(vertices[0] - vertices[2]));
+	return glm::normalize(glm::cross(e0, e1));
 }
 
-std::ostream &operator<<(std::ostream &os, const ModelTriangle &triangle) {
-	os << "(" << triangle.vertices[0].x << ", " << triangle.vertices[0].y << ", " << triangle.vertices[0].z << ")\n";
-	os << "(" << triangle.vertices[1].x << ", " << triangle.vertices[1].y << ", " << triangle.vertices[1].z << ")\n";
-	os << "(" << triangle.vertices[2].x << ", " << triangle.vertices[2].y << ", " << triangle.vertices[2].z << ")\n";
-	return os;
+glm::vec2 ModelTriangle::triangleToTexture(glm::vec2 UV) const
+{
+	vec2 e0 = texturePoints[1] - texturePoints[0];
+	vec2 e1 = texturePoints[2] - texturePoints[0];
+	vec2 texturePoint = texturePoints[0] + e0 * UV.x + e1 * UV.y;
+	return texturePoint;
+}
+
+Colour ModelTriangle::sampleDiffuse(glm::vec2 triangleSpaceUV, bool texturesEnabled) const
+{
+	Colour col = parent->getMaterial().getDiffuseColour().value_or(Colour{ 0.5, 0.5, 0.5, 1.0 });
+	if (const std::optional<Surface>& tex = parent->getMaterial().getDiffuseTexture();
+		tex && texturesEnabled)
+	{
+		col = tex.value().sample(triangleToTexture({ triangleSpaceUV.x, triangleSpaceUV.y }));
+	}
+	return col;
 }

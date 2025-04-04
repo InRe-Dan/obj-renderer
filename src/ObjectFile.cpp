@@ -16,11 +16,16 @@
 #include <unordered_map>
 #include <fstream>
 #include <vector>
-#include <glm/glm.hpp>
+#include <charconv>
+#include <filesystem>
+#include <GLM/vec2.hpp>
+#include <GLM/vec3.hpp>
+#include <GLM/vec4.hpp>
 
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
+
 using std::atoi;
 using std::cout;
 using std::ifstream;
@@ -28,49 +33,47 @@ using std::stof;
 using std::string;
 using std::vector;
 
-ObjectFile::ObjectFile(std::string filename, float scale)
+ObjectFile::ObjectFile(const std::filesystem::path& filePath)
 {
-	position = vec3(0);
-	orientation = glm::mat3();
-	file = "assets/obj/" + filename;
-	scaleFactor = scale;
-	ifstream inputStream;
-	inputStream.open(file, std::ios::in);
+	assert(std::filesystem::status(filePath).type() == std::filesystem::file_type::regular);
+	ifstream inputStream(filePath, std::ios::in);
 	string line;
-	// Default object, material library and material in case .obj does not
-	// define them
-	objects.push_back(Object("default"));
-	objects.back().setMaterial("default");
-	matLib = new MaterialLib();
+	// Default object, material library and material in case .obj does not define them
+	objects.push_back(std::make_unique<Object>("unnamed", matLib.getDefault()));
 	uint32_t smoothingGroup = 0;
 	while (std::getline(inputStream, line))
 	{
-		string code = split(line, ' ').at(0);
+		std::vector<std::string_view> tokens = split(line, ' ');
+		if (tokens.empty())
+		{
+			continue;
+		}
+		std::string_view code = split(line, ' ').at(0);
 		if (code.compare("mtllib") == 0)
 		{
-			materialLib = split(line, ' ').at(1);
-			matLib = new MaterialLib(materialLib);
+			std::string_view matlibname = split(line, ' ').at(1);
+			matLib = MaterialLib(std::filesystem::path() / "assets" / "mtl" / matlibname);
 		}
 		else if (code.compare("o") == 0)
 		{
-			objects.push_back(Object(split(line, ' ').at(1)));
+			objects.push_back(std::make_unique<Object>(split(line, ' ').at(1), matLib.getDefault()));
 		}
 		else if (code.compare("usemtl") == 0)
 		{
-			objects.back().setMaterial(split(line, ' ').at(1));
+			objects.back()->setMaterial(matLib.get(split(line, ' ').at(1)));
 		}
 		else if (code.compare("v") == 0)
 		{
 			vec3 vertex = parseVertex(line);
-			vertices.push_back(vertex * scaleFactor);
+			vertices.push_back(vertex);
 		}
 		else if (code.compare("s") == 0)
 		{
-			string option = split(line, ' ').at(1);
+			std::string_view option = split(line, ' ').at(1);
 			if (code.compare("off") == 0)
 				smoothingGroup = 0;
 			else
-				smoothingGroup = atoi(option.c_str());
+				smoothingGroup = fromStr<int>(option);
 		}
 		else if (code.compare("vn") == 0)
 		{
@@ -85,142 +88,82 @@ ObjectFile::ObjectFile(std::string filename, float scale)
 		else if (code.compare("f") == 0)
 		{
 			std::array<std::array<int, 3>, 3> face = parseFace(line);
-			std::array<vec4, 3> faceVertices;
-			faceVertices[0] = vec4(vertices.at(face[0][0] - 1), 1);
-			faceVertices[1] = vec4(vertices.at(face[1][0] - 1), 1);
-			faceVertices[2] = vec4(vertices.at(face[2][0] - 1), 1);
-			Colour colour = getKdOf(objects.back());
-			Material* material =
-				&(matLib->materials.at(objects.back().material));
-			std::array<vec2, 3> ts = {vec2(0), vec2(0), vec2(0)};
+			std::array<vec3, 3> faceVertices
+			{
+				vec3(vertices.at(face[0][0] - 1)),
+				vec3(vertices.at(face[1][0] - 1)),
+				vec3(vertices.at(face[2][0] - 1))
+			};
+
+			Colour colour = objects.back()->getMaterial().getDiffuseColour().value();
+			std::array<vec2, 3> ts = { vec2(0), vec2(0), vec2(0) };
 			if (face[0][1] > 0)
 			{
 				ts = std::array<vec2, 3>{
 					vertexTextureRatios.at(face[0][1] - 1),
-					vertexTextureRatios.at(face[1][1] - 1),
-					vertexTextureRatios.at(face[2][1] - 1),
+						vertexTextureRatios.at(face[1][1] - 1),
+						vertexTextureRatios.at(face[2][1] - 1),
 				};
 			}
-			std::array<vec3, 3> vNs = {vec3(0), vec3(0), vec3(0)};
-			bool hasVNs = false;
+			std::optional<std::array<glm::vec3, 3>> triangleVertNormals;
 			if (face[0][2] > 0)
 			{
-				vNs = std::array<vec3, 3>{
+				triangleVertNormals = std::array<vec3, 3>
+				{
 					vertexNormals.at(face[0][2] - 1),
-					vertexNormals.at(face[1][2] - 1),
-					vertexNormals.at(face[2][2] - 1),
+						vertexNormals.at(face[1][2] - 1),
+						vertexNormals.at(face[2][2] - 1)
 				};
-				hasVNs = true;
 			}
 			uint32_t sG = smoothingGroup;
 			vec3 e0 = glm::normalize(vec3(faceVertices[0] - faceVertices[1]));
 			vec3 e1 = glm::normalize(vec3(faceVertices[0] - faceVertices[2]));
 			vec3 normal = glm::normalize(glm::cross(e0, e1));
-			objects.back().triangles.push_back(ModelTriangle(
-				faceVertices,
-				ts,
-				colour,
-				normal,
-				material,
-				sG,
-				vNs,
-				hasVNs));
+			objects.back()->getTris().push_back(
+				ModelTriangle(faceVertices, ts, *objects.back()));
+			if (smoothingGroup && triangleVertNormals)
+			{
+				objects.back()->getTris().back().setSmoothing(smoothingGroup, triangleVertNormals.value());
+			}
 			faces.push_back(face);
 		}
 	}
 	inputStream.close();
 }
 
-void ObjectFile::printVertices()
-{
-	cout << "Vertices of " << file << std::endl;
-	for (int i = 0; i < vertices.size(); i++)
-	{
-		vec3 current = vertices.at(i);
-		cout << '(' << current.x << ", " << current.y << ", " << current.z
-			 << ")" << std::endl;
-	}
-	cout << std::endl;
-}
-
-vector<Object> ObjectFile::getObjects()
+vector<std::unique_ptr<Object>>& ObjectFile::getObjects()
 {
 	return objects;
 }
 
-Colour ObjectFile::getKdOf(Object object)
+vec3 ObjectFile::parseVertex(std::string_view input)
 {
-	uint32_t ci = matLib->materials.at(object.material).getDiffuseColourInt();
-	return Colour(
-		(ci & 0x00FF0000) >> 16,
-		(ci & 0x0000FF00) >> 8,
-		ci & 0x000000FF);
-}
-
-void ObjectFile::translate(vec4 displacement)
-{
-	for (int i = 0; i < objects.size(); i++)
+	vector<std::string_view> splitStr = split(input, ' ');
+	return
 	{
-		objects[i].translate(displacement);
-	}
+		fromStr<float>(splitStr[1]),
+		fromStr<float>(splitStr[2]),
+		fromStr<float>(splitStr[3])
+	};
 }
 
-void ObjectFile::centerOn(vec4 target)
+vec2 ObjectFile::parseTextureRatio(std::string_view input)
 {
-	float maxX = 100000.0f;
-	float maxY = 100000.0f;
-	float maxZ = 100000.0f;
-	float minX = -100000.0f;
-	float minY = -100000.0f;
-	float minZ = -100000.0f;
-	for (Object object : objects)
-	{
-		for (ModelTriangle triangle : object.triangles)
-		{
-			for (vec4 vertex : triangle.vertices)
-			{
-				maxX = glm::min(vertex.x, maxX);
-				maxY = glm::min(vertex.y, maxY);
-				maxZ = glm::min(vertex.z, maxZ);
-				minX = glm::max(vertex.x, minX);
-				minY = glm::max(vertex.y, minY);
-				minZ = glm::max(vertex.z, minZ);
-			}
-		}
-	}
-	vec4 center =
-		vec4((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2, 1);
-	translate(target - center);
-}
-
-vec3 ObjectFile::parseVertex(std::string input)
-{
-	vector<std::string> splitStr = split(input, ' ');
-	vec3 result(
-		stof(splitStr.at(1)),
-		stof(splitStr.at(2)),
-		stof(splitStr.at(3)));
-	return result;
-}
-
-vec2 ObjectFile::parseTextureRatio(std::string input)
-{
-	vector<std::string> splitStr = split(input, ' ');
-	vec2 result(stof(splitStr.at(1)), stof(splitStr.at(2)));
-	return result;
+	vector<std::string_view> splitStr = split(input, ' ');
+	return { fromStr<float>(splitStr.at(1)), fromStr<float>(splitStr.at(2)) };
 }
 
 std::array<std::array<int, 3>, 3> ObjectFile::parseFace(std::string input)
 {
 	// vertex/texture/normal format
 	std::array<std::array<int, 3>, 3> faceData;
-	vector<std::string> splitStr = split(input, ' ');
-	for (int i = 0; i < 3; i++)
+	std::vector<std::string_view> tokens = split(input, ' ');
+	for (int i = 1; i < 4; i++)
 	{
-		vector<string> information = split(splitStr.at(i + 1), '/');
-		string locationIndex = information.at(0);
-		string normalIndex = "-1";
-		string textureIndex = "-1";
+		std::vector<std::string_view> information = split(tokens[i], '/');
+		std::string_view locationIndex = information.at(0);
+		std::optional<std::string_view> normalIndex;
+		std::optional<std::string_view> textureIndex;
 		if (information.size() > 1)
 		{
 			if (!information.at(1).empty())
@@ -235,10 +178,11 @@ std::array<std::array<int, 3>, 3> ObjectFile::parseFace(std::string input)
 				normalIndex = information.at(2);
 			}
 		}
-		faceData[i] = std::array<int, 3>{
-			atoi(locationIndex.c_str()),
-			atoi(textureIndex.c_str()),
-			atoi(normalIndex.c_str())};
+		faceData[i - 1] = std::array<int, 3>{
+			fromStr<int>(locationIndex),
+				fromStr<int>(textureIndex.value_or("-1")),
+				fromStr<int>(normalIndex.value_or("-1"))
+		};
 	}
 	return faceData;
 }

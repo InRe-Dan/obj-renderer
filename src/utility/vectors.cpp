@@ -13,7 +13,7 @@
 
 #include <fstream>
 #include <vector>
-#include <glm/glm.hpp>
+#include <GLM/glm.hpp>
 
 using namespace glm;
 using std::string;
@@ -207,15 +207,6 @@ bindToRectangle(vector<CanvasPoint> input, vec2 topLeft, vec2 bottomRight)
 	return returnVector;
 }
 
-// Convert vector to uint32_t (assuming vector values range from 0 and 1)
-uint32_t vec3ToColour(vec3 vect, int alpha)
-{
-	// Convert an RGB value and an alpha value to an int encoding them.
-	uint32_t colour = (alpha << 24) + (uint8_t(vect.x) << 16) +
-					  (uint8_t(vect.y) << 8) + uint8_t(vect.z);
-	return colour;
-}
-
 // Convert RGB uint32_t to vector with values ranging from 0 - 255
 vec3 intColToVec3(uint32_t c)
 {
@@ -291,11 +282,11 @@ vector<CanvasPoint> interpolate(CanvasPoint fromC, CanvasPoint toC, int steps)
 }
 
 Translation::Translation(
-	Animateable* object,
+	Animateable& object,
 	std::function<vec3(vec3, int)> posFunc)
 {
-	target = object;
-	origin = object->getPosition();
+	target = &object;
+	origin = object.getPosition();
 	f = posFunc;
 	tick = 0;
 }
@@ -339,11 +330,11 @@ void Rotation::toggle()
 }
 
 AdjustableRotation::AdjustableRotation(
-	Rotateable* object,
+	Rotateable& object,
 	std::function<vec3(int)> degfunc)
 {
-	target = object;
-	originalOrientation = object->getOrientation();
+	target = &object;
+	originalOrientation = object.getOrientation();
 	f = degfunc;
 	tick = 0;
 }

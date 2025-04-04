@@ -1,18 +1,18 @@
 #pragma once
 
-#include "../CanvasTriangle.h"
-#include "../DrawingWindow.h"
-#include "../CanvasPoint.h"
-#include "../CanvasTriangle.h"
-#include "../Colour.h"
-#include "../Utils.h"
-#include "../TextureMap.h"
-#include "../ModelTriangle.h"
+#include "CanvasTriangle.h"
+#include "DrawingWindow.h"
+#include "CanvasPoint.h"
+#include "CanvasTriangle.h"
+#include "Colour.h"
+#include "Utils.h"
+#include "TextureMap.h"
+#include "ModelTriangle.h"
 
 
 #include <fstream>
 #include <vector>
-#include <glm/glm.hpp>
+#include <GLM/glm.hpp>
 #include <functional>
 #include <iomanip>
 
@@ -48,9 +48,6 @@ void output(glm::mat4 matrix, std::string title);
 std::vector<CanvasPoint>
 bindToRectangle(std::vector<CanvasPoint> input, glm::vec2 topLeft, glm::vec2 bottomRight);
 
-// Convert vector to uint32_t (assuming vector values range from 0 and 1)
-uint32_t vec3ToColour(glm::vec3 vect, int alpha);
-
 // Convert RGB uint32_t to vector with values ranging from 0 - 255
 glm::vec3 intColToVec3(uint32_t c);
 
@@ -70,15 +67,19 @@ interpolate(CanvasPoint fromC, CanvasPoint toC, int steps);
 class Animateable
 {
   public:
-	virtual glm::vec3 getPosition() = 0;
+	virtual glm::vec3 getPosition() const = 0;
 	virtual void setPosition(glm::vec3 pos) = 0;
+	virtual ~Animateable() = default;
+
 };
 
 class Rotateable
 {
   public:
-	virtual glm::mat3 getOrientation() = 0;
+	virtual glm::mat3 getOrientation() const = 0;
 	virtual void setOrientation(glm::mat3 o) = 0;
+	virtual ~Rotateable() = default;
+
 };
 
 class Animation
@@ -86,13 +87,14 @@ class Animation
   public:
 	virtual void animate() = 0;
 	virtual void toggle() = 0;
+	virtual ~Animation() = default;
 };
 
 // Animation controller class.
 class Translation : public Animation
 {
   public:
-	Translation(Animateable* object, std::function<glm::vec3(glm::vec3, int)> posFunc);
+	Translation(Animateable& object, std::function<glm::vec3(glm::vec3, int)> posFunc);
 	// If animation is enabled, increase step and move the object.
 	void animate();
 	// Toggle animation between enabled/disabled
@@ -125,7 +127,7 @@ class Rotation : public Animation
 class AdjustableRotation : public Animation
 {
   public:
-	AdjustableRotation(Rotateable* object, std::function<glm::vec3(int)> degfunc);
+	AdjustableRotation(Rotateable& object, std::function<glm::vec3(int)> degfunc);
 
 	void animate();
 

@@ -7,8 +7,8 @@ DrawingWindow::DrawingWindow() {}
 DrawingWindow::DrawingWindow(int w, int h) : width(w), height(h), pixelBuffer(w * h) {
 	if (!SDL_Init(SDL_INIT_VIDEO)) printMessageAndQuit("Could not initialise SDL: ", SDL_GetError());
 	uint32_t flags = SDL_WINDOW_OPENGL;
-	int ANYWHERE = SDL_WINDOWPOS_UNDEFINED;
 	bool success = SDL_CreateWindowAndRenderer("obj-renderer", width, height, flags, &window, &renderer);
+	if (!success) printMessageAndQuit("Could not create a window and renderer:", SDL_GetError());
 	if (!window) printMessageAndQuit("Could not set video mode: ", SDL_GetError());
 	if (!renderer) printMessageAndQuit("Could not create renderer: ", SDL_GetError());
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, width, height);
@@ -33,7 +33,7 @@ void DrawingWindow::savePPM(const std::string &filename) const {
 	outputStream << width << " " << height << "\n";
 	outputStream << "255\n";
 
-	for (size_t i = 0; i < width * height; i++) {
+	for (size_t i = 0; i < static_cast<size_t>(width) * height; i++) {
 		std::array<char, 3> rgb {{
 				static_cast<char> ((pixelBuffer[i] >> 16) & 0xFF),
 				static_cast<char> ((pixelBuffer[i] >> 8) & 0xFF),

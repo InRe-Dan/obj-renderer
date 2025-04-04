@@ -1,17 +1,16 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <iostream>
 #include "ModelTriangle.h"
 
-struct RayTriangleIntersection {
-	glm::vec3 intersectionPoint;
-	float distanceFromCamera;
-	ModelTriangle intersectedTriangle;
-	int triangleIndex;
-	glm::vec3 normal;
+#include <GLM/vec3.hpp>
+#include <GLM/vec2.hpp>
+#include <iostream>
 
-	RayTriangleIntersection();
-	RayTriangleIntersection(const glm::vec3 &point, float distance, const ModelTriangle &triangle, int index, glm::vec3 normalVec);
-	friend std::ostream &operator<<(std::ostream &os, const RayTriangleIntersection &intersection);
+struct RayTriangleIntersection {
+	/// nullptr only if there was no intersection
+	const ModelTriangle* intersectedTriangle = nullptr;
+	/// x: distance along the ray that the solution was found at
+	/// y: ratio along the triangle's first edge that the solution is at (v1 - v0)
+	/// z: ratio along the triangle's second edge that the solution is at (v2 - v0)
+	glm::vec3 solution;
 };

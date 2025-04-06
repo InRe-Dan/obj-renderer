@@ -49,7 +49,7 @@ Scene SceneCollection::makeCornellScene()
 	{
 		.pos = {0.4, 0.4, 0.4},
 		.colour={1.0, 1.0, 1.0},
-		.strength=0.5f,
+		.strength=5.0f,
 		.radius=0.05f,
 		.on=true 
 	};
@@ -57,7 +57,7 @@ Scene SceneCollection::makeCornellScene()
 	{
 		.pos = {-0.4, 0.4, 0.4},
 		.colour = {1.0, 1.0, 1.0},
-		.strength = 0.5,
+		.strength = 5.0f,
 		.radius = 0.00,
 		.on = true
 	};

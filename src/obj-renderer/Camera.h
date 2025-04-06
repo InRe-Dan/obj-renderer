@@ -21,6 +21,10 @@ class Camera
 {
 public:
 
+	static constexpr float ambientWeight = 0.05f;
+	static constexpr float specularWeight = 0.3f;
+	static constexpr float diffuseWeight = 0.65f;
+
 	/// Camera rendering configuration.
 	struct RenderSettings
 	{

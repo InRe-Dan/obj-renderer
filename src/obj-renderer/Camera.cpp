@@ -266,15 +266,54 @@ void Camera::drawRtPixel(const glm::uvec2& p, const Scene& scene)
 		return;
 	}
 
-	// Everything must be at least 10% brightness
+	// For now we are only interested in the latest interesection (TODO model scattered light)
+	const RayTriangleIntersection& lightOrigin = intersections.back();
+	const glm::vec3 originPos = lightOrigin.getPosition();
+	const glm::vec3 normal = getNormalOf(lightOrigin);
 
-	RayTriangleIntersection lightOrigin = intersections.back();
 
-	glm::vec4 total_colour = lightOrigin.intersectedTriangle
+	glm::vec4 objectCol = lightOrigin.intersectedTriangle
 		->sampleDiffuse({ lightOrigin.solution.y, lightOrigin.solution.z }, settings.texturesEnabled);
+	
+	glm::vec4 ambient = objectCol;
+	glm::vec4 diffuse{};
+	glm::vec4 specular{};
 
-	frameBuffer[p.y][p.x] = total_colour;
-	depthBuffer[p.y][p.x] = 1 / glm::length(1 / intersections[0].solution.x);
+	for (const Light& lightSource : scene.getLights())
+	{
+		if (!lightSource.on)
+		{
+			continue;
+		}
+		glm::vec3 pointToLight = originPos - lightSource.pos;
+		// TODO support reflected light
+		const RayTriangleIntersection lightIntersection = getClosestIntersection(originPos, pointToLight, scene);
+		if (lightIntersection.intersectedTriangle == nullptr)
+		{
+			continue;
+		}
+
+		float distance = glm::length(pointToLight);
+		float distanceSq = static_cast<float>(glm::pow(distance, 2));
+		/// Vector of light reflection at this point
+		glm::vec3 reflection = glm::normalize(
+			(-pointToLight) -2.0f * normal *
+						   (glm::dot(-pointToLight, normal)));
+		/// Ratio of how much light is being reflected at the camera
+		float dotReflection = glm::dot(-rayDirection, reflection);
+		dotReflection = glm::clamp(dotReflection, 0.0f, 1.0f);
+		float specStrength = glm::pow(dotReflection, lightOrigin.intersectedTriangle->parent->getMaterial().getSpecularExponent());
+		float falloff = lightSource.strength / distanceSq;
+
+		diffuse += objectCol * glm::vec4(lightSource.colour, 1.0) * falloff;
+		specular += objectCol * glm::vec4(1.0) * falloff * specStrength;
+		
+	}
+
+	glm::vec4 result = ambient * ambientWeight + diffuse * diffuseWeight + specular * specularWeight;
+
+	frameBuffer[p.y][p.x] = glm::clamp(result, glm::vec4(0.0), glm::vec4(1.0));
+	depthBuffer[p.y][p.x] = 1 / glm::length(1 / intersections.front().solution.x);
 
 	//vec3 col = glm::vec3(c.x, c.y, c.z);
 	//// Iterate through every light in the scene

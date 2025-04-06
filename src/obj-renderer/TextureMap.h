@@ -13,7 +13,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-
+/// RGBA Image
 class Surface {
 public:
 

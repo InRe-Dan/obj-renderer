@@ -22,13 +22,6 @@ void ModelTriangle::setSmoothing(uint32_t newGroup, std::array<glm::vec3, 3> new
 	this->vertexNormals = newNormals;
 }
 
-glm::vec3 ModelTriangle::getNormal() const
-{
-	glm::vec3 e0 = glm::normalize(vertices[0] - vertices[1]);
-	glm::vec3 e1 = glm::normalize(vertices[0] - vertices[2]);
-	return glm::normalize(glm::cross(e0, e1));
-}
-
 glm::vec2 ModelTriangle::triangleToTexture(glm::vec2 UV) const
 {
 	glm::vec2 e0 = texturePoints[1] - texturePoints[0];

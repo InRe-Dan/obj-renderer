@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <streambuf>
 #include <array>
+#include <glm/common.hpp>
 
 Surface::Surface(size_t width, size_t height, std::span<const glm::vec4> data)
 	: width(width)
@@ -58,5 +59,7 @@ glm::vec4 Surface::sample(glm::vec2 uv) const
 	assert(isNormalized(uv.x) && isNormalized(uv.y));
 	int sampleX = std::lround(uv.x * width);
 	int sampleY = std::lround(uv.y * height);
-	return data[sampleY * height + sampleX];
+	sampleX = glm::clamp(sampleX, 0, static_cast<int>(width) - 1);
+	sampleY = glm::clamp(sampleY, 0, static_cast<int>(height) - 1);
+	return data[sampleY * width + sampleX];
 }

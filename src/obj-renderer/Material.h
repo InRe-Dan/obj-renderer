@@ -10,8 +10,6 @@
 #include <glm/glm.hpp>
 
 
-// Class to store information about a material in a MaterialFile. Shouldn't
-// really be used alone.
 class Material
 {
   public:

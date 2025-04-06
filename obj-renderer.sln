@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "obj-renderer", "obj-renderer.vcxproj", "{72C99AE3-5C64-4CF7-9D75-67E7171CCCFB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "obj-renderer", "src\obj-renderer\obj-renderer.vcxproj", "{72C99AE3-5C64-4CF7-9D75-67E7171CCCFB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unit-tests", "src\unit-tests\unit-tests.vcxproj", "{DFCD4331-7705-41AA-91F1-FE72467A2FC9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{72C99AE3-5C64-4CF7-9D75-67E7171CCCFB}.Release|x64.Build.0 = Release|x64
 		{72C99AE3-5C64-4CF7-9D75-67E7171CCCFB}.Release|x86.ActiveCfg = Release|Win32
 		{72C99AE3-5C64-4CF7-9D75-67E7171CCCFB}.Release|x86.Build.0 = Release|Win32
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Debug|x64.ActiveCfg = Debug|x64
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Debug|x64.Build.0 = Debug|x64
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Debug|x86.ActiveCfg = Debug|Win32
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Debug|x86.Build.0 = Debug|Win32
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Release|x64.ActiveCfg = Release|x64
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Release|x64.Build.0 = Release|x64
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Release|x86.ActiveCfg = Release|Win32
+		{DFCD4331-7705-41AA-91F1-FE72467A2FC9}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
